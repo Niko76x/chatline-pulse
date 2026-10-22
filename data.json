@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-23T00:28:09.1958217+02:00",
+  "timezone": "Europe/Berlin",
+  "refresh_minutes": 30,
+  "source_period": {
+    "from": "2026-10-23",
+    "to": "2026-10-23",
+    "label": "Heute · 23.10.2026"
+  },
+  "source": "Meta Events Manager · sichtbare Dataset-Übersicht",
+  "data_note": "Signaleingänge vor Verarbeitung. Browser und Server können dasselbe Ereignis melden; diese Summen sind keine eindeutigen Leads oder Kunden.",
+  "tracking": {
+    "pixel": {
+      "status": "active",
+      "label": "Pixel aktiv",
+      "detail": "PageView sowie Funnel-Events im Meta Events Manager sichtbar."
+    },
+    "capi": {
+      "status": "verified",
+      "label": "CAPI bestätigt",
+      "detail": "Frischer Live-Lead am 22.10.: Meta-Empfang durch die Serverroute bestätigt."
+    },
+    "consent": {
+      "status": "verified",
+      "label": "Consent geprüft",
+      "detail": "Ohne Einwilligung: 202 no_consent. Keine Eventzustellung."
+    },
+    "attribution": {
+      "status": "verified",
+      "label": "Anzeigen zugeordnet",
+      "detail": "Eigener ref- und UTM-Wert je Anzeige; Links und Meta-IDs im Werbekonto geprüft."
+    }
+  },
+  "verification": {
+    "checked_at": "2026-10-22T21:12:10Z",
+    "capi_receipt": "sent",
+    "test_mode": "Markierter Studio-Test; kein Anruf, kein Checkout und keine Zahlung ausgelöst.",
+    "live_trial_verified": false,
+    "billing_webhook": "Browserunabhängige Billing-/Trial-Webhooks im separaten Rails-Backend sind nicht verifiziert."
+  },
+  "events": [
+    {
+      "key": "PageView",
+      "label": "Seitenaufrufe",
+      "count": 0,
+      "connection": "Browser",
+      "quality": null,
+      "meaning": "Eingang eines Browser-PageViews."
+    },
+    {
+      "key": "Lead",
+      "label": "Studio-Test angelegt",
+      "count": 0,
+      "connection": "Browser + Server",
+      "quality": null,
+      "meaning": "Ein Onboarding-Run wurde angelegt. Noch kein qualifiziertes Gespräch."
+    },
+    {
+      "key": "CompleteRegistration",
+      "label": "Testanruf angefordert",
+      "count": 0,
+      "connection": "Browser + Server",
+      "quality": null,
+      "meaning": "Nummer angenommen / Anruf angefordert. Kein Beweis für ein angenommenes Gespräch."
+    },
+    {
+      "key": "InitiateCheckout",
+      "label": "Checkout begonnen",
+      "count": 0,
+      "connection": "Browser + Server",
+      "quality": null,
+      "meaning": "Checkout-Zustand angelegt. Noch keine Zahlung."
+    },
+    {
+      "key": "StartTrial",
+      "label": "Testphase aktiviert",
+      "count": null,
+      "connection": "Noch kein sichtbarer Live-Beleg",
+      "quality": null,
+      "meaning": "Backend bestätigt provisioning/active. Kostenlose Testphase, kein Purchase."
+    }
+  ],
+  "campaign": {
+    "name": "Pilates · DACH · erster Self-Service-Test",
+    "status": "active",
+    "status_label": "Eingeschaltet · erste Auslieferung",
+    "daily_budget_eur": 15,
+    "countries": [
+      "Deutschland",
+      "Österreich",
+      "Schweiz"
+    ],
+    "spend_eur": 0.02,
+    "results": null,
+    "result_label": "Angeforderte Testanrufe",
+    "landing": "https://start.chatline.app/?skin=pilates",
+    "enhancements": "Musik und automatische Creative-Zusätze ausgeschaltet; gespeicherte Einzelprüfungen dokumentiert.",
+    "ads": [
+      {
+        "id": "PIL-PA-01",
+        "name": "Der Kurs läuft",
+        "angle": "Unterbrechungen beim Unterrichten",
+        "stage": "Problem-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-PA-02",
+        "name": "Weniger Rückrufe nach dem Kurs",
+        "angle": "Rückrufe nach dem Unterricht vermeiden",
+        "stage": "Problem-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-PA-03",
+        "name": "Dieselben Fragen",
+        "angle": "Wiederkehrende Erklärarbeit",
+        "stage": "Problem-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-PA-04",
+        "name": "Studiofragen nach Feierabend",
+        "angle": "Studiofragen nach Feierabend abgeben",
+        "stage": "Problem-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-PR-01",
+        "name": "Wie klingt ChatLine?",
+        "angle": "Den eigenen Assistenten selbst hören",
+        "stage": "Produkt / Test",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-PR-02",
+        "name": "Studiofragen am Telefon abgeben",
+        "angle": "Telefonassistent mit Website-Wissen",
+        "stage": "Product-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-PR-03",
+        "name": "Kostenlos und ohne Anmeldung testen",
+        "angle": "Kostenloser Einstieg ohne Konto",
+        "stage": "Product-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-PR-04",
+        "name": "Testen Sie Ihre häufigste Studiofrage",
+        "angle": "Eigene typische Studiofrage testen",
+        "stage": "Product-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-SA-01",
+        "name": "Studiofragen beantworten lassen",
+        "angle": "Aufmerksamkeit im Kurs behalten",
+        "stage": "Solution-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-SA-02",
+        "name": "Fragen vor dem ersten Kurs klären",
+        "angle": "Fragen vor dem ersten Kurs beantworten",
+        "stage": "Solution-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-SA-03",
+        "name": "Ihr Team bleibt beim Mitglied",
+        "angle": "Persönliche Gespräche am Empfang schützen",
+        "stage": "Solution-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-SA-04",
+        "name": "Ihre Website. Ihr Studio-Assistent.",
+        "angle": "Einfacher Einstieg mit Website-Wissen",
+        "stage": "Solution-aware",
+        "format": "Bild"
+      },
+      {
+        "id": "PIL-VID-01",
+        "name": "Kundenstimmen & eigener Test",
+        "angle": "Vertrauen durch Kundenstimmen und konkreten Ablauf",
+        "stage": "Lösung / Produkt",
+        "format": "Video · 58 s"
+      }
+    ],
+    "delivery_note": "Alle zwölf Bildanzeigen plus ein Video veröffentlicht und eingeschaltet. Adset Active; eine Anzeige Active, zwölf Preparing. Erste Ausgaben heute: 0,02 €. Ergebnisse zeigt Meta noch als —."
+  },
+  "updates": {
+    "mode": "30-Minuten-Sync aktiv · lokaler Codex-Agent; PC und Chrome müssen erreichbar sein",
+    "last_success_at": "2026-10-23T00:28:09.1958217+02:00",
+    "last_error": null
+  },
+  "notes": [
+    "Am 23.10. meldet der Events Manager bisher keine Aktivität im ausgewählten Tageszeitraum. Der letzte beobachtete Match-Wert von 4,4/10 stammt vom 22.10.",
+    "Meta kann Daten verzögert anzeigen. Der technische Testnachweis und die aggregierte Statistik haben unterschiedliche Zeitpunkte.",
+    "Nicht geprüfte Kennzahlen bleiben offen statt mit einer erfundenen Null gefüllt zu werden.",
+    "15 €/Tag ist Metas durchschnittliches Tagesbudget. Die Oberfläche nennt bis zu 26,25 € an einem einzelnen Tag und 105 € je Woche."
+  ]
+}

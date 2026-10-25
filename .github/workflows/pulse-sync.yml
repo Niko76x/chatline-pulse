@@ -1,0 +1,37 @@
+name: ChatLine Pulse · read-only reporting
+# Review and copy to .github/workflows/pulse-sync.yml only after app/scopes/storage setup.
+on:
+  workflow_dispatch:
+  # Activate last, after a successful manual run + public readback:
+  # schedule:
+  #   - cron: '7,37 * * * *'
+permissions:
+  contents: write
+concurrency:
+  group: chatline-pulse-aggregate
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: vars.PULSE_SYNC_ENABLED == 'true' && github.repository == 'Niko76x/chatline-pulse'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Verify scope, privacy, freshness and API failure handling
+        run: npm test
+      - name: Collect and publish only ChatLine aggregates
+        env:
+          PULSE_SYNC_ENABLED: ${{ vars.PULSE_SYNC_ENABLED }}
+          META_GRAPH_VERSION: ${{ vars.META_GRAPH_VERSION }}
+          META_REPORTING_ENABLED: ${{ vars.META_REPORTING_ENABLED }}
+          META_REPORTING_ACCESS_TOKEN: ${{ secrets.META_REPORTING_ACCESS_TOKEN }}
+          META_DATASET_STATS_ENABLED: ${{ vars.META_DATASET_STATS_ENABLED }}
+          VERCEL_ANALYTICS_CHATLINE_WEBSITE_TOKEN: ${{ secrets.VERCEL_ANALYTICS_CHATLINE_WEBSITE_TOKEN }}
+          VERCEL_ANALYTICS_LIMITLESS_TOKEN: ${{ secrets.VERCEL_ANALYTICS_LIMITLESS_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/refresh.mjs --publish

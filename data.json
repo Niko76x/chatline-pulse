@@ -1,205 +1,302 @@
 {
-  "schema_version": 1,
-  "updated_at": "2026-10-23T00:28:09.1958217+02:00",
-  "timezone": "Europe/Berlin",
-  "refresh_minutes": 30,
-  "source_period": {
-    "from": "2026-10-23",
-    "to": "2026-10-23",
-    "label": "Heute · 23.10.2026"
+  "schema_version": 2,
+  "scope": {
+    "account": "2128240694419507",
+    "dataset": "1727278251668513",
+    "campaign": "120274644271350555",
+    "adset": "120275421779190555"
   },
-  "source": "Meta Events Manager · sichtbare Dataset-Übersicht",
-  "data_note": "Signaleingänge vor Verarbeitung. Browser und Server können dasselbe Ereignis melden; diese Summen sind keine eindeutigen Leads oder Kunden.",
-  "tracking": {
-    "pixel": {
-      "status": "active",
-      "label": "Pixel aktiv",
-      "detail": "PageView sowie Funnel-Events im Meta Events Manager sichtbar."
+  "snapshot_id": "historical-2026-10-25T14:17:21.414Z",
+  "collected_at": "2026-10-25T14:17:21.414Z",
+  "sources": {
+    "meta": {
+      "status": "historical",
+      "observed_at": "2026-10-25T14:17:21.414Z",
+      "attempted_at": null,
+      "error": null,
+      "timezone": "Europe/Berlin",
+      "period": {
+        "from": "2026-10-25",
+        "to": "2026-10-25"
+      },
+      "complete_test_window": false,
+      "delivery": "ACTIVE",
+      "budget_daily": 15,
+      "attribution": "Manuell gelesener Ads Manager · bestehender Zeitraum; keine neue API-Abfrage",
+      "daily": [
+        {
+          "date": "2026-10-25",
+          "spend": 18.83,
+          "impressions": 632,
+          "reach": 486,
+          "link_clicks": 5,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        }
+      ],
+      "ads_daily": [],
+      "statuses": [
+        {
+          "code": "PIL-PA-01",
+          "status": "ACTIVE",
+          "delivery": "ACTIVE"
+        },
+        {
+          "code": "PIL-PA-02",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PA-03",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PA-04",
+          "status": "ACTIVE",
+          "delivery": "ACTIVE"
+        },
+        {
+          "code": "PIL-PR-01",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PR-02",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PR-03",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PR-04",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-SA-01",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-SA-02",
+          "status": "ACTIVE",
+          "delivery": "ACTIVE"
+        },
+        {
+          "code": "PIL-SA-03",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-SA-04",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-VID-01",
+          "status": "ACTIVE",
+          "delivery": "ACTIVE"
+        }
+      ]
     },
-    "capi": {
-      "status": "verified",
-      "label": "CAPI bestätigt",
-      "detail": "Frischer Live-Lead am 22.10.: Meta-Empfang durch die Serverroute bestätigt."
+    "website_events": {
+      "status": "historical",
+      "observed_at": "2026-10-25T14:17:21.414Z",
+      "attempted_at": null,
+      "error": null,
+      "period": {
+        "from": "2026-10-25",
+        "to": "2026-10-25"
+      },
+      "events": [
+        {
+          "key": "PageView",
+          "label": "Gemeldete Pixel-Seitenaufrufe",
+          "count": 0,
+          "meaning": "Gemeldete PageView-Signale im Events Manager. Die Zahl zählt keine eindeutigen Besucher und ist nicht mit Anzeigenklicks gleichzusetzen."
+        },
+        {
+          "key": "Lead",
+          "label": "Studio-Test angelegt",
+          "count": 0,
+          "meaning": "Ein Onboarding-Run wurde angelegt. Noch kein qualifiziertes Gespräch."
+        },
+        {
+          "key": "CompleteRegistration",
+          "label": "Testanruf angefordert",
+          "count": 0,
+          "meaning": "Nummer angenommen / Anruf angefordert. Kein Beweis für ein angenommenes Gespräch."
+        },
+        {
+          "key": "InitiateCheckout",
+          "label": "Checkout begonnen",
+          "count": 0,
+          "meaning": "Checkout-Zustand angelegt. Noch keine Zahlung."
+        },
+        {
+          "key": "StartTrial",
+          "label": "Testphase aktiviert",
+          "count": null,
+          "meaning": "Backend bestätigt provisioning/active. Kostenlose Testphase, kein Purchase."
+        }
+      ]
     },
-    "consent": {
-      "status": "verified",
-      "label": "Consent geprüft",
-      "detail": "Ohne Einwilligung: 202 no_consent. Keine Eventzustellung."
+    "analytics": {
+      "status": "not_connected",
+      "observed_at": null,
+      "attempted_at": null,
+      "error": null
     },
-    "attribution": {
-      "status": "verified",
-      "label": "Anzeigen zugeordnet",
-      "detail": "Eigener ref- und UTM-Wert je Anzeige; Links und Meta-IDs im Werbekonto geprüft."
+    "search_console": {
+      "status": "not_connected",
+      "observed_at": null,
+      "attempted_at": null,
+      "error": null
     }
   },
   "verification": {
     "checked_at": "2026-10-22T21:12:10Z",
-    "capi_receipt": "sent",
-    "test_mode": "Markierter Studio-Test; kein Anruf, kein Checkout und keine Zahlung ausgelöst.",
-    "live_trial_verified": false,
-    "billing_webhook": "Browserunabhängige Billing-/Trial-Webhooks im separaten Rails-Backend sind nicht verifiziert."
+    "capi": "Technischer Empfang am 22.10. bestätigt; kein neuer Test.",
+    "consent": "Ohne Einwilligung wurde keine Zustellung ausgelöst.",
+    "attribution_checked_at": "2026-10-23T09:04:27.419Z",
+    "live_trial_verified": false
   },
-  "events": [
+  "ads": [
     {
-      "key": "PageView",
-      "label": "Seitenaufrufe",
-      "count": 0,
-      "connection": "Browser",
-      "quality": null,
-      "meaning": "Eingang eines Browser-PageViews."
+      "code": "PIL-PA-01",
+      "name": "Der Kurs läuft",
+      "angle": "Unterbrechungen beim Unterrichten",
+      "stage": "Problem-aware",
+      "format": "Bild"
     },
     {
-      "key": "Lead",
-      "label": "Studio-Test angelegt",
-      "count": 0,
-      "connection": "Browser + Server",
-      "quality": null,
-      "meaning": "Ein Onboarding-Run wurde angelegt. Noch kein qualifiziertes Gespräch."
+      "code": "PIL-PA-02",
+      "name": "Weniger Rückrufe nach dem Kurs",
+      "angle": "Rückrufe nach dem Unterricht vermeiden",
+      "stage": "Problem-aware",
+      "format": "Bild"
     },
     {
-      "key": "CompleteRegistration",
-      "label": "Testanruf angefordert",
-      "count": 0,
-      "connection": "Browser + Server",
-      "quality": null,
-      "meaning": "Nummer angenommen / Anruf angefordert. Kein Beweis für ein angenommenes Gespräch."
+      "code": "PIL-PA-03",
+      "name": "Dieselben Fragen",
+      "angle": "Wiederkehrende Erklärarbeit",
+      "stage": "Problem-aware",
+      "format": "Bild"
     },
     {
-      "key": "InitiateCheckout",
-      "label": "Checkout begonnen",
-      "count": 0,
-      "connection": "Browser + Server",
-      "quality": null,
-      "meaning": "Checkout-Zustand angelegt. Noch keine Zahlung."
+      "code": "PIL-PA-04",
+      "name": "Studiofragen nach Feierabend",
+      "angle": "Studiofragen nach Feierabend abgeben",
+      "stage": "Problem-aware",
+      "format": "Bild"
     },
     {
-      "key": "StartTrial",
-      "label": "Testphase aktiviert",
-      "count": null,
-      "connection": "Noch kein sichtbarer Live-Beleg",
-      "quality": null,
-      "meaning": "Backend bestätigt provisioning/active. Kostenlose Testphase, kein Purchase."
+      "code": "PIL-PR-01",
+      "name": "Wie klingt ChatLine?",
+      "angle": "Den eigenen Assistenten selbst hören",
+      "stage": "Produkt / Test",
+      "format": "Bild"
+    },
+    {
+      "code": "PIL-PR-02",
+      "name": "Studiofragen am Telefon abgeben",
+      "angle": "Telefonassistent mit Website-Wissen",
+      "stage": "Product-aware",
+      "format": "Bild"
+    },
+    {
+      "code": "PIL-PR-03",
+      "name": "Kostenlos und ohne Anmeldung testen",
+      "angle": "Kostenloser Einstieg ohne Konto",
+      "stage": "Product-aware",
+      "format": "Bild"
+    },
+    {
+      "code": "PIL-PR-04",
+      "name": "Testen Sie Ihre häufigste Studiofrage",
+      "angle": "Eigene typische Studiofrage testen",
+      "stage": "Product-aware",
+      "format": "Bild"
+    },
+    {
+      "code": "PIL-SA-01",
+      "name": "Studiofragen beantworten lassen",
+      "angle": "Aufmerksamkeit im Kurs behalten",
+      "stage": "Solution-aware",
+      "format": "Bild"
+    },
+    {
+      "code": "PIL-SA-02",
+      "name": "Fragen vor dem ersten Kurs klären",
+      "angle": "Fragen vor dem ersten Kurs beantworten",
+      "stage": "Solution-aware",
+      "format": "Bild"
+    },
+    {
+      "code": "PIL-SA-03",
+      "name": "Ihr Team bleibt beim Mitglied",
+      "angle": "Persönliche Gespräche am Empfang schützen",
+      "stage": "Solution-aware",
+      "format": "Bild"
+    },
+    {
+      "code": "PIL-SA-04",
+      "name": "Ihre Website. Ihr Studio-Assistent.",
+      "angle": "Einfacher Einstieg mit Website-Wissen",
+      "stage": "Solution-aware",
+      "format": "Bild"
+    },
+    {
+      "code": "PIL-VID-01",
+      "name": "Kundenstimmen & eigener Test",
+      "angle": "Vertrauen durch Kundenstimmen und konkreten Ablauf",
+      "stage": "Lösung / Produkt",
+      "format": "Video · 58 s"
     }
   ],
-  "campaign": {
-    "name": "Pilates · DACH · erster Self-Service-Test",
-    "status": "active",
-    "status_label": "Eingeschaltet · erste Auslieferung",
-    "daily_budget_eur": 15,
-    "countries": [
-      "Deutschland",
-      "Österreich",
-      "Schweiz"
-    ],
-    "spend_eur": 0.02,
-    "results": null,
-    "result_label": "Angeforderte Testanrufe",
-    "landing": "https://start.chatline.app/?skin=pilates",
-    "enhancements": "Musik und automatische Creative-Zusätze ausgeschaltet; gespeicherte Einzelprüfungen dokumentiert.",
-    "ads": [
-      {
-        "id": "PIL-PA-01",
-        "name": "Der Kurs läuft",
-        "angle": "Unterbrechungen beim Unterrichten",
-        "stage": "Problem-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-PA-02",
-        "name": "Weniger Rückrufe nach dem Kurs",
-        "angle": "Rückrufe nach dem Unterricht vermeiden",
-        "stage": "Problem-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-PA-03",
-        "name": "Dieselben Fragen",
-        "angle": "Wiederkehrende Erklärarbeit",
-        "stage": "Problem-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-PA-04",
-        "name": "Studiofragen nach Feierabend",
-        "angle": "Studiofragen nach Feierabend abgeben",
-        "stage": "Problem-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-PR-01",
-        "name": "Wie klingt ChatLine?",
-        "angle": "Den eigenen Assistenten selbst hören",
-        "stage": "Produkt / Test",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-PR-02",
-        "name": "Studiofragen am Telefon abgeben",
-        "angle": "Telefonassistent mit Website-Wissen",
-        "stage": "Product-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-PR-03",
-        "name": "Kostenlos und ohne Anmeldung testen",
-        "angle": "Kostenloser Einstieg ohne Konto",
-        "stage": "Product-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-PR-04",
-        "name": "Testen Sie Ihre häufigste Studiofrage",
-        "angle": "Eigene typische Studiofrage testen",
-        "stage": "Product-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-SA-01",
-        "name": "Studiofragen beantworten lassen",
-        "angle": "Aufmerksamkeit im Kurs behalten",
-        "stage": "Solution-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-SA-02",
-        "name": "Fragen vor dem ersten Kurs klären",
-        "angle": "Fragen vor dem ersten Kurs beantworten",
-        "stage": "Solution-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-SA-03",
-        "name": "Ihr Team bleibt beim Mitglied",
-        "angle": "Persönliche Gespräche am Empfang schützen",
-        "stage": "Solution-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-SA-04",
-        "name": "Ihre Website. Ihr Studio-Assistent.",
-        "angle": "Einfacher Einstieg mit Website-Wissen",
-        "stage": "Solution-aware",
-        "format": "Bild"
-      },
-      {
-        "id": "PIL-VID-01",
-        "name": "Kundenstimmen & eigener Test",
-        "angle": "Vertrauen durch Kundenstimmen und konkreten Ablauf",
-        "stage": "Lösung / Produkt",
-        "format": "Video · 58 s"
-      }
-    ],
-    "delivery_note": "Alle zwölf Bildanzeigen plus ein Video veröffentlicht und eingeschaltet. Adset Active; eine Anzeige Active, zwölf Preparing. Erste Ausgaben heute: 0,02 €. Ergebnisse zeigt Meta noch als —."
-  },
-  "updates": {
-    "mode": "30-Minuten-Sync aktiv · lokaler Codex-Agent; PC und Chrome müssen erreichbar sein",
-    "last_success_at": "2026-10-23T00:28:09.1958217+02:00",
-    "last_error": null
-  },
-  "notes": [
-    "Am 23.10. meldet der Events Manager bisher keine Aktivität im ausgewählten Tageszeitraum. Der letzte beobachtete Match-Wert von 4,4/10 stammt vom 22.10.",
-    "Meta kann Daten verzögert anzeigen. Der technische Testnachweis und die aggregierte Statistik haben unterschiedliche Zeitpunkte.",
-    "Nicht geprüfte Kennzahlen bleiben offen statt mit einer erfundenen Null gefüllt zu werden.",
-    "15 €/Tag ist Metas durchschnittliches Tagesbudget. Die Oberfläche nennt bis zu 26,25 € an einem einzelnen Tag und 105 € je Woche."
-  ]
+  "goals": [
+    {
+      "id": "qualified_tests",
+      "label": "Qualifizierte Studio-Tests",
+      "target": null,
+      "unit": "Tests",
+      "note": "Definition und Zeitraum gemeinsam festlegen."
+    },
+    {
+      "id": "cost_per_test",
+      "label": "Kosten je qualifiziertem Test",
+      "target": null,
+      "unit": "EUR",
+      "note": "Ziel aus Akquisitionskosten und Abschlussquote ableiten."
+    },
+    {
+      "id": "paying_studios",
+      "label": "Zahlende Standorte",
+      "target": null,
+      "unit": "Standorte",
+      "note": "Produkt- und Zahlungsquelle noch nicht verbunden."
+    },
+    {
+      "id": "total_test_budget",
+      "label": "Gesamtbudget des Tests",
+      "target": null,
+      "unit": "EUR",
+      "note": "15 € Tagesbudget ist kein vereinbartes Gesamt-Testlimit."
+    }
+  ],
+  "review": {
+    "enabled": false,
+    "cpc_review_start": 10,
+    "cpc_review_above": 2,
+    "funnel_review_clicks": 25,
+    "rule_version": "2026-10-25-draft",
+    "note": "Vorläufige Prüfheuristiken, für ChatLine nicht validiert. Keine automatische Anzeigensteuerung."
+  }
 }

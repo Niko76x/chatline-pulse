@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-25T19:30:00.000Z",
-  "collected_at": "2026-10-25T14:17:21.414Z",
+  "snapshot_id": "2026-10-25T20:00:00.000Z",
+  "collected_at": "2026-10-25T20:07:13.866Z",
   "sources": {
     "meta": {
       "status": "historical",
@@ -149,24 +149,51 @@
       ]
     },
     "analytics": {
-      "status": "error",
-      "observed_at": null,
-      "attempted_at": "2026-10-25T19:57:42.886Z",
+      "status": "partial",
+      "observed_at": "2026-10-25T20:07:13.866Z",
+      "attempted_at": "2026-10-25T20:07:13.866Z",
       "error": "ANALYTICS_PARTIAL_FAILURE",
       "sites": [
         {
           "site": "chatline.app",
-          "observed_at": null,
-          "attempted_at": "2026-10-25T19:57:42.886Z",
+          "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
+          "source_code": "vercel_project_production",
+          "status": "connected",
+          "observed_at": "2026-10-25T20:07:13.866Z",
+          "attempted_at": "2026-10-25T20:07:13.866Z",
+          "error": null,
           "timezone": "UTC",
-          "daily": [],
-          "status": "error",
-          "error": "ANALYTICS_INVALID_RESPONSE"
+          "period": {
+            "from": "2026-10-22",
+            "to": "2026-10-25"
+          },
+          "daily": [
+            {
+              "date": "2026-10-22",
+              "visitors": 3,
+              "pageviews": 4
+            },
+            {
+              "date": "2026-10-23",
+              "visitors": 2,
+              "pageviews": 3
+            },
+            {
+              "date": "2026-10-24",
+              "visitors": 1,
+              "pageviews": 1
+            },
+            {
+              "date": "2026-10-25",
+              "visitors": 0,
+              "pageviews": 0
+            }
+          ]
         },
         {
           "site": "start.chatline.app",
           "observed_at": null,
-          "attempted_at": "2026-10-25T19:57:42.886Z",
+          "attempted_at": "2026-10-25T20:07:13.866Z",
           "timezone": "UTC",
           "daily": [],
           "status": "error",

@@ -1,4 +1,4 @@
-import { SCOPE, validateSnapshot, canSkipCollection, assertConfiguredSources, refreshSources } from '../api/data.js';
+import { SCOPE, validateSnapshot, canSkipCollection, assertConfiguredSources, refreshSources, createAnalyticsDiagnosticFetcher } from '../api/data.js';
 import { readFile, writeFile } from 'node:fs/promises';
 
 const publish = process.argv.includes('--publish');
@@ -18,7 +18,7 @@ const metaEnabled = process.env.META_REPORTING_ENABLED === 'true';
 const datasetEnabled = process.env.META_DATASET_STATS_ENABLED === 'true';
 const sourceOptions = { now, slot, metaEnabled, datasetEnabled,
   metaOptions: { token: process.env.META_REPORTING_ACCESS_TOKEN, version: process.env.META_GRAPH_VERSION },
-  analyticsOptions: { tokens: {
+  analyticsOptions: { fetcher: createAnalyticsDiagnosticFetcher({ enabled: process.env.ANALYTICS_DIAGNOSTICS_ENABLED === 'true' }), tokens: {
     'chatline.app': process.env.VERCEL_ANALYTICS_CHATLINE_WEBSITE_TOKEN,
     'start.chatline.app': process.env.VERCEL_ANALYTICS_LIMITLESS_TOKEN,
   } },

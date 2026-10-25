@@ -6,7 +6,7 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "historical-2026-10-25T14:17:21.414Z",
+  "snapshot_id": "2026-10-25T19:30:00.000Z",
   "collected_at": "2026-10-25T14:17:21.414Z",
   "sources": {
     "meta": {
@@ -149,10 +149,30 @@
       ]
     },
     "analytics": {
-      "status": "not_connected",
+      "status": "error",
       "observed_at": null,
-      "attempted_at": null,
-      "error": null
+      "attempted_at": "2026-10-25T19:44:24.984Z",
+      "error": "ANALYTICS_PARTIAL_FAILURE",
+      "sites": [
+        {
+          "site": "chatline.app",
+          "observed_at": null,
+          "attempted_at": "2026-10-25T19:44:24.984Z",
+          "timezone": "UTC",
+          "daily": [],
+          "status": "error",
+          "error": "ANALYTICS_INVALID_RESPONSE"
+        },
+        {
+          "site": "start.chatline.app",
+          "observed_at": null,
+          "attempted_at": "2026-10-25T19:44:24.984Z",
+          "timezone": "UTC",
+          "daily": [],
+          "status": "error",
+          "error": "ANALYTICS_READ_FAILED"
+        }
+      ]
     },
     "search_console": {
       "status": "not_connected",

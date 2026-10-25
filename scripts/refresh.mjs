@@ -1,4 +1,4 @@
-import { SCOPE, createMetaReader, collectAds, mergeMeta, validateSnapshot } from '../api/data.js';
+import { SCOPE, createMetaReader, collectAds, collectWebAnalytics, collectDatasetStats, mergeMeta, mergeAnalytics, mergeDatasetStats, validateSnapshot, canSkipCollection } from '../api/data.js';
 import { readFile, writeFile } from 'node:fs/promises';
 
 const publish = process.argv.includes('--publish');
@@ -23,14 +23,27 @@ if (publish) {
   }
 }
 old ||= validateSnapshot(JSON.parse(await readFile(new URL('../public/data/fallback.json', import.meta.url), 'utf8')));
-if (old.snapshot_id === slot && old.sources.meta.status === 'connected') { process.stdout.write('Already published successfully for this slot.\n'); process.exit(0); }
-let next, success = false;
+const datasetEnabled = process.env.META_DATASET_STATS_ENABLED === 'true';
+if (canSkipCollection(old, { slot, now, datasetEnabled })) { process.stdout.write('Already published successfully for this slot.\n'); process.exit(0); }
+let next, metaReader, success = false;
 try {
-  const read = createMetaReader({ token: process.env.META_REPORTING_ACCESS_TOKEN, version: process.env.META_GRAPH_VERSION });
-  next = mergeMeta(old, await collectAds(read, now), { now, slot });
+  metaReader = createMetaReader({ token: process.env.META_REPORTING_ACCESS_TOKEN, version: process.env.META_GRAPH_VERSION });
+  next = mergeMeta(old, await collectAds(metaReader, now), { now, slot });
   success = true;
 } catch (e) {
   next = mergeMeta(old, null, { now, slot, error: e.code || e.message });
+}
+// Analytics is independent. A Meta auth failure must not block a configured website source.
+const analyticsResults = await collectWebAnalytics({ token: process.env.VERCEL_ANALYTICS_ACCESS_TOKEN, now });
+next = mergeAnalytics(next, analyticsResults, { now, slot });
+success = success && !analyticsResults.some(s => s.status === 'error');
+try {
+  if (datasetEnabled && !metaReader) throw new Error('META_NOT_CONFIGURED');
+  const datasetResult = await collectDatasetStats(metaReader, { enabled: datasetEnabled, now });
+  next = mergeDatasetStats(next, datasetResult, { now });
+} catch (error) {
+  next = mergeDatasetStats(next, null, { now, error: error.code || error.message });
+  success = false;
 }
 if (publish) {
   // Branch creation is an explicit setup task. Never create it implicitly from the worker.

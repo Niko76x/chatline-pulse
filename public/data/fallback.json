@@ -263,6 +263,13 @@
   ],
   "goals": [
     {
+      "id": "report_interval",
+      "label": "Automatischer Berichtstakt",
+      "target": 30,
+      "unit": "Minuten",
+      "note": "Beauftragter Takt. Noch nicht aktiv; Quellenzeit und mögliche Anbieter-Verzögerungen separat prüfen."
+    },
+    {
       "id": "qualified_tests",
       "label": "Qualifizierte Studio-Tests",
       "target": null,

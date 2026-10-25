@@ -236,6 +236,82 @@ export async function collectWebAnalytics(options) {
 }
 
 
+const DIAGNOSTIC_ENDPOINT = 'https://api.vercel.com/v1/query/web-analytics/visits/aggregate';
+const DIAGNOSTIC_KEYS = new Set(['version','query','data','rows','result','results','metrics','values','buckets','timestamp','date','day','pageviews','visitors','count','value','metric','name','key','since','until','groupBy','filter','limit','error','code']);
+const DIAGNOSTIC_METRICS = new Set(['pageviews','visitors','count','value']);
+const DIAGNOSTIC_DATES = new Set(['timestamp','date','day','since','until']);
+const DIAGNOSTIC_NESTED = new Set(['data','rows','result','results','metrics','values','buckets']);
+const DIAGNOSTIC_GROUPS = new Set(['hour','day','week','month','year']);
+const DIAGNOSTIC_ERROR_CODES = new Set(['not_found','project_not_found','forbidden','unauthorized','invalid_query','bad_request','payment_required','rate_limit_exceeded','too_many_requests','invalid_project','invalid_project_id','invalid_filter','invalid_date_range','invalid_time_range','invalid_since','invalid_until','missing_parameter','missing_project','NOT_FOUND','FORBIDDEN','UNAUTHORIZED','INVALID_QUERY']);
+const diagnosticType = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
+const diagnosticKeys = value => value && typeof value === 'object' && !Array.isArray(value) ? Object.keys(value).filter(k => DIAGNOSTIC_KEYS.has(k)).slice(0,20) : [];
+function diagnosticDate(value) {
+  let milliseconds;
+  if (typeof value === 'number' && Number.isFinite(value)) milliseconds = value;
+  else if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/.test(value)) milliseconds = Date.parse(value);
+  if (!Number.isFinite(milliseconds) || milliseconds < Date.UTC(2020,0,1) || milliseconds >= Date.UTC(2100,0,1)) return { type: diagnosticType(value), valid_date: false };
+  return { type: diagnosticType(value), utc: new Date(milliseconds).toISOString() };
+}
+function diagnosticMetric(value) {
+  const result = { type: diagnosticType(value) };
+  if (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0) result.number = value;
+  // String values are never copied, even when the metric unexpectedly contains text.
+  return result;
+}
+function diagnosticVersion(value) {
+  const result = { type: diagnosticType(value) };
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 999 || typeof value === 'string' && /^v?\d{1,3}$/.test(value)) result.value = value;
+  return result;
+}
+function diagnosticShape(value, depth = 0) {
+  const type = diagnosticType(value);
+  if (Array.isArray(value)) return { type, length: value.length, ...(depth < 3 ? { sample: value.slice(0,2).map(v => diagnosticShape(v, depth + 1)) } : {}) };
+  const result = { type };
+  if (!value || typeof value !== 'object') return result;
+  result.keys = diagnosticKeys(value);
+  if (depth >= 3) return result;
+  result.fields = {};
+  for (const key of result.keys) {
+    if (DIAGNOSTIC_DATES.has(key)) result.fields[key] = diagnosticDate(value[key]);
+    else if (DIAGNOSTIC_METRICS.has(key)) result.fields[key] = value[key] && typeof value[key] === 'object' ? diagnosticShape(value[key],depth + 1) : diagnosticMetric(value[key]);
+    else if (DIAGNOSTIC_NESTED.has(key)) result.fields[key] = diagnosticShape(value[key],depth + 1);
+    else if (['metric','name','key'].includes(key)) result.fields[key] = { type: diagnosticType(value[key]), ...(DIAGNOSTIC_METRICS.has(value[key]) ? { aggregate_name: value[key] } : {}) };
+    // No arbitrary property values, names, URLs, paths, identifiers or messages.
+  }
+  return result;
+}
+export function summarizeAnalyticsDiagnostic(project, status, body) {
+  const query = body && typeof body.query === 'object' && body.query ? body.query : {};
+  const group = query.groupBy;
+  const groupValues = (Array.isArray(group) ? group : [group]).filter(v => DIAGNOSTIC_GROUPS.has(v)).slice(0,2);
+  const errorCode = body?.error && typeof body.error === 'object' ? body.error.code : body?.code;
+  return {
+    project: project.site === 'chatline.app' ? 'chatline-website' : 'limitless',
+    http_status: Number.isInteger(status) && status >= 100 && status <= 599 ? status : null,
+    body_type: diagnosticType(body), root_keys: diagnosticKeys(body),
+    version: diagnosticVersion(body?.version),
+    query: { keys: diagnosticKeys(query), since: diagnosticDate(query.since), until: diagnosticDate(query.until), group_by: { type: diagnosticType(group), values: groupValues }, production_filter: query.filter === "environment eq 'production'" },
+    data: diagnosticShape(body?.data),
+    ...(DIAGNOSTIC_ERROR_CODES.has(errorCode) ? { error_code: errorCode } : {}),
+  };
+}
+export function createAnalyticsDiagnosticFetcher({ enabled = false, fetcher = fetch, logger = message => console.log(message) } = {}) {
+  if (!enabled) return fetcher;
+  return async function diagnosticFetch(input, options) {
+    const response = await fetcher(input, options);
+    let project;
+    try { const url = new URL(input); if (url.origin + url.pathname === DIAGNOSTIC_ENDPOINT) project = ANALYTICS_PROJECTS.find(p => p.projectId === url.searchParams.get('projectId')); }
+    catch { /* No logging for unknown requests. */ }
+    if (!project) return response;
+    let body;
+    try { body = await response.clone().json(); } catch { /* Never read/log text on non-JSON responses. */ }
+    const summary = summarizeAnalyticsDiagnostic(project,response.status,body);
+    try { logger('PULSE_ANALYTICS_DIAGNOSTIC ' + JSON.stringify(summary)); } catch { /* Diagnostics cannot change reporting behavior. */ }
+    return response;
+  };
+}
+
+
 const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews').split(' '));
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
 function scan(value, depth = 0) {

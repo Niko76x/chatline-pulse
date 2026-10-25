@@ -114,6 +114,23 @@ test('known production alias is accepted only for the recognized project-level p
   assert.throws(() => normalizeAnalytics(body([alias]), { ...projects[0], scope: 'host' }, period), /ANALYTICS_INVALID_RESPONSE/);
   assert.throws(() => normalizeAnalytics(body([{ ...day(), requestHostname: 'mindbody-home.chatline.app' }]), projects[1], period), /ANALYTICS_INVALID_RESPONSE/);
 });
+test('actual safe response excerpt accepts omitted groupBy and exact exclusive next-day boundary', () => {
+  // Provenance: evidence/analytics-diagnostic-job-visible.txt, visible main diagnostic.
+  // Only the two actually logged rows are copied; the other two reported rows are not invented.
+  const actualExcerpt = { version:1, query:{since:'2026-10-22T00:00:00.000Z',until:'2026-10-26T00:00:00.000Z',filter:"environment eq 'production'"},data:[
+    {timestamp:'2026-10-22T00:00:00.000Z',visitors:3,pageviews:4},
+    {timestamp:'2026-10-23T00:00:00.000Z',visitors:2,pageviews:3},
+  ] };
+  assert.deepEqual(normalizeAnalytics(actualExcerpt,projects[0],period),[
+    {date:'2026-10-22',visitors:3,pageviews:4},{date:'2026-10-23',visitors:2,pageviews:3},
+  ]);
+  for (const until of ['2026-10-26T12:00:00.000Z','2026-10-27T00:00:00.000Z','2026-10-25T12:00:00.000Z']) {
+    assert.throws(()=>normalizeAnalytics({...actualExcerpt,query:{...actualExcerpt.query,until}},projects[0],period),/ANALYTICS_INVALID_RESPONSE/);
+  }
+  for(const groupBy of [['country'],['day','country'],'day',null]) assert.throws(()=>normalizeAnalytics({...actualExcerpt,query:{...actualExcerpt.query,groupBy}},projects[0],period),/ANALYTICS_INVALID_RESPONSE/);
+  assert.throws(()=>normalizeAnalytics({...actualExcerpt,query:{...actualExcerpt.query,since:'2026-10-22T12:00:00.000Z'}},projects[0],period),/ANALYTICS_INVALID_RESPONSE/);
+  assert.throws(()=>normalizeAnalytics({...actualExcerpt,data:[{timestamp:'2026-10-26T00:00:00.000Z',visitors:1,pageviews:1}]},projects[0],period),/ANALYTICS_INVALID_RESPONSE/);
+});
 test('permission and network failures expose fixed codes and never copy private API errors', async () => {
   const read = createAnalyticsReader({ tokens: fixtureTokens, now, fetcher: async () => ({ ok: false, status: 403, json: async () => ({ error: 'private message' }) }) }, [projects[0]]);
   const result = await read('chatline.app');

@@ -20,7 +20,7 @@ test('enabled diagnostics keep the original response unread and log only safe ag
   const result=await wrapped(url('chatline.app')+'&private='+privateValue,{headers:{Authorization:'Bearer '+privateValue}});
   assert.equal(result,response);assert.equal(result.bodyUsed,false);assert.equal(logs.length,1);
   const text=logs[0];
-  for(const forbidden of [privateValue,'Authorization','Bearer','https://','userId','visitorId','referrerHostname','requestPath','X-Private-Header','message'])assert.equal(text.includes(forbidden),false,forbidden+' must not appear');
+  for(const forbidden of [privateValue,'Authorization','Bearer','https://','userId','visitorId','referrerHostname','requestPath','X-Private-Header'])assert.equal(text.includes(forbidden),false,forbidden+' must not appear');
   const safe=JSON.parse(text.slice('PULSE_ANALYTICS_DIAGNOSTIC '.length));
   assert.equal(safe.project,'chatline-website');assert.equal(safe.http_status,200);assert.equal(safe.version.value,'1');
   assert.equal(safe.query.until.utc,'2026-10-26T00:00:00.000Z');assert.deepEqual(safe.query.group_by.values,['day']);
@@ -57,4 +57,18 @@ test('nested aggregate metric structure is visible without copying arbitrary tex
   await wrapped(url('chatline.app'));const safe=JSON.parse(logs[0].slice('PULSE_ANALYTICS_DIAGNOSTIC '.length));
   assert.equal(safe.data.fields.pageviews.type,'array');assert.equal(safe.data.fields.pageviews.sample[0].fields.value.number,4);
   assert.equal(safe.data.fields.metrics.fields.visitors.fields.value.number,2);assert.equal(logs[0].includes(privateValue),false);
+});
+test('error field types and constant message flags reveal causes without exposing error text', async () => {
+  const examples=[
+    ['Web Analytics is not enabled for this project','analytics_not_enabled'],
+    ['Invalid project identifier','invalid_project'],
+    ['Invalid grouping or date range','invalid_grouping_or_date_range'],
+    ['No data: not configured','no_data_or_not_configured'],
+  ];
+  for(const [message,flag]of examples){
+    const logs=[],wrapped=createAnalyticsDiagnosticFetcher({enabled:true,fetcher:async()=>new Response(JSON.stringify({error:{code:'BAD_REQUEST',message:message+' '+privateValue,details:{token:privateValue}}}),{status:400}),logger:line=>logs.push(line)});
+    await wrapped(url('start.chatline.app'));const safe=JSON.parse(logs[0].slice('PULSE_ANALYTICS_DIAGNOSTIC '.length));
+    assert.equal(safe.http_status,400);assert.equal(safe.error_code,'BAD_REQUEST');assert.equal(safe.error_shape.fields.message,'string');assert.equal(safe.error_shape.fields.details,'object');assert.equal(safe.message_flags[flag],true);
+    assert.equal(logs[0].includes(privateValue),false);assert.equal(logs[0].includes(message),false);
+  }
 });

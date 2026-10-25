@@ -1,0 +1,12 @@
+{
+  "name": "chatline-pulse",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "collect": "node scripts/refresh.mjs"
+  }
+}

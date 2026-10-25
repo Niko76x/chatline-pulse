@@ -29,7 +29,7 @@ test('the actual client renders the currently published legacy analytics source 
   const get = await renderFixture(legacy);
   assert.equal((get('#creative-list').innerHTML.match(/class="creative-card"/g) || []).length, 13);
   assert.equal(get('#analytics-state').textContent, 'Nicht verbunden');
-  assert.match(get('#analytics-project').textContent, /Projekt chatline-website.*mindbody-home\.chatline\.app/);
+  assert.match(get('#analytics-project').textContent, /Erfasst chatline\.app und mindbody-home\.chatline\.app zusammen\./);
   assert.equal((get('#analytics-metrics').innerHTML.match(/<b>—<\/b>/g) || []).length, 2);
   assert.match(get('#event-source').textContent, /Historischer UI-Beleg/);
   assert.doesNotMatch(get('#freshness-banner').textContent, /konnten nicht geladen/);

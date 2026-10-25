@@ -170,11 +170,17 @@ export function configuredAnalyticsSites(tokens = {}) {
 }
 export function normalizeAnalytics(body, project, period) {
   const analyticsDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T00:00:00(?:\.000)?Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value.slice(0, 10) ? value.slice(0, 10) : null;
+  const start = Date.parse(period.from + 'T00:00:00.000Z'), inclusiveEnd = Date.parse(period.to + 'T00:00:00.000Z');
+  const atMidnight = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T00:00:00(?:\.000)?Z$/.test(value);
+  const sinceMatches = body?.query?.since === period.from || atMidnight(body?.query?.since) && Date.parse(body.query.since) === start;
+  // Actual response: an inclusive date request is echoed as next-day exclusive UTC midnight.
+  // Accept only that exact boundary or the documented inclusive date, never noon/future days.
+  const untilMatches = body?.query?.until === period.to || atMidnight(body?.query?.until) && Date.parse(body.query.until) === inclusiveEnd + 86400000;
+  const groupingMatches = body?.query && (!Object.hasOwn(body.query,'groupBy') || JSON.stringify(body.query.groupBy) === '["day"]');
   if (!body || project.scope !== 'project' || body.version !== 1 || !Array.isArray(body.data) || body.data.length > 32 ||
-      !body.query || JSON.stringify(body.query.groupBy) !== '["day"]' ||
+      !body.query || !groupingMatches || !sinceMatches || !untilMatches ||
       body.query.filter !== ANALYTICS_FILTER ||
-      typeof body.query.since !== 'string' || typeof body.query.until !== 'string' ||
-      body.query.since.slice(0, 10) !== period.from || body.query.until.slice(0, 10) !== period.to) throw new AnalyticsReadError('ANALYTICS_INVALID_RESPONSE');
+      !Number.isFinite(start) || !Number.isFinite(inclusiveEnd)) throw new AnalyticsReadError('ANALYTICS_INVALID_RESPONSE');
   const days = new Set();
   const rows = body.data.map(row => {
     const day = analyticsDay(row.timestamp);
@@ -242,7 +248,7 @@ const DIAGNOSTIC_METRICS = new Set(['pageviews','visitors','count','value']);
 const DIAGNOSTIC_DATES = new Set(['timestamp','date','day','since','until']);
 const DIAGNOSTIC_NESTED = new Set(['data','rows','result','results','metrics','values','buckets']);
 const DIAGNOSTIC_GROUPS = new Set(['hour','day','week','month','year']);
-const DIAGNOSTIC_ERROR_CODES = new Set(['not_found','project_not_found','forbidden','unauthorized','invalid_query','bad_request','payment_required','rate_limit_exceeded','too_many_requests','invalid_project','invalid_project_id','invalid_filter','invalid_date_range','invalid_time_range','invalid_since','invalid_until','missing_parameter','missing_project','NOT_FOUND','FORBIDDEN','UNAUTHORIZED','INVALID_QUERY']);
+const DIAGNOSTIC_ERROR_CODES = new Set(['not_found','project_not_found','forbidden','unauthorized','invalid_query','bad_request','payment_required','rate_limit_exceeded','too_many_requests','invalid_project','invalid_project_id','invalid_filter','invalid_date_range','invalid_time_range','invalid_since','invalid_until','missing_parameter','missing_project','NOT_FOUND','FORBIDDEN','UNAUTHORIZED','INVALID_QUERY','BAD_REQUEST','PROJECT_NOT_FOUND','INVALID_PROJECT','INVALID_PROJECT_ID','INVALID_FILTER','INVALID_DATE_RANGE','INVALID_TIME_RANGE','INVALID_GROUPING','INVALID_GROUP_BY','ANALYTICS_NOT_ENABLED','WEB_ANALYTICS_NOT_ENABLED','NOT_CONFIGURED','NO_DATA']);
 const diagnosticType = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
 const diagnosticKeys = value => value && typeof value === 'object' && !Array.isArray(value) ? Object.keys(value).filter(k => DIAGNOSTIC_KEYS.has(k)).slice(0,20) : [];
 function diagnosticDate(value) {
@@ -262,6 +268,22 @@ function diagnosticVersion(value) {
   const result = { type: diagnosticType(value) };
   if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 999 || typeof value === 'string' && /^v?\d{1,3}$/.test(value)) result.value = value;
   return result;
+}
+function diagnosticErrorShape(value) {
+  const fields = {};
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    for (const key of Object.keys(value).filter(k=>['code','message','name','status','type','details'].includes(k)).slice(0,20)) fields[key]=diagnosticType(value[key]);
+  }
+  return {type:diagnosticType(value),fields};
+}
+function diagnosticMessageFlags(value) {
+  const text = typeof value === 'string' ? value.slice(0,4096).toLowerCase().replace(/[_-]+/g,' ') : '';
+  return {
+    analytics_not_enabled: /\banalytics\b/.test(text) && /not (?:been )?enabled|disabled|enable (?:web )?analytics|analytics.{0,80}not (?:active|configured)/.test(text),
+    invalid_project: /\b(?:invalid|unknown|missing|not found|does not exist)\b.{0,80}\bproject(?:id)?\b|\bproject(?:id)?\b.{0,80}\b(?:invalid|unknown|missing|not found|does not exist)\b/.test(text),
+    invalid_grouping_or_date_range: /\b(?:invalid|unsupported|missing|out of range|must)\b.{0,80}\b(?:group(?:ing|by)?|date|range|since|until|timeframe)\b|\b(?:group(?:ing|by)?|date|range|since|until|timeframe)\b.{0,80}\b(?:invalid|unsupported|out of range)\b/.test(text),
+    no_data_or_not_configured: /\bno (?:analytics )?data\b|\bnot (?:yet )?configured\b|\bnot (?:yet )?set up\b/.test(text),
+  };
 }
 function diagnosticShape(value, depth = 0) {
   const type = diagnosticType(value);
@@ -285,6 +307,7 @@ export function summarizeAnalyticsDiagnostic(project, status, body) {
   const group = query.groupBy;
   const groupValues = (Array.isArray(group) ? group : [group]).filter(v => DIAGNOSTIC_GROUPS.has(v)).slice(0,2);
   const errorCode = body?.error && typeof body.error === 'object' ? body.error.code : body?.code;
+  const errorMessage = typeof body?.error === 'string' ? body.error : body?.error?.message;
   return {
     project: project.site === 'chatline.app' ? 'chatline-website' : 'limitless',
     http_status: Number.isInteger(status) && status >= 100 && status <= 599 ? status : null,
@@ -292,6 +315,7 @@ export function summarizeAnalyticsDiagnostic(project, status, body) {
     version: diagnosticVersion(body?.version),
     query: { keys: diagnosticKeys(query), since: diagnosticDate(query.since), until: diagnosticDate(query.until), group_by: { type: diagnosticType(group), values: groupValues }, production_filter: query.filter === "environment eq 'production'" },
     data: diagnosticShape(body?.data),
+    error_shape: diagnosticErrorShape(body?.error), message_flags: diagnosticMessageFlags(errorMessage),
     ...(DIAGNOSTIC_ERROR_CODES.has(errorCode) ? { error_code: errorCode } : {}),
   };
 }

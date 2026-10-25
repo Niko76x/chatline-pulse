@@ -17,6 +17,9 @@ export const AD_IDS = Object.freeze({
   '120275422266140555': 'PIL-SA-03', '120275421929310555': 'PIL-SA-04',
   '120275421929320555': 'PIL-VID-01',
 });
+// Empty until each project ID, owning team and production-domain mapping is verified.
+// No environment/browser parameter can substitute a project or enumerate the account.
+export const ANALYTICS_PROJECTS = Object.freeze([]);
 export function assertScope(row, { ad = false } = {}) {
   if (String(row.account_id) !== SCOPE.account || String(row.campaign_id) !== SCOPE.campaign ||
       String(row.adset_id ?? row.id) !== SCOPE.adset || (ad && !AD_IDS[String(row.ad_id ?? row.id)])) {
@@ -28,7 +31,7 @@ export function assertScope(row, { ad = false } = {}) {
 
 const ROOT = 'https://graph.facebook.com';
 const ALLOWED = new Set([`act_${SCOPE.account}`, SCOPE.campaign, SCOPE.adset,
-  `${SCOPE.adset}/insights`, `${SCOPE.adset}/ads`]);
+  `${SCOPE.adset}/insights`, `${SCOPE.adset}/ads`, `${SCOPE.dataset}/stats`]);
 export class ReadError extends Error {
   constructor(code) { super(code); this.code = code; }
 }
@@ -123,7 +126,90 @@ export async function collectAds(read, now = new Date()) {
 }
 
 
-const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget').split(' '));
+export const ANALYTICS_SITES = Object.freeze(['chatline.app', 'start.chatline.app']);
+const ANALYTICS_ENDPOINT = 'https://api.vercel.com/v1/query/web-analytics/visits/aggregate';
+export class AnalyticsReadError extends Error {
+  constructor(code) { super(code); this.code = code; }
+}
+export function analyticsPeriod(now = new Date()) {
+  const today = now.toISOString().slice(0, 10);
+  const lower = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29)).toISOString().slice(0, 10);
+  return { from: lower < SCOPE.since ? SCOPE.since : lower, to: today };
+}
+function checkedProjects(projects) {
+  if (!Array.isArray(projects) || projects.length > 2) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
+  const sites = new Set(), ids = new Set();
+  for (const p of projects) {
+    if (!p || !ANALYTICS_SITES.includes(p.site) || !/^prj_[A-Za-z0-9]+$/.test(p.projectId || '') ||
+        p.teamId && !/^team_[A-Za-z0-9]+$/.test(p.teamId) || sites.has(p.site) || ids.has(p.projectId)) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
+    if (Object.keys(p).some(k => !['site', 'projectId', 'teamId'].includes(k))) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
+    sites.add(p.site); ids.add(p.projectId);
+  }
+  return projects;
+}
+export function normalizeAnalytics(body, project, period) {
+  const analyticsDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T00:00:00(?:\.000)?Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value.slice(0, 10) ? value.slice(0, 10) : null;
+  if (!body || body.version !== 1 || !Array.isArray(body.data) || body.data.length > 32 ||
+      !body.query || JSON.stringify(body.query.groupBy) !== '["day"]' ||
+      typeof body.query.since !== 'string' || typeof body.query.until !== 'string' ||
+      body.query.since.slice(0, 10) !== period.from || body.query.until.slice(0, 10) !== period.to) throw new AnalyticsReadError('ANALYTICS_INVALID_RESPONSE');
+  const days = new Set();
+  const rows = body.data.map(row => {
+    const day = analyticsDay(row.timestamp);
+    if (!day || day < period.from || day > period.to || days.has(day) ||
+        !Number.isSafeInteger(row.pageviews) || row.pageviews < 0 || !Number.isSafeInteger(row.visitors) || row.visitors < 0 || row.visitors > row.pageviews ||
+        row.projectId && row.projectId !== project.projectId || row.requestHostname && row.requestHostname !== project.site ||
+        row.environment && row.environment !== 'production') throw new AnalyticsReadError('ANALYTICS_INVALID_RESPONSE');
+    days.add(day);
+    // Only these aggregates leave the reader; no referrers, user IDs, URLs or raw rows.
+    return { date: day, visitors: row.visitors, pageviews: row.pageviews };
+  });
+  return rows.sort((a, b) => a.date.localeCompare(b.date));
+}
+// Config injection is for unit fixtures. Production collectWebAnalytics uses only
+// ANALYTICS_PROJECTS, a reviewed empty code constant until explicit verification.
+export function createAnalyticsReader({ token, fetcher = fetch, now = new Date(), sleep = ms => new Promise(r => setTimeout(r, ms)) }, fixtureProjects = ANALYTICS_PROJECTS) {
+  const projects = checkedProjects(fixtureProjects);
+  return async function readAnalyticsSite(site) {
+    if (!ANALYTICS_SITES.includes(site)) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
+    const project = projects.find(p => p.site === site);
+    if (!project) return { site, status: 'not_connected', observed_at: null, attempted_at: null, error: null, timezone: 'UTC', daily: [] };
+    if (!token) return { site, status: 'error', observed_at: null, attempted_at: now.toISOString(), error: 'ANALYTICS_NOT_CONFIGURED', timezone: 'UTC', daily: [] };
+    const period = analyticsPeriod(now);
+    const url = new URL(ANALYTICS_ENDPOINT);
+    url.searchParams.set('projectId', project.projectId);
+    if (project.teamId) url.searchParams.set('teamId', project.teamId);
+    url.searchParams.set('by', 'day');
+    url.searchParams.set('since', period.from); url.searchParams.set('until', period.to);
+    url.searchParams.set('limit', '32');
+    // Documented default is production. Fix it explicitly rather than inheriting another segment.
+    url.searchParams.set('filter', "environment eq 'production'");
+    try {
+      let body;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        let response;
+        try { response = await fetcher(url, { method: 'GET', headers: { Authorization: `Bearer ${token}` }, redirect: 'error', signal: AbortSignal.timeout(12000) }); }
+        catch { if (attempt === 2) throw new AnalyticsReadError('ANALYTICS_UNAVAILABLE'); await sleep(400 * 2 ** attempt); continue; }
+        if (!response.ok) {
+          if ((response.status === 429 || response.status >= 500) && attempt < 2) { await sleep(400 * 2 ** attempt); continue; }
+          throw new AnalyticsReadError(response.status === 401 ? 'ANALYTICS_LOGIN_REQUIRED' : response.status === 403 ? 'ANALYTICS_PERMISSION_REQUIRED' : response.status === 429 ? 'ANALYTICS_RATE_LIMITED' : response.status === 402 ? 'ANALYTICS_PLAN_REQUIRED' : 'ANALYTICS_READ_FAILED');
+        }
+        try { body = await response.json(); } catch { throw new AnalyticsReadError('ANALYTICS_INVALID_RESPONSE'); }
+        break;
+      }
+      return { site, status: 'connected', observed_at: now.toISOString(), attempted_at: now.toISOString(), error: null, timezone: 'UTC', period, daily: normalizeAnalytics(body, project, period) };
+    } catch (error) {
+      return { site, status: 'error', observed_at: null, attempted_at: now.toISOString(), error: error instanceof AnalyticsReadError ? error.code : 'ANALYTICS_READ_FAILED', timezone: 'UTC', daily: [] };
+    }
+  };
+}
+export async function collectWebAnalytics(options) {
+  const read = createAnalyticsReader(options); // Never accepts runtime project configuration.
+  return Promise.all(ANALYTICS_SITES.map(site => read(site)));
+}
+
+
+const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews').split(' '));
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
 function scan(value, depth = 0) {
   if (depth > 15) throw new Error('SNAPSHOT_INVALID');
@@ -147,7 +233,53 @@ export function validateSnapshot(data) {
     }
     if (source.statuses?.some(s => !Object.values(AD_IDS).includes(s.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   }
+  const sites = data.sources.analytics?.sites || [];
+  if (!Array.isArray(sites) || sites.length > 2 || new Set(sites.map(s => s.site)).size !== sites.length) throw new Error('SNAPSHOT_ANALYTICS_SCOPE_MISMATCH');
+  for (const site of sites) {
+    if (!ANALYTICS_SITES.includes(site.site) || !timestamp(site.observed_at) || !timestamp(site.attempted_at) || !Array.isArray(site.daily)) throw new Error('SNAPSHOT_ANALYTICS_SCOPE_MISMATCH');
+    const seen = new Set();
+    for (const row of site.daily) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date || '') || seen.has(row.date) ||
+          !Number.isSafeInteger(row.visitors) || row.visitors < 0 || !Number.isSafeInteger(row.pageviews) || row.pageviews < row.visitors) throw new Error('SNAPSHOT_INVALID_ANALYTICS');
+      seen.add(row.date);
+    }
+  }
   return data;
+}
+export function canSkipCollection(previous, { slot, now = new Date(), analyticsProjects = ANALYTICS_PROJECTS, datasetEnabled = false } = {}) {
+  const start = Date.parse(slot), current = now.getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(current)) return false;
+  const completedInSlot = source => {
+    const observed = Date.parse(source?.observed_at);
+    return source?.status === 'connected' && Number.isFinite(observed) && observed >= start && observed < start + 1800000 && observed <= current;
+  };
+  const analyticsDone = analyticsProjects.every(p => completedInSlot(previous.sources.analytics.sites?.find(s => s.site === p.site)));
+  const datasetDone = !datasetEnabled || completedInSlot(previous.sources.website_events) && previous.sources.website_events.source_code === 'meta_dataset_stats';
+  return previous.snapshot_id === slot && completedInSlot(previous.sources.meta) && analyticsDone && datasetDone;
+}
+export function mergeAnalytics(previous, results, { now = new Date(), slot = null } = {}) {
+  validateSnapshot(previous);
+  if (!Array.isArray(results) || results.length !== ANALYTICS_SITES.length || new Set(results.map(r => r.site)).size !== results.length || results.some(r => !ANALYTICS_SITES.includes(r.site) || !['connected', 'error', 'not_connected'].includes(r.status))) throw new Error('SNAPSHOT_ANALYTICS_SCOPE_MISMATCH');
+  const next = structuredClone(previous);
+  const oldSites = next.sources.analytics?.sites || [];
+  const sites = ANALYTICS_SITES.map(site => {
+    const result = results.find(r => r.site === site);
+    const old = oldSites.find(r => r.site === site) || { site, observed_at: null, attempted_at: null, timezone: 'UTC', daily: [] };
+    if (result.status === 'connected') return result;
+    if (result.status === 'not_connected') return { ...old, status: 'not_connected', error: null };
+    return { ...old, status: 'error', attempted_at: now.toISOString(), error: /^[A-Z_]+$/.test(result.error) ? result.error : 'ANALYTICS_READ_FAILED' };
+  });
+  const known = sites.map(s => s.observed_at).filter(Boolean).sort();
+  const attempted = sites.map(s => s.attempted_at).filter(Boolean).sort();
+  const connected = sites.filter(s => s.status === 'connected').length;
+  next.sources.analytics = {
+    status: connected === sites.length ? 'connected' : connected ? 'partial' : sites.every(s => s.status === 'not_connected') ? 'not_connected' : 'error',
+    observed_at: known[0] || null, attempted_at: attempted.at(-1) || null,
+    error: sites.some(s => s.status === 'error') ? 'ANALYTICS_PARTIAL_FAILURE' : null, sites,
+  };
+  if (connected) next.collected_at = now.toISOString();
+  if (slot) next.snapshot_id = slot;
+  return validateSnapshot(next);
 }
 export function mergeMeta(previous, result, { now = new Date(), error = null, slot = null } = {}) {
   validateSnapshot(previous);
@@ -161,6 +293,93 @@ export function mergeMeta(previous, result, { now = new Date(), error = null, sl
   } else {
     next.collected_at = now.toISOString();
     next.sources.meta = { ...result, status: 'connected', attempted_at: now.toISOString(), error: null, complete_test_window: true };
+  }
+  return validateSnapshot(next);
+}
+
+
+// Only aggregate event counts from the approved Dataset. Never request URLs,
+// match keys, contact information, raw events or another asset inventory.
+const STANDARD_EVENTS = Object.freeze([
+  ['PageView', 'Gemeldete Dataset-Seitenaufrufe', 'Gemeldete PageView-Signale; keine eindeutigen Besucher und keine Anzeigenklicks.'],
+  ['Lead', 'Studio-Test angelegt', 'Ein Onboarding-Run wurde angelegt. Noch kein qualifiziertes Gespräch.'],
+  ['CompleteRegistration', 'Testanruf angefordert', 'Ein Testanruf wurde angefordert. Kein Beweis für ein angenommenes Gespräch.'],
+  ['InitiateCheckout', 'Checkout begonnen', 'Ein Checkout wurde begonnen. Noch keine Zahlung.'],
+  ['StartTrial', 'Testphase aktiviert', 'Ein kostenloser Backend-Trialstatus; keine bestätigte Zahlung.'],
+]);
+const EVENT_NAMES = new Set(STANDARD_EVENTS.map(([key]) => key));
+const fail = code => { throw new ReadError(code); };
+const validCount = count => {
+  if (count === null || count === undefined || count === '' ||
+      !['string', 'number'].includes(typeof count)) fail('DATASET_INVALID_RESPONSE');
+  const value = Number(count);
+  if (!Number.isSafeInteger(value) || value < 0) fail('DATASET_INVALID_RESPONSE');
+  return value;
+};
+
+export function normalizeDatasetStats(buckets, { start, end }) {
+  if (!Array.isArray(buckets) || !buckets.length) fail('DATASET_NO_STATS');
+  const counts = new Map(), coverage = new Map(), seenBuckets = new Set();
+  for (const bucket of buckets) {
+    if (bucket.aggregation !== 'event_total_counts' || !Array.isArray(bucket.data)) fail('DATASET_INVALID_RESPONSE');
+    const bucketTime = Date.parse(bucket.start_time);
+    if (!Number.isFinite(bucketTime) || bucketTime < start.getTime() || bucketTime > end.getTime() || seenBuckets.has(bucketTime)) fail('DATASET_INVALID_PERIOD');
+    seenBuckets.add(bucketTime);
+    const seenEvents = new Set();
+    for (const item of bucket.data) {
+      // The official SDK exposes both event and value. Accept a recognized
+      // event label only; no arbitrary custom names are copied to the report.
+      const explicit = EVENT_NAMES.has(item.event) ? item.event : null;
+      const dimension = EVENT_NAMES.has(item.value) ? item.value : null;
+      if (explicit && dimension && explicit !== dimension) fail('DATASET_INVALID_RESPONSE');
+      const key = explicit || dimension;
+      if (!key) continue;
+      if (seenEvents.has(key)) fail('DATASET_DUPLICATE_EVENT');
+      seenEvents.add(key);
+      const value = validCount(item.count);
+      const sum = (counts.get(key) || 0) + value;
+      if (!Number.isSafeInteger(sum)) fail('DATASET_INVALID_RESPONSE');
+      counts.set(key, sum);
+      coverage.set(key, (coverage.get(key) || 0) + 1);
+    }
+  }
+  // An omitted event is unknown, not evidence of a measured zero.
+  return STANDARD_EVENTS.map(([key, label, meaning]) => ({
+    key, label, count: coverage.get(key) === buckets.length ? counts.get(key) : null, meaning,
+  }));
+}
+
+export async function collectDatasetStats(read, { enabled = false, now = new Date() } = {}) {
+  if (!enabled) return null;
+  if (!Number.isFinite(now.getTime())) fail('DATASET_INVALID_PERIOD');
+  // A bounded current UTC day avoids an ever-growing historical stats query.
+  // This period is independent from the ad account's local reporting day.
+  const start = new Date(`${now.toISOString().slice(0, 10)}T00:00:00.000Z`);
+  const buckets = await read(`${SCOPE.dataset}/stats`, {
+    aggregation: 'event_total_counts', start_time: start.toISOString(),
+    end_time: now.toISOString(), fields: 'aggregation,start_time,data',
+  });
+  return {
+    dataset: SCOPE.dataset, source_code: 'meta_dataset_stats', timezone: 'UTC',
+    observed_at: now.toISOString(), period: { from: start.toISOString().slice(0, 10), to: now.toISOString().slice(0, 10) },
+    note: `Gemeldete Ereigniszählungen im API-Zeitfenster ${start.toISOString()} bis ${now.toISOString()}. Keine eindeutigen Menschen; Browser-/Server-Deduplizierung hier nicht unabhängig bestätigt.`,
+    events: normalizeDatasetStats(buckets, { start, end: now }),
+  };
+}
+
+export function mergeDatasetStats(previous, result, { now = new Date(), error = null } = {}) {
+  validateSnapshot(previous);
+  if (!result && !error) return previous;
+  const next = structuredClone(previous);
+  if (error) {
+    next.sources.website_events = {
+      ...next.sources.website_events, attempted_at: now.toISOString(), status: 'error',
+      error: /^[A-Z_]+$/.test(error) ? error : 'DATASET_READ_FAILED',
+    };
+  } else {
+    if (result.dataset !== SCOPE.dataset || result.source_code !== 'meta_dataset_stats') fail('DATASET_MISMATCH');
+    next.sources.website_events = { ...result, attempted_at: now.toISOString(), status: 'connected', error: null };
+    if (Date.parse(next.collected_at) < now.getTime()) next.collected_at = now.toISOString();
   }
   return validateSnapshot(next);
 }

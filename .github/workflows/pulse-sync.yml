@@ -33,6 +33,7 @@ jobs:
           META_DATASET_STATS_ENABLED: ${{ vars.META_DATASET_STATS_ENABLED }}
           VERCEL_ANALYTICS_CHATLINE_WEBSITE_TOKEN: ${{ secrets.VERCEL_ANALYTICS_CHATLINE_WEBSITE_TOKEN }}
           VERCEL_ANALYTICS_LIMITLESS_TOKEN: ${{ secrets.VERCEL_ANALYTICS_LIMITLESS_TOKEN }}
-          ANALYTICS_DIAGNOSTICS_ENABLED: ${{ vars.ANALYTICS_DIAGNOSTICS_ENABLED }}
+          # Live response diagnosis is complete; routine collection must stay quiet.
+          ANALYTICS_DIAGNOSTICS_ENABLED: 'false'
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/refresh.mjs --publish

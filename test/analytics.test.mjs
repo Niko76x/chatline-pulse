@@ -6,41 +6,93 @@ import { analyticsPeriod, createAnalyticsReader, collectWebAnalytics, normalizeA
 import { mergeAnalytics, mergeMeta, validateSnapshot, canSkipCollection } from '../api/data.js';
 import { analyticsView } from './model.mjs';
 const now = new Date('2026-10-25T18:00:00.000Z');
-const projects = [{ site: 'chatline.app', projectId: 'prj_fixtureWebsite', teamId: 'team_fixture' }, { site: 'start.chatline.app', projectId: 'prj_fixtureDIY' }];
+const projects = ANALYTICS_PROJECTS.map((p,i) => ({ ...p, hosts: [...p.hosts], projectId: i ? 'prj_fixtureDIY' : 'prj_fixtureWebsite', teamId: 'team_fixture' }));
+const fixtureTokens = Object.freeze({ 'chatline.app': 'fixture-website-token', 'start.chatline.app': 'fixture-diy-token' });
 const period = analyticsPeriod(now);
 const body = rows => ({ version: 1, query: { since: period.from, until: period.to, groupBy: ['day'], filter: "environment eq 'production'" }, data: rows });
 const day = (date = '2026-10-25', visitors = 3, pageviews = 4) => ({ timestamp: date + 'T00:00:00.000Z', visitors, pageviews });
 const original = JSON.parse(await readFile(new URL('../public/data/fallback.json', import.meta.url), 'utf8'));
 
-test('production analytics allowlist is empty: even a token cannot trigger a project read', async () => {
-  assert.equal(ANALYTICS_PROJECTS.length, 0);
+test('production analytics scope is exactly the two verified projects; missing tokens make zero requests', async () => {
+  assert.deepEqual(ANALYTICS_PROJECTS.map(p => [p.site,p.projectId,p.teamId]), [
+    ['chatline.app','prj_gzg9Y1fg2GOIyQFOZiifk45iahty','team_i2XlerNOfSTLE5EGj65B1vau'],
+    ['start.chatline.app','prj_cKWblSdgOD2QY0tUExAkoqB3Z5jH','team_i2XlerNOfSTLE5EGj65B1vau'],
+  ]);
   let reads = 0;
-  const result = await collectWebAnalytics({ token: 'test-only', now, fetcher: async () => { reads++; } });
+  const result = await collectWebAnalytics({ now, fetcher: async () => { reads++; } });
   assert.equal(reads, 0);
-  assert.deepEqual(result.map(s => [s.site, s.status, s.observed_at]), [['chatline.app', 'not_connected', null], ['start.chatline.app', 'not_connected', null]]);
+  assert.ok(result.every(s => s.status === 'error' && s.error === 'ANALYTICS_NOT_CONFIGURED' && s.observed_at === null));
 });
 test('fixture configuration permits only the two separate verified-style ChatLine projects', () => {
-  assert.throws(() => createAnalyticsReader({ token: 'test-only' }, [{ site: 'other.example', projectId: 'prj_fixture' }]), /ANALYTICS_SCOPE_INVALID/);
-  assert.throws(() => createAnalyticsReader({ token: 'test-only' }, [projects[0], { ...projects[1], projectId: projects[0].projectId }]), /ANALYTICS_SCOPE_INVALID/);
-  assert.throws(() => createAnalyticsReader({ token: 'test-only' }, [{ ...projects[0], url: 'https://other.example' }]), /ANALYTICS_SCOPE_INVALID/);
+  assert.throws(() => createAnalyticsReader({ tokens: fixtureTokens }, [{ site: 'other.example', projectId: 'prj_fixture' }]), /ANALYTICS_SCOPE_INVALID/);
+  assert.throws(() => createAnalyticsReader({ tokens: fixtureTokens }, [projects[0], { ...projects[1], projectId: projects[0].projectId }]), /ANALYTICS_SCOPE_INVALID/);
+  assert.throws(() => createAnalyticsReader({ tokens: fixtureTokens }, [{ ...projects[0], url: 'https://other.example' }]), /ANALYTICS_SCOPE_INVALID/);
 });
 test('the reader uses only the official endpoint, fixed project/team, daily production aggregates and bearer header', async () => {
   let reads = 0;
-  const read = createAnalyticsReader({ token: 'test-only', now, fetcher: async (url, options) => {
+  const read = createAnalyticsReader({ tokens: fixtureTokens, now, fetcher: async (url, options) => {
     reads++; assert.equal(url.href.split('?')[0], 'https://api.vercel.com/v1/query/web-analytics/visits/aggregate');
     assert.equal(url.searchParams.get('projectId'), projects[0].projectId);
     assert.equal(url.searchParams.get('teamId'), projects[0].teamId);
     assert.equal(url.searchParams.get('by'), 'day'); assert.equal(url.searchParams.get('limit'), '32');
     assert.equal(url.searchParams.get('filter'), "environment eq 'production'");
-    assert.equal(url.searchParams.has('access_token'), false); assert.equal(url.href.includes('test-only'), false);
+    assert.equal(url.searchParams.has('access_token'), false); assert.equal(url.href.includes('fixture-website-token'), false);
     assert.equal(options.method, 'GET'); assert.equal(options.redirect, 'error');
-    assert.equal(options.headers.Authorization, 'Bearer test-only');
+    assert.equal(options.headers.Authorization, 'Bearer fixture-website-token');
     return { ok: true, json: async () => body([day()]) };
   } }, [projects[0]]);
   assert.equal((await read('chatline.app')).daily[0].visitors, 3);
   assert.equal((await read('start.chatline.app')).status, 'not_connected');
   await assert.rejects(read('other.example'), /ANALYTICS_SCOPE_INVALID/);
   assert.equal(reads, 1);
+});
+test('each configured project receives only its own token', async () => {
+  const calls = [];
+  const read = createAnalyticsReader({ tokens: fixtureTokens, now, fetcher: async (url, options) => {
+    calls.push({ project: url.searchParams.get('projectId'), auth: options.headers.Authorization });
+    return { ok: true, json: async () => body([day()]) };
+  } }, projects);
+  await Promise.all(projects.map(p => read(p.site)));
+  assert.deepEqual(calls.sort((a, b) => a.project.localeCompare(b.project)), [
+    { project: projects[1].projectId, auth: 'Bearer fixture-diy-token' },
+    { project: projects[0].projectId, auth: 'Bearer fixture-website-token' },
+  ].sort((a, b) => a.project.localeCompare(b.project)));
+});
+test('a missing site token fails only that source without requesting it or borrowing the other token', async () => {
+  for (const provided of projects) {
+    const calls = [];
+    const read = createAnalyticsReader({ tokens: { [provided.site]: fixtureTokens[provided.site] }, now, fetcher: async url => {
+      calls.push(url.searchParams.get('projectId'));
+      return { ok: true, json: async () => body([day()]) };
+    } }, projects);
+    const results = await Promise.all(projects.map(p => read(p.site)));
+    assert.equal(results.find(s => s.site === provided.site).status, 'connected');
+    assert.equal(results.find(s => s.site !== provided.site).error, 'ANALYTICS_NOT_CONFIGURED');
+    assert.deepEqual(calls, [provided.projectId]);
+  }
+});
+test('transient retries keep the same project token and never retry a failed source with its neighbour credential', async () => {
+  const calls = [];
+  const read = createAnalyticsReader({ tokens: fixtureTokens, now, sleep: async () => {}, fetcher: async (url, options) => {
+    const project = url.searchParams.get('projectId'); calls.push({ project, auth: options.headers.Authorization });
+    return project === projects[0].projectId ? { ok: false, status: 429 } : { ok: true, json: async () => body([day()]) };
+  } }, projects);
+  const results = await Promise.all(projects.map(p => read(p.site)));
+  assert.equal(results[0].error, 'ANALYTICS_RATE_LIMITED'); assert.equal(results[1].status, 'connected');
+  assert.equal(calls.filter(c => c.project === projects[0].projectId).length, 3);
+  assert.equal(calls.filter(c => c.project === projects[1].projectId).length, 1);
+  assert.ok(calls.every(c => c.auth === (c.project === projects[0].projectId ? 'Bearer fixture-website-token' : 'Bearer fixture-diy-token')));
+});
+test('unknown site/token keys, a shared credential and inherited token maps are rejected before any request', async () => {
+  let requests = 0;
+  const fetcher = async () => { requests++; };
+  for (const tokens of [{ shared: 'fixture-shared' }, { ...fixtureTokens, 'other.example': 'fixture-other' }, { 'chatline.app': 123 }, Object.create({ 'chatline.app': 'fixture-inherited' }), { [Symbol('site')]: 'fixture-symbol' }]) {
+    assert.throws(() => createAnalyticsReader({ tokens, now, fetcher }, projects), /ANALYTICS_TOKEN_SCOPE_INVALID/);
+  }
+  assert.throws(() => createAnalyticsReader({ token: 'fixture-shared', now, fetcher }, projects), /ANALYTICS_TOKEN_SCOPE_INVALID/);
+  const read = createAnalyticsReader({ tokens: fixtureTokens, now, fetcher }, projects);
+  await assert.rejects(read('other.example'), /ANALYTICS_SCOPE_INVALID/);
+  assert.equal(requests, 0);
 });
 test('analytics normalization drops non-aggregate data and preserves explicit zero without filling missing days', () => {
   const rows = normalizeAnalytics(body([{ ...day('2026-10-23', 0, 0), visitorId: 'private-user', requestPath: '/private' }, day('2026-10-25')]), projects[0], period);
@@ -55,14 +107,21 @@ test('wrong project, wrong date, duplicates, missing counts and non-daily groupi
   }
   assert.throws(() => normalizeAnalytics({ ...body([day()]), query: { ...body([]).query, groupBy: ['country'] } }, projects[0], period), /ANALYTICS_INVALID_RESPONSE/);
 });
+test('known production alias is accepted only for the recognized project-level production query', () => {
+  const alias = { ...day(), requestHostname: 'mindbody-home.chatline.app', projectId: projects[0].projectId };
+  assert.equal(normalizeAnalytics(body([alias]), projects[0], period)[0].visitors, 3);
+  assert.throws(() => normalizeAnalytics({ ...body([alias]), query: { ...body([]).query, filter: "requestHostname eq 'chatline.app'" } }, projects[0], period), /ANALYTICS_INVALID_RESPONSE/);
+  assert.throws(() => normalizeAnalytics(body([alias]), { ...projects[0], scope: 'host' }, period), /ANALYTICS_INVALID_RESPONSE/);
+  assert.throws(() => normalizeAnalytics(body([{ ...day(), requestHostname: 'mindbody-home.chatline.app' }]), projects[1], period), /ANALYTICS_INVALID_RESPONSE/);
+});
 test('permission and network failures expose fixed codes and never copy private API errors', async () => {
-  const read = createAnalyticsReader({ token: 'test-only', now, fetcher: async () => ({ ok: false, status: 403, json: async () => ({ error: 'private message' }) }) }, [projects[0]]);
+  const read = createAnalyticsReader({ tokens: fixtureTokens, now, fetcher: async () => ({ ok: false, status: 403, json: async () => ({ error: 'private message' }) }) }, [projects[0]]);
   const result = await read('chatline.app');
   assert.equal(result.error, 'ANALYTICS_PERMISSION_REQUIRED'); assert.equal(result.observed_at, null);
   assert.equal(JSON.stringify(result).includes('private'), false);
 });
 test('a partial failure preserves the failed site values/date and never freshens Meta or the other sources', async () => {
-  const read = createAnalyticsReader({ token: 'test-only', now, fetcher: async () => ({ ok: true, json: async () => body([day()]) }) }, projects);
+  const read = createAnalyticsReader({ tokens: fixtureTokens, now, fetcher: async () => ({ ok: true, json: async () => body([day()]) }) }, projects);
   const initial = mergeAnalytics(original, await Promise.all(projects.map(p => read(p.site))), { now });
   const later = new Date(now.getTime() + 1800000);
   const results = [{ ...initial.sources.analytics.sites[0], observed_at: later.toISOString(), attempted_at: later.toISOString(), daily: [{ date: '2026-10-25', visitors: 5, pageviews: 8 }] }, { site: 'start.chatline.app', status: 'error', error: 'ANALYTICS_PERMISSION_REQUIRED' }];
@@ -77,7 +136,7 @@ test('a partial failure preserves the failed site values/date and never freshens
 });
 test('Meta failure does not block a successful analytics merge; global collection time never substitutes source time', async () => {
   const failedMeta = mergeMeta(original, null, { now, error: 'META_LOGIN_REQUIRED' });
-  const read = createAnalyticsReader({ token: 'test-only', now, fetcher: async () => ({ ok: true, json: async () => body([day()]) }) }, [projects[0]]);
+  const read = createAnalyticsReader({ tokens: fixtureTokens, now, fetcher: async () => ({ ok: true, json: async () => body([day()]) }) }, [projects[0]]);
   const next = mergeAnalytics(failedMeta, [await read('chatline.app'), await read('start.chatline.app')], { now });
   assert.equal(next.sources.meta.observed_at, original.sources.meta.observed_at);
   assert.equal(next.sources.meta.status, 'error');
@@ -105,40 +164,36 @@ test('the currently published legacy schema-2 analytics shape without sites stay
   assert.equal(analyticsView(old.sources.analytics, 'chatline.app').visitors, null);
   assert.equal(analyticsView(old.sources.analytics, 'start.chatline.app').visitors, null);
 });
-test('same-slot retry is skipped only when every enabled independent source succeeded', () => {
-  const old = structuredClone(original); const slot = '2026-10-25T18:00:00.000Z';
-  old.snapshot_id = slot; old.sources.meta.status = 'connected'; old.sources.meta.observed_at = now.toISOString();
-  assert.equal(canSkipCollection(old, { slot, now }), true);
-  assert.equal(canSkipCollection(old, { slot, now, analyticsProjects: [projects[0]] }), false);
-  old.sources.analytics.sites = [{ site: 'chatline.app', status: 'error', observed_at: now.toISOString(), daily: [] }];
-  assert.equal(canSkipCollection(old, { slot, now, analyticsProjects: [projects[0]] }), false);
-  old.sources.analytics.sites[0].status = 'connected';
-  assert.equal(canSkipCollection(old, { slot, now, analyticsProjects: [projects[0]] }), true);
-  assert.equal(canSkipCollection(old, { slot, now, datasetEnabled: true }), false);
-  old.sources.website_events.status = 'error'; old.sources.website_events.source_code = 'meta_dataset_stats';
-  assert.equal(canSkipCollection(old, { slot, now, datasetEnabled: true }), false);
-  old.sources.website_events.status = 'connected'; old.sources.website_events.observed_at = now.toISOString();
-  assert.equal(canSkipCollection(old, { slot, now, datasetEnabled: true, analyticsProjects: [projects[0]] }), true);
+test('same-slot retry requires every active source and ignores explicitly disabled Meta', () => {
+  const old = structuredClone(original), slot = now.toISOString();
+  old.snapshot_id = slot;
+  old.sources.analytics.sites = projects.map(p => ({ site:p.site,status:'connected',observed_at:now.toISOString(),daily:[] }));
+  assert.equal(canSkipCollection(old,{slot,now,metaEnabled:false}),true);
+  assert.equal(canSkipCollection(old,{slot,now,metaEnabled:true}),false);
+  old.sources.meta.status='connected'; old.sources.meta.observed_at=now.toISOString();
+  assert.equal(canSkipCollection(old,{slot,now,metaEnabled:true}),true);
+  old.sources.analytics.sites[1].status='error';
+  assert.equal(canSkipCollection(old,{slot,now,metaEnabled:false}),false);
+  old.sources.analytics.sites[1].status='connected';
+  assert.equal(canSkipCollection(old,{slot,now,datasetEnabled:true}),false);
+  old.sources.website_events.status='connected';old.sources.website_events.source_code='meta_dataset_stats';old.sources.website_events.observed_at=now.toISOString();
+  assert.equal(canSkipCollection(old,{slot,now,datasetEnabled:true}),true);
+  assert.equal(canSkipCollection(old,{slot,now,metaEnabled:false,analyticsProjects:[]}),false);
 });
-test('enabling a source after a same-slot Meta-only run does not reuse its success from an older slot', () => {
-  const slot = '2026-10-25T18:00:00.000Z', current = new Date('2026-10-25T18:10:00.000Z');
-  const old = structuredClone(original);
-  old.snapshot_id = slot; old.sources.meta.status = 'connected'; old.sources.meta.observed_at = '2026-10-25T18:07:00.000Z';
-  old.sources.website_events.status = 'connected'; old.sources.website_events.source_code = 'meta_dataset_stats';
-  old.sources.website_events.observed_at = '2026-10-25T17:37:00.000Z';
-  old.sources.analytics.sites = [{ site: 'chatline.app', status: 'connected', observed_at: '2026-10-25T17:37:00.000Z', daily: [] }];
-  assert.equal(canSkipCollection(old, { slot, now: current, datasetEnabled: false }), true);
-  assert.equal(canSkipCollection(old, { slot, now: current, datasetEnabled: true }), false);
-  assert.equal(canSkipCollection(old, { slot, now: current, analyticsProjects: [projects[0]] }), false);
-  old.sources.website_events.observed_at = '2026-10-25T18:08:00.000Z';
-  old.sources.analytics.sites[0].observed_at = '2026-10-25T18:09:00.000Z';
-  assert.equal(canSkipCollection(old, { slot, now: current, datasetEnabled: true, analyticsProjects: [projects[0]] }), true);
+test('newly activated source cannot reuse an older success within a same-slot Meta-only snapshot', () => {
+  const slot='2026-10-25T18:00:00.000Z',current=new Date('2026-10-25T18:10:00.000Z');
+  const old=structuredClone(original);old.snapshot_id=slot;old.sources.meta.status='connected';old.sources.meta.observed_at='2026-10-25T18:07:00.000Z';
+  old.sources.website_events.status='connected';old.sources.website_events.source_code='meta_dataset_stats';old.sources.website_events.observed_at='2026-10-25T17:37:00.000Z';
+  old.sources.analytics.sites=[{site:'chatline.app',status:'connected',observed_at:'2026-10-25T17:37:00.000Z',daily:[]}];
+  assert.equal(canSkipCollection(old,{slot,now:current,metaEnabled:true,analyticsProjects:[]}),true);
+  assert.equal(canSkipCollection(old,{slot,now:current,metaEnabled:true,datasetEnabled:true,analyticsProjects:[]}),false);
+  assert.equal(canSkipCollection(old,{slot,now:current,metaEnabled:true,analyticsProjects:[projects[0]]}),false);
 });
-test('future observation times and a later slot cannot suppress a current-slot retry', () => {
-  const slot = '2026-10-25T18:00:00.000Z', current = new Date('2026-10-25T18:10:00.000Z');
-  const old = structuredClone(original); old.snapshot_id = slot; old.sources.meta.status = 'connected';
-  old.sources.meta.observed_at = '2026-10-25T18:11:00.000Z';
-  assert.equal(canSkipCollection(old, { slot, now: current }), false);
-  old.sources.meta.observed_at = '2026-10-25T18:30:00.000Z';
-  assert.equal(canSkipCollection(old, { slot, now: new Date('2026-10-25T18:35:00.000Z') }), false);
+test('future source times and later slots cannot suppress a current-slot retry', () => {
+  const slot='2026-10-25T18:00:00.000Z',current=new Date('2026-10-25T18:10:00.000Z');
+  const old=structuredClone(original);old.snapshot_id=slot;old.sources.meta.status='connected';
+  old.sources.meta.observed_at='2026-10-25T18:11:00.000Z';
+  assert.equal(canSkipCollection(old,{slot,now:current,metaEnabled:true,analyticsProjects:[]}),false);
+  old.sources.meta.observed_at='2026-10-25T18:30:00.000Z';
+  assert.equal(canSkipCollection(old,{slot,now:new Date('2026-10-25T18:35:00.000Z'),metaEnabled:true,analyticsProjects:[]}),false);
 });

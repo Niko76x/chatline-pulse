@@ -151,13 +151,13 @@
     "analytics": {
       "status": "error",
       "observed_at": null,
-      "attempted_at": "2026-10-25T19:44:24.984Z",
+      "attempted_at": "2026-10-25T19:57:42.886Z",
       "error": "ANALYTICS_PARTIAL_FAILURE",
       "sites": [
         {
           "site": "chatline.app",
           "observed_at": null,
-          "attempted_at": "2026-10-25T19:44:24.984Z",
+          "attempted_at": "2026-10-25T19:57:42.886Z",
           "timezone": "UTC",
           "daily": [],
           "status": "error",
@@ -166,7 +166,7 @@
         {
           "site": "start.chatline.app",
           "observed_at": null,
-          "attempted_at": "2026-10-25T19:44:24.984Z",
+          "attempted_at": "2026-10-25T19:57:42.886Z",
           "timezone": "UTC",
           "daily": [],
           "status": "error",

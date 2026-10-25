@@ -9,6 +9,16 @@ export function total(rows, key) {
   return rows.reduce((s, r) => s + r[key], 0);
 }
 export const ratio = (a, b, multiplier = 1) => a === null || b === null || b <= 0 ? null : a / b * multiplier;
+export function analyticsView(source, site, now = Date.now()) {
+  const current = source?.sites?.find(s => s.site === site);
+  const days = (current?.daily || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+  const latest = days.at(-1) || null;
+  const state = !current || current.status === 'not_connected' ? 'not_connected' : current.status === 'error' ? 'error' : freshness(current.observed_at, now).state;
+  // Visitors are meaningful per returned day. Do not add users across days or sites.
+  return { site, state, observed_at: current?.observed_at || null, attempted_at: current?.attempted_at || null,
+    error: current?.error || null, period: current?.period || null, days,
+    latest_date: latest?.date || null, visitors: latest?.visitors ?? null, pageviews: latest?.pageviews ?? null };
+}
 export function summarize(rows) {
   const result = Object.fromEntries(['spend', 'impressions', 'link_clicks', 'landing_page_views', 'studio_tests', 'call_requests', 'checkouts', 'trials'].map(k => [k, total(rows, k)]));
   // Reach cannot be summed across days without double-counting people.

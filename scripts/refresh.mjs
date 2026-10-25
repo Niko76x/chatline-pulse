@@ -1,4 +1,4 @@
-import { SCOPE, createMetaReader, collectAds, collectWebAnalytics, collectDatasetStats, mergeMeta, mergeAnalytics, mergeDatasetStats, validateSnapshot, canSkipCollection } from '../api/data.js';
+import { SCOPE, validateSnapshot, canSkipCollection, assertConfiguredSources, refreshSources } from '../api/data.js';
 import { readFile, writeFile } from 'node:fs/promises';
 
 const publish = process.argv.includes('--publish');
@@ -14,6 +14,17 @@ async function github(path, options = {}) {
   return response.json();
 }
 if (publish && (process.env.PULSE_SYNC_ENABLED !== 'true' || process.env.GITHUB_REPOSITORY !== SCOPE.repository || !token)) throw new Error('PUBLISH_NOT_CONFIGURED');
+const metaEnabled = process.env.META_REPORTING_ENABLED === 'true';
+const datasetEnabled = process.env.META_DATASET_STATS_ENABLED === 'true';
+const sourceOptions = { now, slot, metaEnabled, datasetEnabled,
+  metaOptions: { token: process.env.META_REPORTING_ACCESS_TOKEN, version: process.env.META_GRAPH_VERSION },
+  analyticsOptions: { tokens: {
+    'chatline.app': process.env.VERCEL_ANALYTICS_CHATLINE_WEBSITE_TOKEN,
+    'start.chatline.app': process.env.VERCEL_ANALYTICS_LIMITLESS_TOKEN,
+  } },
+};
+// Fail before any snapshot store read/write when no enabled source can authenticate.
+assertConfiguredSources(sourceOptions);
 let old, previousSha;
 if (publish) {
   const stored = await github(`contents/data.json?ref=${SCOPE.dataBranch}`);
@@ -23,28 +34,8 @@ if (publish) {
   }
 }
 old ||= validateSnapshot(JSON.parse(await readFile(new URL('../public/data/fallback.json', import.meta.url), 'utf8')));
-const datasetEnabled = process.env.META_DATASET_STATS_ENABLED === 'true';
-if (canSkipCollection(old, { slot, now, datasetEnabled })) { process.stdout.write('Already published successfully for this slot.\n'); process.exit(0); }
-let next, metaReader, success = false;
-try {
-  metaReader = createMetaReader({ token: process.env.META_REPORTING_ACCESS_TOKEN, version: process.env.META_GRAPH_VERSION });
-  next = mergeMeta(old, await collectAds(metaReader, now), { now, slot });
-  success = true;
-} catch (e) {
-  next = mergeMeta(old, null, { now, slot, error: e.code || e.message });
-}
-// Analytics is independent. A Meta auth failure must not block a configured website source.
-const analyticsResults = await collectWebAnalytics({ token: process.env.VERCEL_ANALYTICS_ACCESS_TOKEN, now });
-next = mergeAnalytics(next, analyticsResults, { now, slot });
-success = success && !analyticsResults.some(s => s.status === 'error');
-try {
-  if (datasetEnabled && !metaReader) throw new Error('META_NOT_CONFIGURED');
-  const datasetResult = await collectDatasetStats(metaReader, { enabled: datasetEnabled, now });
-  next = mergeDatasetStats(next, datasetResult, { now });
-} catch (error) {
-  next = mergeDatasetStats(next, null, { now, error: error.code || error.message });
-  success = false;
-}
+if (canSkipCollection(old, { slot, now, metaEnabled, datasetEnabled })) { process.stdout.write('Already published successfully for this slot.\n'); process.exit(0); }
+const { snapshot: next, success } = await refreshSources(old, sourceOptions);
 if (publish) {
   // Branch creation is an explicit setup task. Never create it implicitly from the worker.
   const branch = await github(`git/ref/heads/${SCOPE.dataBranch}`);

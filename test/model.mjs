@@ -15,7 +15,8 @@ export function analyticsView(source, site, now = Date.now()) {
   const latest = days.at(-1) || null;
   const state = !current || current.status === 'not_connected' ? 'not_connected' : current.status === 'error' ? 'error' : freshness(current.observed_at, now).state;
   // Visitors are meaningful per returned day. Do not add users across days or sites.
-  return { site, state, observed_at: current?.observed_at || null, attempted_at: current?.attempted_at || null,
+  const projectLabel = site === 'chatline.app' ? 'Projekt chatline-website · Produktion inklusive chatline.app + mindbody-home.chatline.app' : 'Projekt limitless · Produktion inklusive start.chatline.app';
+  return { site, label: current?.label || projectLabel, state, observed_at: current?.observed_at || null, attempted_at: current?.attempted_at || null,
     error: current?.error || null, period: current?.period || null, days,
     latest_date: latest?.date || null, visitors: latest?.visitors ?? null, pageviews: latest?.pageviews ?? null };
 }

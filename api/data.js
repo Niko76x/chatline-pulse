@@ -17,9 +17,15 @@ export const AD_IDS = Object.freeze({
   '120275422266140555': 'PIL-SA-03', '120275421929310555': 'PIL-SA-04',
   '120275421929320555': 'PIL-VID-01',
 });
-// Empty until each project ID, owning team and production-domain mapping is verified.
-// No environment/browser parameter can substitute a project or enumerate the account.
-export const ANALYTICS_PROJECTS = Object.freeze([]);
+// Verified in the HeyHo Systems Work profile. These are project-production
+// aggregates, including the listed aliases; no host-only filter is assumed.
+// Browser/environment input cannot substitute a project or enumerate the team.
+export const ANALYTICS_PROJECTS = Object.freeze([
+  Object.freeze({ site: 'chatline.app', projectId: 'prj_gzg9Y1fg2GOIyQFOZiifk45iahty', teamId: 'team_i2XlerNOfSTLE5EGj65B1vau', scope: 'project',
+    hosts: Object.freeze(['chatline.app', 'mindbody-home.chatline.app']), label: 'Projekt chatline-website · chatline.app + mindbody-home.chatline.app' }),
+  Object.freeze({ site: 'start.chatline.app', projectId: 'prj_cKWblSdgOD2QY0tUExAkoqB3Z5jH', teamId: 'team_i2XlerNOfSTLE5EGj65B1vau', scope: 'project',
+    hosts: Object.freeze(['start.chatline.app']), label: 'Projekt limitless · start.chatline.app' }),
+]);
 export function assertScope(row, { ad = false } = {}) {
   if (String(row.account_id) !== SCOPE.account || String(row.campaign_id) !== SCOPE.campaign ||
       String(row.adset_id ?? row.id) !== SCOPE.adset || (ad && !AD_IDS[String(row.ad_id ?? row.id)])) {
@@ -128,6 +134,8 @@ export async function collectAds(read, now = new Date()) {
 
 export const ANALYTICS_SITES = Object.freeze(['chatline.app', 'start.chatline.app']);
 const ANALYTICS_ENDPOINT = 'https://api.vercel.com/v1/query/web-analytics/visits/aggregate';
+const ANALYTICS_FILTER = "environment eq 'production'";
+const ANALYTICS_HOSTS = Object.freeze({ 'chatline.app': ['chatline.app', 'mindbody-home.chatline.app'], 'start.chatline.app': ['start.chatline.app'] });
 export class AnalyticsReadError extends Error {
   constructor(code) { super(code); this.code = code; }
 }
@@ -141,16 +149,30 @@ function checkedProjects(projects) {
   const sites = new Set(), ids = new Set();
   for (const p of projects) {
     if (!p || !ANALYTICS_SITES.includes(p.site) || !/^prj_[A-Za-z0-9]+$/.test(p.projectId || '') ||
-        p.teamId && !/^team_[A-Za-z0-9]+$/.test(p.teamId) || sites.has(p.site) || ids.has(p.projectId)) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
-    if (Object.keys(p).some(k => !['site', 'projectId', 'teamId'].includes(k))) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
+        p.teamId && !/^team_[A-Za-z0-9]+$/.test(p.teamId) || sites.has(p.site) || ids.has(p.projectId) ||
+        p.scope !== 'project' || typeof p.label !== 'string' || !p.label || !Array.isArray(p.hosts) || !p.hosts.includes(p.site) || p.hosts.some(host => !ANALYTICS_HOSTS[p.site].includes(host))) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
+    if (Object.keys(p).some(k => !['site', 'projectId', 'teamId', 'scope', 'hosts', 'label'].includes(k))) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
     sites.add(p.site); ids.add(p.projectId);
   }
   return projects;
 }
+function checkedAnalyticsTokens(tokens = {}) {
+  if (!tokens || typeof tokens !== 'object' || Array.isArray(tokens) ||
+      ![Object.prototype, null].includes(Object.getPrototypeOf(tokens))) throw new AnalyticsReadError('ANALYTICS_TOKEN_SCOPE_INVALID');
+  const keys = Reflect.ownKeys(tokens);
+  if (keys.some(key => !ANALYTICS_SITES.includes(key) || tokens[key] !== undefined && typeof tokens[key] !== 'string')) throw new AnalyticsReadError('ANALYTICS_TOKEN_SCOPE_INVALID');
+  // Copy only own, explicitly named credentials. Never inherit or use a default credential.
+  return Object.freeze(Object.fromEntries(keys.map(key => [key, tokens[key]])));
+}
+export function configuredAnalyticsSites(tokens = {}) {
+  const safe = checkedAnalyticsTokens(tokens);
+  return checkedProjects(ANALYTICS_PROJECTS).filter(p => safe[p.site]).map(p => p.site);
+}
 export function normalizeAnalytics(body, project, period) {
   const analyticsDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T00:00:00(?:\.000)?Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value.slice(0, 10) ? value.slice(0, 10) : null;
-  if (!body || body.version !== 1 || !Array.isArray(body.data) || body.data.length > 32 ||
+  if (!body || project.scope !== 'project' || body.version !== 1 || !Array.isArray(body.data) || body.data.length > 32 ||
       !body.query || JSON.stringify(body.query.groupBy) !== '["day"]' ||
+      body.query.filter !== ANALYTICS_FILTER ||
       typeof body.query.since !== 'string' || typeof body.query.until !== 'string' ||
       body.query.since.slice(0, 10) !== period.from || body.query.until.slice(0, 10) !== period.to) throw new AnalyticsReadError('ANALYTICS_INVALID_RESPONSE');
   const days = new Set();
@@ -158,7 +180,7 @@ export function normalizeAnalytics(body, project, period) {
     const day = analyticsDay(row.timestamp);
     if (!day || day < period.from || day > period.to || days.has(day) ||
         !Number.isSafeInteger(row.pageviews) || row.pageviews < 0 || !Number.isSafeInteger(row.visitors) || row.visitors < 0 || row.visitors > row.pageviews ||
-        row.projectId && row.projectId !== project.projectId || row.requestHostname && row.requestHostname !== project.site ||
+        row.projectId && row.projectId !== project.projectId || row.requestHostname && !project.hosts.includes(row.requestHostname) ||
         row.environment && row.environment !== 'production') throw new AnalyticsReadError('ANALYTICS_INVALID_RESPONSE');
     days.add(day);
     // Only these aggregates leave the reader; no referrers, user IDs, URLs or raw rows.
@@ -167,14 +189,19 @@ export function normalizeAnalytics(body, project, period) {
   return rows.sort((a, b) => a.date.localeCompare(b.date));
 }
 // Config injection is for unit fixtures. Production collectWebAnalytics uses only
-// ANALYTICS_PROJECTS, a reviewed empty code constant until explicit verification.
-export function createAnalyticsReader({ token, fetcher = fetch, now = new Date(), sleep = ms => new Promise(r => setTimeout(r, ms)) }, fixtureProjects = ANALYTICS_PROJECTS) {
+// ANALYTICS_PROJECTS, the fixed reviewed project-production mappings.
+export function createAnalyticsReader(options = {}, fixtureProjects = ANALYTICS_PROJECTS) {
+  if (!options || typeof options !== 'object' || ![Object.prototype, null].includes(Object.getPrototypeOf(options)) || Reflect.ownKeys(options).some(key => !['tokens', 'fetcher', 'now', 'sleep'].includes(key))) throw new AnalyticsReadError('ANALYTICS_TOKEN_SCOPE_INVALID');
+  const { tokens, fetcher = fetch, now = new Date(), sleep = ms => new Promise(r => setTimeout(r, ms)) } = options;
+  const scopedTokens = checkedAnalyticsTokens(tokens);
   const projects = checkedProjects(fixtureProjects);
   return async function readAnalyticsSite(site) {
     if (!ANALYTICS_SITES.includes(site)) throw new AnalyticsReadError('ANALYTICS_SCOPE_INVALID');
     const project = projects.find(p => p.site === site);
     if (!project) return { site, status: 'not_connected', observed_at: null, attempted_at: null, error: null, timezone: 'UTC', daily: [] };
-    if (!token) return { site, status: 'error', observed_at: null, attempted_at: now.toISOString(), error: 'ANALYTICS_NOT_CONFIGURED', timezone: 'UTC', daily: [] };
+    const source = { site, label: project.label, source_code: 'vercel_project_production' };
+    const token = Object.hasOwn(scopedTokens, site) ? scopedTokens[site] : undefined;
+    if (!token) return { ...source, status: 'error', observed_at: null, attempted_at: now.toISOString(), error: 'ANALYTICS_NOT_CONFIGURED', timezone: 'UTC', daily: [] };
     const period = analyticsPeriod(now);
     const url = new URL(ANALYTICS_ENDPOINT);
     url.searchParams.set('projectId', project.projectId);
@@ -183,7 +210,7 @@ export function createAnalyticsReader({ token, fetcher = fetch, now = new Date()
     url.searchParams.set('since', period.from); url.searchParams.set('until', period.to);
     url.searchParams.set('limit', '32');
     // Documented default is production. Fix it explicitly rather than inheriting another segment.
-    url.searchParams.set('filter', "environment eq 'production'");
+    url.searchParams.set('filter', ANALYTICS_FILTER);
     try {
       let body;
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -197,9 +224,9 @@ export function createAnalyticsReader({ token, fetcher = fetch, now = new Date()
         try { body = await response.json(); } catch { throw new AnalyticsReadError('ANALYTICS_INVALID_RESPONSE'); }
         break;
       }
-      return { site, status: 'connected', observed_at: now.toISOString(), attempted_at: now.toISOString(), error: null, timezone: 'UTC', period, daily: normalizeAnalytics(body, project, period) };
+      return { ...source, status: 'connected', observed_at: now.toISOString(), attempted_at: now.toISOString(), error: null, timezone: 'UTC', period, daily: normalizeAnalytics(body, project, period) };
     } catch (error) {
-      return { site, status: 'error', observed_at: null, attempted_at: now.toISOString(), error: error instanceof AnalyticsReadError ? error.code : 'ANALYTICS_READ_FAILED', timezone: 'UTC', daily: [] };
+      return { ...source, status: 'error', observed_at: null, attempted_at: now.toISOString(), error: error instanceof AnalyticsReadError ? error.code : 'ANALYTICS_READ_FAILED', timezone: 'UTC', daily: [] };
     }
   };
 }
@@ -246,7 +273,7 @@ export function validateSnapshot(data) {
   }
   return data;
 }
-export function canSkipCollection(previous, { slot, now = new Date(), analyticsProjects = ANALYTICS_PROJECTS, datasetEnabled = false } = {}) {
+export function canSkipCollection(previous, { slot, now = new Date(), analyticsProjects = ANALYTICS_PROJECTS, metaEnabled = false, datasetEnabled = false } = {}) {
   const start = Date.parse(slot), current = now.getTime();
   if (!Number.isFinite(start) || !Number.isFinite(current)) return false;
   const completedInSlot = source => {
@@ -255,7 +282,8 @@ export function canSkipCollection(previous, { slot, now = new Date(), analyticsP
   };
   const analyticsDone = analyticsProjects.every(p => completedInSlot(previous.sources.analytics.sites?.find(s => s.site === p.site)));
   const datasetDone = !datasetEnabled || completedInSlot(previous.sources.website_events) && previous.sources.website_events.source_code === 'meta_dataset_stats';
-  return previous.snapshot_id === slot && completedInSlot(previous.sources.meta) && analyticsDone && datasetDone;
+  const anyEnabled = metaEnabled || datasetEnabled || analyticsProjects.length > 0;
+  return anyEnabled && previous.snapshot_id === slot && (!metaEnabled || completedInSlot(previous.sources.meta)) && analyticsDone && datasetDone;
 }
 export function mergeAnalytics(previous, results, { now = new Date(), slot = null } = {}) {
   validateSnapshot(previous);
@@ -382,6 +410,40 @@ export function mergeDatasetStats(previous, result, { now = new Date(), error = 
     if (Date.parse(next.collected_at) < now.getTime()) next.collected_at = now.toISOString();
   }
   return validateSnapshot(next);
+}
+
+
+export function assertConfiguredSources({ metaEnabled = false, datasetEnabled = false, metaOptions = {}, analyticsOptions = {} } = {}) {
+  const metaReady = Boolean(metaOptions.token && /^v\d{2,3}\.\d+$/.test(metaOptions.version || ''));
+  const analyticsSites = configuredAnalyticsSites(analyticsOptions.tokens);
+  if (!(metaReady && (metaEnabled || datasetEnabled)) && !analyticsSites.length) throw new Error('NO_ENABLED_CONFIGURED_SOURCE');
+}
+
+export async function refreshSources(previous, { now = new Date(), slot = null, metaEnabled = false, datasetEnabled = false, metaOptions = {}, analyticsOptions = {} } = {}) {
+  assertConfiguredSources({ metaEnabled, datasetEnabled, metaOptions, analyticsOptions });
+  validateSnapshot(previous);
+  let next = structuredClone(previous), metaReader, metaInitError = null, success = true;
+  if (metaEnabled || datasetEnabled) {
+    try { metaReader = createMetaReader(metaOptions); }
+    catch (error) { metaInitError = error.code || error.message; }
+  }
+  if (metaEnabled) {
+    try {
+      if (metaInitError) throw new Error(metaInitError);
+      next = mergeMeta(next, await collectAds(metaReader, now), { now, slot });
+    } catch (error) { next = mergeMeta(next, null, { now, slot, error: error.code || error.message }); success = false; }
+  }
+  // The disabled Meta source is copied verbatim, including its status and timestamps.
+  const analyticsResults = await collectWebAnalytics({ ...analyticsOptions, now });
+  next = mergeAnalytics(next, analyticsResults, { now, slot });
+  success = success && !analyticsResults.some(source => source.status === 'error');
+  if (datasetEnabled) {
+    try {
+      if (metaInitError) throw new Error(metaInitError);
+      next = mergeDatasetStats(next, await collectDatasetStats(metaReader, { enabled: true, now }), { now });
+    } catch (error) { next = mergeDatasetStats(next, null, { now, error: error.code || error.message }); success = false; }
+  }
+  return { snapshot: validateSnapshot(next), success };
 }
 
 import { readFile } from 'node:fs/promises';

@@ -89,6 +89,20 @@ test('inline valid tags are distinguished; duplicate base/creative tags are ambi
   assert.equal(result.status, 'needs_review'); assert.equal(result.destinations[0].checks.unique_query_keys, false);
 });
 
+test('additional diagnostic exposes fixed generic key names/categories, never values or arbitrary key names', () => {
+  const value = ad(), extras = ['hsa_acc','hsa_cam','hsa_grp','hsa_ad','hsa_src','hsa_net','hsa_ver','hsa_la'];
+  value.creative.url_tags += '&' + new URLSearchParams(Object.fromEntries(extras.map(key => [key, canary]))).toString();
+  value.creative.url_tags += '&email=PRIVATE_VALUE&PRIVATE_PARAMETER_NAME=PRIVATE_VALUE';
+  const result = inspectAdDestination(value, id);
+  assert.equal(result.status, 'needs_review'); assert.equal(result.url_tags.unknown_key_count, 10);
+  assert.equal(result.url_tags.unrecognized_extra_key_count, 2);
+  assert.deepEqual(result.url_tags.recognized_extra_keys.map(row => row.name).sort(), [...extras].sort());
+  assert.ok(result.url_tags.recognized_extra_keys.every(row => row.category === 'crm_tracking'));
+  assert.equal(JSON.stringify(result).includes('PRIVATE'), false);
+  assert.equal(JSON.stringify(result).includes('email'), false);
+  assert.ok(result.failures.includes('UNEXPECTED_URL_TAG_KEYS'), 'Name recognition must not silently approve the extra tracking');
+});
+
 test('missing stories, carousel/dynamic formats and malformed url_tags are not silently declared correct', () => {
   const missing = ad(); delete missing.creative.object_story_spec;
   assert.ok(inspectAdDestination(missing, id).failures.includes('DESTINATION_UNAVAILABLE'));

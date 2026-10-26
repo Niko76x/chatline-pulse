@@ -17,6 +17,17 @@ export const ADS = Object.freeze({
 });
 export const TAG_KEYS = Object.freeze(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'campaign_id', 'adset_id', 'ad_id']);
 const QUERY_KEYS = new Set(['skin', 'ref', ...TAG_KEYS]);
+// Fixed generic parameter NAMES only. Recognition never validates a value or
+// removes the existing needs_review result for additional tracking parameters.
+const EXTRA_KEY_NAMES = Object.freeze({
+  utm_id: 'optional_utm', utm_term: 'optional_utm', utm_creative_format: 'optional_utm', utm_marketing_tactic: 'optional_utm',
+  campaign_name: 'platform_label', adset_name: 'platform_label', ad_name: 'platform_label', placement: 'platform_label', site_source_name: 'platform_label',
+  fb_campaign_id: 'platform_identifier', fb_adset_id: 'platform_identifier', fb_ad_id: 'platform_identifier',
+  fbclid: 'click_identifier', gclid: 'click_identifier', msclkid: 'click_identifier',
+  hsa_acc: 'crm_tracking', hsa_cam: 'crm_tracking', hsa_grp: 'crm_tracking', hsa_ad: 'crm_tracking',
+  hsa_src: 'crm_tracking', hsa_net: 'crm_tracking', hsa_ver: 'crm_tracking', hsa_la: 'crm_tracking',
+  hsa_kw: 'crm_tracking', hsa_tgt: 'crm_tracking', hsa_mt: 'crm_tracking', hsa_mtk: 'crm_tracking',
+});
 const URL_FIELDS = Object.freeze([
   ['object_story_spec.link_data.link', value => value?.link_data?.link],
   ['object_story_spec.link_data.call_to_action.value.link', value => value?.link_data?.call_to_action?.value?.link],
@@ -32,12 +43,15 @@ export function expectedTags(id) {
 }
 function inspectTagParams(params, id) {
   const expected = expectedTags(id);
+  const extraNames = [...new Set(params.keys())].filter(key => !QUERY_KEYS.has(key));
   const checks = Object.fromEntries(TAG_KEYS.map(key => [key, params.getAll(key).length === 1 && expected[key].includes(params.get(key))]));
   // Only known key names and accepted static/macro values can be reported.
   const accepted = Object.fromEntries(TAG_KEYS.filter(key => checks[key]).map(key => [key, params.get(key)]));
   return { checks, accepted, known_keys_present: TAG_KEYS.filter(key => params.has(key)),
     unique: [...new Set(params.keys())].every(key => params.getAll(key).length === 1),
-    unknown_key_count: [...new Set(params.keys())].filter(key => !QUERY_KEYS.has(key)).length,
+    unknown_key_count: extraNames.length,
+    recognized_extra_keys: Object.keys(EXTRA_KEY_NAMES).filter(key => extraNames.includes(key)).map(name => ({ name, category: EXTRA_KEY_NAMES[name] })),
+    unrecognized_extra_key_count: extraNames.filter(key => !Object.hasOwn(EXTRA_KEY_NAMES, key)).length,
     complete: Object.values(checks).every(Boolean) };
 }
 
@@ -99,7 +113,8 @@ export function inspectAdDestination(body, id) {
       effective_utm_contract: effective.complete,
     };
     result.destinations.push({ field, valid: Object.values(checks).every(Boolean), checks,
-      tag_checks: effective.checks, known_keys_present: effective.known_keys_present, unknown_key_count: effective.unknown_key_count });
+      tag_checks: effective.checks, known_keys_present: effective.known_keys_present, unknown_key_count: effective.unknown_key_count,
+      recognized_extra_keys: effective.recognized_extra_keys, unrecognized_extra_key_count: effective.unrecognized_extra_key_count });
   }
   if (!result.destinations.length) result.failures.push('DESTINATION_UNAVAILABLE');
   if (result.destinations.some(row => !row.valid)) result.failures.push('DESTINATION_OR_UTM_CONTRACT_MISMATCH');

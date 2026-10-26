@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { freshness, summarize, reviewAd, analyticsView } from '../public/assets/model.js';
 import { CREATIVE_CATALOG } from '../public/assets/creative-catalog.js';
+import { reportedCount } from '../public/assets/count-display.js';
 const original = JSON.parse(await readFile(new URL('../public/data/fallback.json', import.meta.url), 'utf8'));
 const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 const client = (await readFile(new URL('../public/assets/pulse.js', import.meta.url), 'utf8')).replace(/^import[^\n]+;\r?\n/gm, '');
@@ -21,7 +22,7 @@ async function renderFixture(snapshot = structuredClone(original), hash = '#/ove
   let incoming = snapshot, transport = { status: 'snapshot' }, fail = false;
   const context = { document: { querySelector: node, querySelectorAll: () => nav, addEventListener: (k,v) => { events[k] = v; } },
     window: { addEventListener: (k,v) => { win[k] = v; } }, location, setInterval: () => {}, Intl, Date,
-    freshness, summarize, reviewAd, analyticsView, CREATIVE_CATALOG, navigator: { clipboard: { writeText: async text => clipboard.push(text) } },
+    freshness, summarize, reviewAd, analyticsView, CREATIVE_CATALOG, reportedCount, navigator: { clipboard: { writeText: async text => clipboard.push(text) } },
     fetch: async (url, options) => { requests.push([url,options]); assert.equal(url, '/api/data'); if (fail) throw Error('test failure'); return { ok:true, json:async () => ({snapshot:incoming,transport}) }; } };
   await vm.runInNewContext(`(async () => { ${client}\n })()`, context, { timeout:1500 });
   return { node, nav, clipboard, requests, get view() { return node('#view').innerHTML; },
@@ -40,17 +41,38 @@ test('overview has four KPIs, real source status and no invented business target
   const app = await renderFixture();
   assert.equal((app.view.match(/class="metric(?: highlight)?"/g)||[]).length,4);
   assert.deepEqual([...app.view.matchAll(/class="metric-label">([^<]+)</g)].map(item=>item[1]),['Ausgaben','Linkklicks','Zielseitenaufrufe','Studio-Tests']);
-  assert.match(app.view,/Von Meta gemeldete Starts/); assert.doesNotMatch(app.view,/je gemeldetem Test/);
+  assert.match(app.view,/Meta-Lead-Signale · kein Kunden-Nachweis/); assert.doesNotMatch(app.view,/je Lead-Signal/);
   assert.match(app.view,/Historischer Stand/); assert.match(app.view,/noch nicht gemeinsam festgelegt/);
+  assert.match(app.view,/Nächster Beleg · Nachweis offen/); assert.match(app.view,/Ein Studio durchläuft den DIY-Einstieg eigenständig bis zum Dashboard\./);
   assert.doesNotMatch(app.view,/creative-card|fb-table|Google Search Console|progress|<img/);
   assert.equal(app.node('#period option[value="all"]').disabled,true);
   assert.equal(app.nav[0].attributes['aria-current'],'page');
 });
 test('cost per reported studio test is supporting text only when measured', async () => {
   const app=await renderFixture(withMetrics());
-  assert.match(app.view,/4 € je gemeldetem Test/);
+  assert.match(app.view,/4 € je Lead-Signal/);
   assert.doesNotMatch(app.view,/class="metric-label">Kosten/);
   assert.match(app.view,/class="metric-label">Zielseitenaufrufe<\/span><strong class="metric-value">4<\/strong>/);
+});
+test('known positive partial counts are minimums in overview, Facebook, detail and funnel without weakening strict rates', async () => {
+  const fixture=withMetrics(), source=fixture.sources.meta;
+  source.status='connected'; source.observed_at=new Date().toISOString(); source.complete_test_window=true;
+  source.daily=[{...source.daily[0],date:'2026-10-24',landing_page_views:2,studio_tests:1,call_requests:0}, {...source.daily[0],landing_page_views:null,studio_tests:null,call_requests:null}];
+  source.ads_daily=source.daily.map(row=>({...row,code:'PIL-PA-01'}));
+  const before=structuredClone(fixture), app=await renderFixture(fixture);
+  assert.match(app.view,/class="metric-label">Zielseitenaufrufe<\/span><strong class="metric-value">Mind. 2<\/strong>/);
+  assert.match(app.view,/class="metric-label">Studio-Tests<\/span><strong class="metric-value">Mind. 1<\/strong>/);
+  assert.match(app.view,/1 von 2 gemeldeten Tagen mit Messwert/); assert.doesNotMatch(app.view,/€ je Lead-Signal/);
+  assert.match(app.view,/Nächster Beleg · Nachweis offen/,'Meta-Lead signals never complete the independent-journey milestone');
+  app.navigate('#/facebook'); const row=app.view.match(/<tbody>(<tr>[\s\S]*?<\/tr>)/)[1];
+  assert.match(row,/Mind. 2/); assert.match(row,/Mind. 1/); assert.match(row,/1 von 2 gemeldeten Tagen mit Messwert/);
+  assert.match(row,/<td class="numeric">—<\/td><\/tr>/,'No cost per test is derived from a lower bound');
+  app.navigate('#/facebook/ad/PIL-PA-01'); assert.match(app.view,/data-signal="studio_tests"><b>Mind. 1<\/b>/);
+  assert.match(app.view,/Übergang zur Website prüfen/); assert.doesNotMatch(app.view,/Erste weiterführende Signale/);
+  app.navigate('#/funnel'); assert.match(app.view,/funnel-count">Mind. 1/); assert.match(app.view,/funnel-count">—<span class="code">1 von 2 gemeldeten Tagen/);
+  assert.doesNotMatch(app.view,/>[\d,.]+ %<\/td>/);
+  assert.equal(summarize(source.daily).studio_tests,null); assert.equal(summarize(source.daily).cost_per_test,null);
+  assert.deepEqual(fixture,before);
 });
 test('hash routes show one page at a time with 13 Facebook rows and safe unknown routes', async () => {
   const app = await renderFixture(); app.navigate('#/facebook');
@@ -114,7 +136,7 @@ test('four product steps distinguish unknown and zero while rates remain open wi
   const fixture=withMetrics(), app=await renderFixture(fixture,'#/funnel');
   assert.equal((app.view.match(/class="funnel-stage"/g)||[]).length,4);
   for(const label of ['Website / Studio eingegeben','Telefon / Testanruf angefordert','Zahlungsseite / Checkout begonnen','Einrichtung / Testphase begonnen']) assert.ok(app.view.includes(label));
-  assert.match(app.view,/funnel-count">0<\/td>/); assert.match(app.view,/funnel-count">—<\/td>/);
+  assert.match(app.view,/funnel-count">0<\/td>/); assert.match(app.view,/funnel-count">—(?:<span|<\/td>)/);
   assert.match(app.view,/Anteile und Conversionraten bleiben offen/); assert.match(app.view,/keine zusammenhängende Nutzergruppe/); assert.doesNotMatch(app.view,/>[\d,.]+ %<\/td>|E-Mail|Emaileingabe|Zahlung bestätigt/);
   fixture.sources.meta.daily[0].call_requests=5; const excessive=await renderFixture(fixture,'#/funnel'); assert.doesNotMatch(excessive.view,/>250 %<\/td>/);
 });

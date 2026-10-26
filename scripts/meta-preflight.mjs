@@ -24,11 +24,24 @@ const SAFE_ERRORS = new Set([
 const fail = code => { throw new Error(code); };
 export const safeError = error => SAFE_ERRORS.has(error?.code || error?.message)
   ? error.code || error.message : 'PREFLIGHT_FAILED';
+const GRAPH_TYPES = Object.freeze({ OAuthException: 'oauth', GraphMethodException: 'graph_method', GraphAPIException: 'graph_api', RateLimitException: 'rate_limit' });
+const GRAPH_CATEGORIES = new Set(['oauth', 'graph_method', 'graph_api', 'rate_limit', 'other']);
+const graphCode = value => Number.isSafeInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
+// Only fixed numeric/type metadata leaves the optional Dataset error path.
+// Never return messages, trace IDs, arbitrary type strings or response bodies.
+export function safeDatasetGraphError(error) {
+  return {
+    code: graphCode(error?.code),
+    subcode: graphCode(error?.error_subcode ?? error?.subcode),
+    type_category: Object.hasOwn(GRAPH_TYPES, error?.type) ? GRAPH_TYPES[error.type]
+      : GRAPH_CATEGORIES.has(error?.type_category) ? error.type_category : 'other',
+  };
+}
 const metrics = row => Object.fromEntries(METRICS.map(key => [key, row?.[key] ?? null]));
 
 // Called only by the manual CLI below. An injected reader permits offline safety
 // tests; account/asset IDs cannot be configured by workflow/browser parameters.
-export async function runPreflight({ read, reportDate, includeDataset = false, now = new Date(), datasetHttpStatus = () => null }) {
+export async function runPreflight({ read, reportDate, includeDataset = false, now = new Date(), datasetHttpStatus = () => null, datasetGraphError = () => null }) {
   if (SCOPE.account !== '2128240694419507' || SCOPE.dataset !== '1727278251668513' ||
       SCOPE.campaign !== '120274644271350555' || SCOPE.adset !== '120275421779190555' ||
       SCOPE.repository !== 'Niko76x/chatline-pulse' || SCOPE.since !== '2026-10-22' ||
@@ -90,8 +103,10 @@ export async function runPreflight({ read, reportDate, includeDataset = false, n
         deduplication_verified: false };
     } catch (error) {
       const http = datasetHttpStatus();
+      const graph = datasetGraphError();
       summary.dataset = { status: 'error', enable_flag_changed: false, error: safeError(error),
-        http_status: Number.isInteger(http) && http >= 100 && http <= 599 ? http : null };
+        http_status: Number.isInteger(http) && http >= 100 && http <= 599 ? http : null,
+        ...(graph ? { graph_error: safeDatasetGraphError(graph) } : {}) };
     }
   }
   return summary;
@@ -102,14 +117,24 @@ async function main() {
   if (process.env.META_GRAPH_VERSION !== VERSION) fail('PREFLIGHT_GRAPH_VERSION');
   if (!process.env.META_REPORTING_ACCESS_TOKEN?.trim()) fail('META_NOT_CONFIGURED');
   let statsHttp = null;
+  let statsGraph = null;
   const read = createMetaReader({ token: process.env.META_REPORTING_ACCESS_TOKEN.trim(), version: VERSION,
     fetcher: async (url, options) => {
       const response = await fetch(url, options);
-      if (url.origin === 'https://graph.facebook.com' && url.pathname === `/${VERSION}/${SCOPE.dataset}/stats`) statsHttp = response.status;
+      if (url.origin === 'https://graph.facebook.com' && url.pathname === `/${VERSION}/${SCOPE.dataset}/stats`) {
+        statsHttp = response.status;
+        statsGraph = null;
+        if (!response.ok) {
+          try {
+            const body = await response.clone().json();
+            if (body?.error && typeof body.error === 'object' && !Array.isArray(body.error)) statsGraph = safeDatasetGraphError(body.error);
+          } catch { /* No raw parse/error detail is copied. */ }
+        }
+      }
       return response;
     } });
   const result = await runPreflight({ read, reportDate: process.env.PREFLIGHT_REPORT_DATE,
-    includeDataset: process.env.PREFLIGHT_INCLUDE_DATASET_STATS === 'true', datasetHttpStatus: () => statsHttp });
+    includeDataset: process.env.PREFLIGHT_INCLUDE_DATASET_STATS === 'true', datasetHttpStatus: () => statsHttp, datasetGraphError: () => statsGraph });
   process.stdout.write(`${JSON.stringify(result)}\n`);
   if (result.status !== 'ads_validated' || result.dataset.status === 'error') process.exitCode = 1;
 }

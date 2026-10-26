@@ -1,0 +1,27 @@
+name: ChatLine DIY funnel · manual read-only preflight
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: chatline-diy-funnel-preflight
+  cancel-in-progress: false
+jobs:
+  read:
+    if: github.repository == 'Niko76x/chatline-pulse' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Check diagnostic syntax without credentials
+        run: node --check scripts/diy-funnel-preflight.mjs
+      - name: Read exactly four approved Production aggregates
+        shell: bash
+        env:
+          VERCEL_ANALYTICS_LIMITLESS_TOKEN: ${{ secrets.VERCEL_ANALYTICS_LIMITLESS_TOKEN }}
+        run: node scripts/diy-funnel-preflight.mjs | tee "$RUNNER_TEMP/diy-funnel-preflight.json"

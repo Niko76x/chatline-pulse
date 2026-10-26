@@ -124,9 +124,9 @@
         },
         {
           "key": "Lead",
-          "label": "Studio-Test angelegt",
+          "label": "Lead-Signale",
           "count": 0,
-          "meaning": "Ein Onboarding-Run wurde angelegt. Noch kein qualifiziertes Gespräch."
+          "meaning": "Bedeutung je Einstieg; im DIY: Studio-Test gestartet. Kein qualifizierter Kontakt."
         },
         {
           "key": "CompleteRegistration",
@@ -142,9 +142,9 @@
         },
         {
           "key": "StartTrial",
-          "label": "Testphase aktiviert",
+          "label": "Testphase begonnen",
           "count": null,
-          "meaning": "Backend bestätigt provisioning/active. Kostenlose Testphase, kein Purchase."
+          "meaning": "Im DIY: Einrichtung läuft oder ist aktiv. Keine bestätigte Zahlung."
         }
       ]
     },

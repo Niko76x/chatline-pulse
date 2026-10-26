@@ -430,10 +430,10 @@ export function mergeMeta(previous, result, { now = new Date(), error = null, sl
 // match keys, contact information, raw events or another asset inventory.
 const STANDARD_EVENTS = Object.freeze([
   ['PageView', 'Gemeldete Dataset-Seitenaufrufe', 'Gemeldete PageView-Signale; keine eindeutigen Besucher und keine Anzeigenklicks.'],
-  ['Lead', 'Studio-Test angelegt', 'Ein Onboarding-Run wurde angelegt. Noch kein qualifiziertes Gespräch.'],
+  ['Lead', 'Lead-Signale', 'Bedeutung je Einstieg; im DIY: Studio-Test gestartet. Kein qualifizierter Kontakt.'],
   ['CompleteRegistration', 'Testanruf angefordert', 'Ein Testanruf wurde angefordert. Kein Beweis für ein angenommenes Gespräch.'],
   ['InitiateCheckout', 'Checkout begonnen', 'Ein Checkout wurde begonnen. Noch keine Zahlung.'],
-  ['StartTrial', 'Testphase aktiviert', 'Ein kostenloser Backend-Trialstatus; keine bestätigte Zahlung.'],
+  ['StartTrial', 'Testphase begonnen', 'Im DIY: Einrichtung läuft oder ist aktiv. Keine bestätigte Zahlung.'],
 ]);
 const EVENT_NAMES = new Set(STANDARD_EVENTS.map(([key]) => key));
 const fail = code => { throw new ReadError(code); };

@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-26T00:00:00.000Z",
-  "collected_at": "2026-10-26T00:10:37.239Z",
+  "snapshot_id": "2026-10-26T01:30:00.000Z",
+  "collected_at": "2026-10-26T01:38:23.587Z",
   "sources": {
     "meta": {
       "status": "historical",
@@ -150,8 +150,8 @@
     },
     "analytics": {
       "status": "connected",
-      "observed_at": "2026-10-26T00:10:37.239Z",
-      "attempted_at": "2026-10-26T00:10:37.239Z",
+      "observed_at": "2026-10-26T01:38:23.587Z",
+      "attempted_at": "2026-10-26T01:38:23.587Z",
       "error": null,
       "sites": [
         {
@@ -159,8 +159,8 @@
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-26T00:10:37.239Z",
-          "attempted_at": "2026-10-26T00:10:37.239Z",
+          "observed_at": "2026-10-26T01:38:23.587Z",
+          "attempted_at": "2026-10-26T01:38:23.587Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -200,8 +200,8 @@
           "label": "Projekt limitless · start.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-26T00:10:37.239Z",
-          "attempted_at": "2026-10-26T00:10:37.239Z",
+          "observed_at": "2026-10-26T01:38:23.587Z",
+          "attempted_at": "2026-10-26T01:38:23.587Z",
           "error": null,
           "timezone": "UTC",
           "period": {

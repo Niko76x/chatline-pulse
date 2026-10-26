@@ -6,11 +6,11 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-26T04:30:00.000Z",
-  "collected_at": "2026-10-26T04:53:50.802Z",
+  "snapshot_id": "2026-10-26T05:00:00.000Z",
+  "collected_at": "2026-10-26T05:16:23.205Z",
   "sources": {
     "meta": {
-      "observed_at": "2026-10-26T04:53:50.802Z",
+      "observed_at": "2026-10-26T05:16:23.205Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -46,8 +46,8 @@
         },
         {
           "date": "2026-10-25",
-          "spend": 27.85,
-          "impressions": 1067,
+          "spend": 27.86,
+          "impressions": 1068,
           "reach": 727,
           "link_clicks": 15,
           "landing_page_views": 2,
@@ -58,9 +58,9 @@
         },
         {
           "date": "2026-10-26",
-          "spend": 1.48,
-          "impressions": 245,
-          "reach": 65,
+          "spend": 1.56,
+          "impressions": 250,
+          "reach": 69,
           "link_clicks": 1,
           "landing_page_views": null,
           "studio_tests": null,
@@ -424,8 +424,8 @@
         {
           "date": "2026-10-25",
           "code": "PIL-PA-04",
-          "spend": 20.89,
-          "impressions": 773,
+          "spend": 20.9,
+          "impressions": 774,
           "reach": 592,
           "link_clicks": 10,
           "landing_page_views": 1,
@@ -437,9 +437,9 @@
         {
           "date": "2026-10-26",
           "code": "PIL-PA-01",
-          "spend": 0.1,
-          "impressions": 8,
-          "reach": 4,
+          "spend": 0.15,
+          "impressions": 9,
+          "reach": 5,
           "link_clicks": 0,
           "landing_page_views": null,
           "studio_tests": null,
@@ -463,9 +463,9 @@
         {
           "date": "2026-10-26",
           "code": "PIL-SA-02",
-          "spend": 1.07,
-          "impressions": 232,
-          "reach": 56,
+          "spend": 1.1,
+          "impressions": 236,
+          "reach": 60,
           "link_clicks": 1,
           "landing_page_views": null,
           "studio_tests": null,
@@ -555,7 +555,7 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-10-26T04:53:50.802Z",
+      "attempted_at": "2026-10-26T05:16:23.205Z",
       "error": null,
       "complete_test_window": true
     },
@@ -603,8 +603,8 @@
     },
     "analytics": {
       "status": "connected",
-      "observed_at": "2026-10-26T04:53:50.802Z",
-      "attempted_at": "2026-10-26T04:53:50.802Z",
+      "observed_at": "2026-10-26T05:16:23.205Z",
+      "attempted_at": "2026-10-26T05:16:23.205Z",
       "error": null,
       "sites": [
         {
@@ -612,8 +612,8 @@
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "observed_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -653,8 +653,8 @@
           "label": "Projekt limitless · start.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "observed_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -704,8 +704,8 @@
       "timezone": "UTC",
       "collection_started_at": "2026-10-26T02:30:39Z",
       "status": "awaiting_events",
-      "observed_at": "2026-10-26T04:53:50.802Z",
-      "attempted_at": "2026-10-26T04:53:50.802Z",
+      "observed_at": "2026-10-26T05:16:23.205Z",
+      "attempted_at": "2026-10-26T05:16:23.205Z",
       "period": {
         "from": "2026-10-26",
         "to": "2026-10-26"
@@ -716,8 +716,8 @@
     "link_audit": {
       "source_code": "meta_ad_destination_checks",
       "status": "connected",
-      "observed_at": "2026-10-26T04:53:50.802Z",
-      "attempted_at": "2026-10-26T04:53:50.802Z",
+      "observed_at": "2026-10-26T05:16:23.205Z",
+      "attempted_at": "2026-10-26T05:16:23.205Z",
       "complete": true,
       "checked_count": 13,
       "request_count": 13,
@@ -727,8 +727,8 @@
           "ad_id": "120275421779180555",
           "code": "PIL-PA-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -792,8 +792,8 @@
           "ad_id": "120275422266100555",
           "code": "PIL-PA-02",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -824,8 +824,8 @@
           "ad_id": "120275421929330555",
           "code": "PIL-PA-03",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -856,8 +856,8 @@
           "ad_id": "120275422266130555",
           "code": "PIL-PA-04",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -921,8 +921,8 @@
           "ad_id": "120275421929340555",
           "code": "PIL-PR-01",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -953,8 +953,8 @@
           "ad_id": "120275422266170555",
           "code": "PIL-PR-02",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -985,8 +985,8 @@
           "ad_id": "120275422266160555",
           "code": "PIL-PR-03",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1017,8 +1017,8 @@
           "ad_id": "120275422266150555",
           "code": "PIL-PR-04",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1049,8 +1049,8 @@
           "ad_id": "120275422266110555",
           "code": "PIL-SA-01",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1081,8 +1081,8 @@
           "ad_id": "120275422266120555",
           "code": "PIL-SA-02",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1146,8 +1146,8 @@
           "ad_id": "120275422266140555",
           "code": "PIL-SA-03",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1178,8 +1178,8 @@
           "ad_id": "120275421929310555",
           "code": "PIL-SA-04",
           "status": "valid",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1210,8 +1210,8 @@
           "ad_id": "120275421929320555",
           "code": "PIL-VID-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-10-26T04:53:50.802Z",
-          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checked_at": "2026-10-26T05:16:23.205Z",
+          "attempted_at": "2026-10-26T05:16:23.205Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,

@@ -48,15 +48,34 @@ export function safeQueryBound(value) {
   return rejected;
 }
 
-function queryChecks(query, day, filter) {
-  const start = Date.parse(`${day}T00:00:00.000Z`);
-  const midnight = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T00:00:00(?:\.000)?Z$/.test(value) ? Date.parse(value) : NaN;
+export function requestedWindow(now) {
+  if (!Number.isFinite(now?.getTime?.())) throw new Error('PREFLIGHT_INVALID_TIME');
+  const until = now.getTime(), day = now.toISOString().slice(0, 10);
+  return { day, since: Date.parse(`${day}T00:00:00.000Z`), until,
+    rounded_until: Math.floor(until / 3600000) * 3600000 + 3600000 };
+}
+function boundaryMilliseconds(value) {
+  const echo = safeQueryBound(value);
+  if (!echo.valid) return null;
+  // Extra fractional digits may be safely displayed, but nonzero sub-ms
+  // precision must not silently round into an accepted exact boundary.
+  if (typeof value === 'string') {
+    const fraction = value.match(/\.(\d+)(?:Z|\+00:00)$/)?.[1];
+    if (fraction && /[1-9]/.test(fraction.slice(3))) return null;
+  }
+  return Date.parse(echo.value);
+}
+function queryChecks(query, window, filter) {
+  const since = boundaryMilliseconds(query?.since), until = boundaryMilliseconds(query?.until);
+  const untilMode = until === window.until ? 'exact_request'
+    : until === window.rounded_until ? 'derived_next_utc_hour' : null;
   return {
     present: Boolean(query && typeof query === 'object' && !Array.isArray(query)),
-    since: query?.since === day || midnight(query?.since) === start,
-    // Existing visits API echoes an inclusive date as next-day exclusive
-    // midnight. Accept precisely that representation, never an arbitrary time.
-    until: query?.until === day || midnight(query?.until) === start + 86400000,
+    since: since === window.since,
+    // Accept only the exact timestamp requested or the precisely derived
+    // inclusive-hour boundary supported by the actual passive readback.
+    until: untilMode !== null,
+    until_mode: untilMode,
     filter: query?.filter === filter,
     group: !Object.hasOwn(query || {}, 'groupBy') ? 'absent' : JSON.stringify(query.groupBy) === '["eventData/ad_id"]' ? 'matches' : 'different',
     limit: !Object.hasOwn(query || {}, 'limit') ? null : query.limit === 32 || query.limit === '32',
@@ -64,8 +83,9 @@ function queryChecks(query, day, filter) {
 }
 
 /** Sanitize first; never return the response, arbitrary keys, or error text. */
-export function inspectAggregate(body, { day, event }) {
-  const checks = queryChecks(body?.query, day, filterFor(event));
+export function inspectAggregate(body, { window, event }) {
+  const day = window.day;
+  const checks = queryChecks(body?.query, window, filterFor(event));
   const rows = Array.isArray(body?.data) ? body.data : null;
   const summary = {
     api_version: Number.isSafeInteger(body?.version) && body.version >= 0 && body.version <= 10000 ? body.version : null,
@@ -105,18 +125,19 @@ export function inspectAggregate(body, { day, event }) {
 }
 
 export async function runDiyPreflight({ token, fetcher = fetch, now = new Date() } = {}) {
-  if (!Number.isFinite(now?.getTime?.())) throw new Error('PREFLIGHT_INVALID_TIME');
-  const day = now.toISOString().slice(0, 10);
+  const window = requestedWindow(now), day = window.day;
   const report = { status: 'not_configured', checked_at: now.toISOString(), timezone: 'UTC', day,
+    requested_window: { since_utc: new Date(window.since).toISOString(), until_utc: now.toISOString(),
+      derived_hour_boundary_utc: new Date(window.rounded_until).toISOString() },
     scope: { site: 'start.chatline.app', project: PROJECT, team: TEAM, campaign: CAMPAIGN, approved_ads: 13 },
     snapshot_written: false, published: false, events_generated: false, results: [] };
   if (typeof token !== 'string' || !token.trim() || token.length > 4096) return { ...report, error: 'ANALYTICS_NOT_CONFIGURED' };
   for (const event of EVENTS) {
     const url = new URL(ENDPOINT), filter = filterFor(event);
-    for (const [key, value] of Object.entries({ projectId: PROJECT, teamId: TEAM, since: day, until: day, by: 'eventData/ad_id', limit: '32', filter }))
+    for (const [key, value] of Object.entries({ projectId: PROJECT, teamId: TEAM, since: window.since, until: window.until, by: 'eventData/ad_id', limit: '32', filter }))
       url.searchParams.set(key, value);
     // This is the fixed requested query, never an echo of arbitrary API text.
-    const request = { event, since: day, until: day, by: 'eventData/ad_id', limit: 32, filter };
+    const request = { event, since: window.since, until: window.until, by: 'eventData/ad_id', limit: 32, filter };
     let response;
     try {
       response = await fetcher(url, { method: 'GET', headers: { Authorization: `Bearer ${token.trim()}` }, redirect: 'error', signal: AbortSignal.timeout(12000) });
@@ -131,7 +152,7 @@ export async function runDiyPreflight({ token, fetcher = fetch, now = new Date()
     let body;
     try { body = await response.json(); }
     catch { report.results.push({ request, status: 'error', error: 'ANALYTICS_INVALID_JSON', http_status, rows: [], event_reception_proven: false }); continue; }
-    report.results.push({ request, http_status, ...inspectAggregate(body, { day, event }) });
+    report.results.push({ request, http_status, ...inspectAggregate(body, { window, event }) });
   }
   report.status = report.results.some(row => row.status === 'error') ? 'failed'
     : report.results.some(row => row.rows.length) ? 'aggregate_reads_validated' : 'awaiting_events';

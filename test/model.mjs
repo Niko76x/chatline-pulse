@@ -27,6 +27,8 @@ export function summarize(rows) {
   result.cpc = ratio(result.spend, result.link_clicks);
   result.ctr = ratio(result.link_clicks, result.impressions, 100);
   result.cpm = ratio(result.spend, result.impressions, 1000);
+  // Retain the snapshot's existing internal key; this is cost per Lead event,
+  // not cost per qualified studio or new customer.
   result.cost_per_test = ratio(result.spend, result.studio_tests);
   return result;
 }
@@ -39,7 +41,7 @@ export function reviewAd(metrics, source, config = {}, now = Date.now()) {
   if (metrics.link_clicks === null) return { state: 'data', title: 'Klickmessung prüfen', text: 'Es gibt Ausgaben, aber keinen gemeldeten Wert für Linkklicks.' };
   if (metrics.link_clicks > 0 && metrics.landing_page_views === null) return { state: 'data', title: 'Übergang zur Website prüfen', text: 'Linkklicks sind gemeldet. Landingpage-Aufrufe fehlen als Messwert; daraus folgt keine Null.' };
   if (config.enabled && metrics.cpc !== null && metrics.spend >= config.cpc_review_start && metrics.cpc > config.cpc_review_above) return { state: 'review', title: 'Traffic gemeinsam prüfen', text: 'Der vorläufige CPC-Prüfpunkt ist erreicht. Ansprache, Motiv, Landingpage und stärkere Signale zusammen ansehen. Keine automatische Abschaltung.' };
-  if (config.enabled && metrics.link_clicks >= config.funnel_review_clicks && metrics.studio_tests === 0) return { state: 'review', title: 'Studio-Test-Funnel prüfen', text: 'Klicks sind da, aber keine zugerechneten Studio-Tests. Tracking, Zielgruppe und Seite prüfen; eine B2B-Grenze ist noch nicht validiert.' };
+  if (config.enabled && metrics.link_clicks >= config.funnel_review_clicks && metrics.studio_tests === 0) return { state: 'review', title: 'Lead-Funnel prüfen', text: 'Klicks sind da, aber keine zugerechneten Lead-Signale. Tracking, Zielgruppe und Seite prüfen; eine B2B-Grenze ist noch nicht validiert.' };
   if (metrics.studio_tests > 0 || metrics.call_requests > 0) return { state: 'signal', title: 'Erste weiterführende Signale', text: 'Meta ordnet der Anzeige Aktionen zu. Das sind weder bestätigte zahlende Studios noch bereits ein bewiesener Gewinner.' };
   return { state: 'untested', title: 'Weiter beobachten', text: 'Noch keine belastbare Entscheidung. Kleine Stichproben und die Datenverzögerung berücksichtigen.' };
 }

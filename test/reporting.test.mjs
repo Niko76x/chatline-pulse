@@ -19,6 +19,16 @@ test('unknown conversion actions stay unknown; an explicit zero remains zero', (
   assert.equal(normalizeInsight(row).studio_tests, null);
   assert.equal(normalizeInsight({ ...row, actions: [{ action_type: 'offsite_conversion.fb_pixel_lead', value: '0' }] }).studio_tests, 0);
 });
+test('the four standard website actions retain their distinct funnel meaning without adding overlapping aliases', () => {
+  const normalized = normalizeInsight({ ...row, actions: [
+    { action_type: 'offsite_conversion.fb_pixel_lead', value: '2' },
+    { action_type: 'omni_lead', value: '99' },
+    { action_type: 'offsite_conversion.fb_pixel_complete_registration', value: '1' },
+    { action_type: 'offsite_conversion.fb_pixel_initiate_checkout', value: '0' },
+    { action_type: 'offsite_conversion.fb_pixel_start_trial', value: '1' },
+  ] }, true);
+  assert.deepEqual([normalized.studio_tests, normalized.call_requests, normalized.checkouts, normalized.trials], [2, 1, 0, 1]);
+});
 test('reader has fixed paths and never puts the credential in the URL', async () => {
   let calls = 0;
   const read = createMetaReader({ token: 'test-only', version: 'v99.0', fetcher: async (url, options) => {

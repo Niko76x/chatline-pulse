@@ -13,6 +13,15 @@ test('dataset statistics are disabled by default and make no request', async () 
   assert.equal(await collectDatasetStats(async () => { calls++; }, { now }), null);
   assert.equal(calls, 0);
 });
+test('dataset labels do not turn all Lead events into new studios or provisioning into a payment', () => {
+  const events = normalizeDatasetStats([bucket([{ event: 'Lead', count: 2 }, { event: 'StartTrial', count: 1 }])], { start, end: now });
+  const lead = events.find(e => e.key === 'Lead'), trial = events.find(e => e.key === 'StartTrial');
+  assert.equal(lead.label, 'Lead-Signale');
+  assert.match(lead.meaning, /im DIY: Studio-Test gestartet/);
+  assert.equal(trial.label, 'Testphase begonnen');
+  assert.match(trial.meaning, /Einrichtung läuft oder ist aktiv/);
+  assert.match(trial.meaning, /Keine bestätigte Zahlung/);
+});
 test('dataset reader requests only the approved aggregate edge and explicit bounded period', async () => {
   const source = await collectDatasetStats(async (path, params) => {
     assert.equal(path, `${SCOPE.dataset}/stats`);

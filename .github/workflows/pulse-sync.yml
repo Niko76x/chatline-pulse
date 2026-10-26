@@ -3,8 +3,8 @@ name: ChatLine Pulse · read-only reporting
 on:
   workflow_dispatch:
   # Activate last, after a successful manual run + public readback:
-  # schedule:
-  #   - cron: '7,37 * * * *'
+  schedule:
+    - cron: '7,37 * * * *'
 permissions:
   contents: write
 concurrency:

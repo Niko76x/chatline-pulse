@@ -102,7 +102,7 @@ export function normalizeInsight(row, ad = false) {
 }
 export async function collectAds(read, now = new Date()) {
   const account = await read(`act_${SCOPE.account}`, { fields: 'id,currency,timezone_name' });
-  if (String(account.id).replace(/^act_/, '') !== SCOPE.account || account.currency !== 'EUR' || !account.timezone_name) throw new ReadError('ACCOUNT_CONFIG_MISMATCH');
+  if (String(account.id).replace(/^act_/, '') !== SCOPE.account || account.currency !== 'EUR' || account.timezone_name !== 'Europe/Berlin') throw new ReadError('ACCOUNT_CONFIG_MISMATCH');
   let today;
   try { today = new Intl.DateTimeFormat('en-CA', { timeZone: account.timezone_name }).format(now); }
   catch { throw new ReadError('ACCOUNT_CONFIG_MISMATCH'); }

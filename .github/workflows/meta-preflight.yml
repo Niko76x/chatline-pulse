@@ -1,0 +1,39 @@
+name: ChatLine Meta · read-only preflight
+on:
+  workflow_dispatch:
+    inputs:
+      report_date:
+        description: 'Abgeschlossener Berichtstag in Europe/Berlin (YYYY-MM-DD, ab 2026-10-22)'
+        required: true
+        type: string
+      include_dataset_stats:
+        description: 'Separater Dataset-Stats-Read mit denselben Rechten; aktiviert keinen Collector'
+        required: false
+        default: false
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: chatline-meta-preflight
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.repository == 'Niko76x/chatline-pulse'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Verify existing safety tests
+        run: npm test
+      - name: Read fixed ChatLine identities and compare one closed day
+        env:
+          META_REPORTING_ACCESS_TOKEN: ${{ secrets.META_REPORTING_ACCESS_TOKEN }}
+          META_GRAPH_VERSION: 'v26.0'
+          PREFLIGHT_REPORT_DATE: ${{ inputs.report_date }}
+          PREFLIGHT_INCLUDE_DATASET_STATS: ${{ inputs.include_dataset_stats }}
+        run: node scripts/meta-preflight.mjs

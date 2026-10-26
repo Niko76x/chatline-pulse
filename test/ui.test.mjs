@@ -11,7 +11,7 @@ const html = await readFile(new URL('../public/index.html', import.meta.url), 'u
 const client = (await readFile(new URL('../public/assets/pulse.js', import.meta.url), 'utf8')).replace(/^import[^\n]+;\r?\n/gm, '');
 
 // Execute the shipped client and its actual handlers; fixtures never contact a service.
-async function renderFixture(snapshot = structuredClone(original), hash = '#/overview') {
+async function renderFixture(snapshot = structuredClone(original), hash = '#/overview', catalog = CREATIVE_CATALOG) {
   const nodes = new Map(), events = {}, win = {}, clipboard = [], requests = [], location = { hash };
   function node(selector) {
     if (!nodes.has(selector)) nodes.set(selector, { innerHTML: '', textContent: '', value: '', hidden: false, disabled: false, attributes: {}, dataset: {}, listeners: {},
@@ -22,7 +22,7 @@ async function renderFixture(snapshot = structuredClone(original), hash = '#/ove
   let incoming = snapshot, transport = { status: 'snapshot' }, fail = false;
   const context = { document: { querySelector: node, querySelectorAll: () => nav, addEventListener: (k,v) => { events[k] = v; } },
     window: { addEventListener: (k,v) => { win[k] = v; } }, location, setInterval: () => {}, Intl, Date,
-    freshness, summarize, reviewAd, analyticsView, CREATIVE_CATALOG, reportedCount, navigator: { clipboard: { writeText: async text => clipboard.push(text) } },
+    freshness, summarize, reviewAd, analyticsView, CREATIVE_CATALOG: catalog, reportedCount, navigator: { clipboard: { writeText: async text => clipboard.push(text) } },
     fetch: async (url, options) => { requests.push([url,options]); assert.equal(url, '/api/data'); if (fail) throw Error('test failure'); return { ok:true, json:async () => ({snapshot:incoming,transport}) }; } };
   await vm.runInNewContext(`(async () => { ${client}\n })()`, context, { timeout:1500 });
   return { node, nav, clipboard, requests, get view() { return node('#view').innerHTML; },
@@ -168,18 +168,21 @@ test('Facebook search, awareness and delivery filters use actual client handlers
   assert.equal((app.node('#facebook-results').innerHTML.match(/<tr><td>/g)||[]).length,original.sources.meta.statuses.filter(row=>row.status==='ACTIVE').length);
   app.input('creative-search','no matches'); assert.match(app.node('#facebook-results').innerHTML,/Keine Anzeige/);
 });
-test('gallery preserves 12 original image hashes and explicitly marks the missing video', async () => {
+test('gallery preserves twelve original images and the recovered original video by their approved hashes', async () => {
   const app = await renderFixture(original,'#/facebook/creatives');
   assert.equal((app.view.match(/class="creative-card"/g)||[]).length,13); assert.equal((app.view.match(/<img /g)||[]).length,12);
-  assert.match(app.view,/freigegebenen Motive und Texte vom 22.10./); assert.match(app.view,/Originaldatei derzeit nicht verknüpft/);
+  assert.match(app.view,/freigegebenen Motive und Texte vom 22.10./); assert.match(app.view,/Originalvideo · 58 Sekunden/); assert.doesNotMatch(app.view,/Originaldatei derzeit nicht verknüpft/);
   assert.match(app.view,/https:\/\/claude.ai\/artifact\/QDK36dCNCCbttM9zscGHx8/); assert.doesNotMatch(app.view,/<video|localStorage|contenteditable/);
   assert.equal(CREATIVE_CATALOG.length,13);
   for (const item of CREATIVE_CATALOG) {
     assert.equal(new URL(item.targetUrl).hostname,'start.chatline.app'); assert.equal(new URL(item.targetUrl).searchParams.get('skin'),'pilates');
     assert.match(item.urlParameters,/ad_id=\{\{ad.id\}\}/);
     if(item.asset) { const bytes=await readFile(new URL('../public'+item.asset,import.meta.url)); assert.equal(createHash('sha256').update(bytes).digest('hex'),item.sha256.toLowerCase()); }
-    else assert.equal(item.code,'PIL-VID-01');
+    else assert.fail('Every approved creative now has its original local asset');
   }
+  const video=CREATIVE_CATALOG.find(row=>row.code==='PIL-VID-01');
+  assert.equal(video.asset,'/creatives/PIL-VID-01.mp4');
+  assert.equal(video.sha256,'e3244cc428b55a6173d853649e39676885b0dd6890ed5ea9b73e0dae3faf7f99');
 });
 test('details map fixed copy and exact Meta ID to five distinct downstream signals', async () => {
   const app = await renderFixture(withMetrics(),'#/facebook/ad/PIL-PA-01'), item=CREATIVE_CATALOG[0];
@@ -188,8 +191,13 @@ test('details map fixed copy and exact Meta ID to five distinct downstream signa
   assert.match(app.view,/<b>CPC<\/b> 1,6 € je Linkklick/);
   assert.match(app.view,/<b>CTR<\/b> 5 % Linkklickrate/);
   for(const [key,value] of [['landing_page_views','4'],['studio_tests','2'],['call_requests','1'],['checkouts','0'],['trials','—']]) assert.ok(app.view.includes(`data-signal="${key}"><b>${value}</b>`));
-  app.navigate('#/facebook/ad/PIL-VID-01'); assert.match(app.view,/ursprüngliche Video ist lokal derzeit nicht verfügbar/); assert.doesNotMatch(app.view,/<video|<img/);
+  app.navigate('#/facebook/ad/PIL-VID-01'); assert.match(app.view,/<video[^>]*src="\/creatives\/PIL-VID-01\.mp4"[^>]*controls playsinline preload="metadata"/); assert.doesNotMatch(app.view,/autoplay|<img|Originaldatei derzeit nicht verknüpft/);
   app.navigate('#/facebook/ad/UNAPPROVED'); assert.match(app.view,/nicht Teil der freigegebenen/); assert.doesNotMatch(app.view,/selected_ad_ids/);
+});
+test('missing media fallback is shown only when the selected creative has no linked asset', async () => {
+  const catalog=structuredClone(CREATIVE_CATALOG); catalog.find(row=>row.code==='PIL-VID-01').asset=null;
+  const app=await renderFixture(original,'#/facebook/ad/PIL-VID-01',catalog);
+  assert.match(app.view,/Originaldatei derzeit nicht verknüpft/); assert.doesNotMatch(app.view,/<video/);
 });
 test('ad review uses only the selected period rather than signals from other days', async () => {
   const fixture=withMetrics(), source=fixture.sources.meta;
@@ -226,7 +234,10 @@ test('tracking preserves independent source failures, old labels, counts and tim
 test('scoped historic links and undecided review criteria do not imply automated ad control', async () => {
   const app=await renderFixture(original,'#/tracking/links'); assert.equal((app.view.match(/data-copy=/g)||[]).length,13); assert.match(app.view,/Stand 23.10.2026/); assert.match(app.view,/muss unabhängig im tatsächlichen Ablauf geprüft/);
   await app.copy('PIL-PA-01'); assert.equal(app.clipboard.length,1); assert.ok(app.clipboard[0].startsWith(CREATIVE_CATALOG[0].targetUrl)); await app.copy('UNAPPROVED'); assert.equal(app.clipboard.length,1);
-  app.navigate('#/tracking/criteria'); assert.match(app.view,/keine automatische Stopregel/); assert.match(app.view,/noch gemeinsam festzulegen/); assert.doesNotMatch(app.view,/2 €|25 Klicks|Gewinner|progress/);
+  app.navigate('#/tracking/criteria'); assert.match(app.view,/keine festen Abschaltgrenzen/); assert.match(app.view,/noch gemeinsam festzulegen/);
+  assert.match(app.view,/seit Beginn desselben Teststands/); assert.match(app.view,/Link-CPC = Gesamtausgaben geteilt durch Linkklicks/); assert.match(app.view,/nicht alle Klicks und kein Tagesreset/);
+  assert.match(app.view,/Top-Spender ist kein Gewinner/); assert.match(app.view,/CPM allein entscheidet nicht/); assert.match(app.view,/Tracking und Landingpage prüfen/); assert.match(app.view,/Zeit vor einer neuen Messung sind keine Null/); assert.match(app.view,/Die Entscheidung bleibt menschlich/);
+  assert.doesNotMatch(app.view,/2 €|5 €|10 €|25 Klicks|progress/);
 });
 test('display strings are escaped; failed or older reads never redates or replaces newer source data', async () => {
   const fixture=withMetrics(); fixture.ads[0].name='<img src=x onerror=alert(1)>'; const app=await renderFixture(fixture,'#/facebook');

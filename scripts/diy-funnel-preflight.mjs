@@ -24,6 +24,30 @@ const safeCount = value => Number.isSafeInteger(value) && value >= 0;
 const filterFor = event => `environment eq 'production' and eventName eq '${event}' and eventData/campaign_id eq '${CAMPAIGN}'`;
 const httpError = status => status === 401 ? 'ANALYTICS_LOGIN_REQUIRED' : status === 403 ? 'ANALYTICS_PERMISSION_REQUIRED' : status === 402 ? 'ANALYTICS_PLAN_REQUIRED' : status === 429 ? 'ANALYTICS_RATE_LIMITED' : status >= 500 ? 'ANALYTICS_UNAVAILABLE' : 'ANALYTICS_READ_FAILED';
 
+/** Public date diagnostics only; no permissive Date.parse fallback for text. */
+export function safeQueryBound(value) {
+  const rejected = { valid: false, input_type: kind(value) };
+  if (typeof value === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const parsed = Date.parse(`${value}T00:00:00.000Z`);
+      return Number.isFinite(parsed) && new Date(parsed).toISOString().slice(0, 10) === value
+        ? { valid: true, format: 'utc_date', value } : rejected;
+    }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|\+00:00)$/.test(value)) {
+      const parsed = Date.parse(value);
+      // Validate the calendar and clock without rounding away the API's exact
+      // fractional representation. Invalid 24:00/Feb 30 strings cannot pass.
+      if (Number.isFinite(parsed) && new Date(parsed).toISOString().slice(0, 19) === value.slice(0, 19))
+        return { valid: true, format: 'utc_iso', value };
+    }
+  } else if (Number.isSafeInteger(value) && value >= Date.UTC(2000, 0, 1) && value < Date.UTC(2100, 0, 1)) {
+    // The documented numeric form is converted into a UTC ISO value, never
+    // echoed as an arbitrary identifier-shaped number.
+    return { valid: true, format: 'epoch_milliseconds_as_utc_iso', value: new Date(value).toISOString() };
+  }
+  return rejected;
+}
+
 function queryChecks(query, day, filter) {
   const start = Date.parse(`${day}T00:00:00.000Z`);
   const midnight = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T00:00:00(?:\.000)?Z$/.test(value) ? Date.parse(value) : NaN;
@@ -50,6 +74,8 @@ export function inspectAggregate(body, { day, event }) {
     known_row_fields: rows ? [...new Set(rows.slice(0, 32).flatMap(knownFields))].sort() : [],
     known_event_data_fields: rows ? [...new Set(rows.slice(0, 32).flatMap(row => knownFields(row?.eventData)))].sort() : [],
     query_checks: checks,
+    // Representation diagnosis does not alter any acceptance check below.
+    query_bound_echo: { since: safeQueryBound(body?.query?.since), until: safeQueryBound(body?.query?.until) },
   };
   const invalid = error => ({ ...summary, status: 'error', error, rows: [], event_reception_proven: false });
   if (body?.version !== 1 || !rows || rows.length > 32) return invalid('PREFLIGHT_RESPONSE_SHAPE_UNVALIDATED');

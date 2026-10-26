@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { SCOPE, AD_IDS, createMetaReader } from '../api/data.js';
-import { runPreflight, safeError } from '../scripts/meta-preflight.mjs';
+import { runPreflight, safeError, safeDatasetGraphError } from '../scripts/meta-preflight.mjs';
 
 const now = new Date('2026-10-26T10:00:00.000Z');
 const date = '2026-10-25';
 function fixture(overrides = {}) {
   const calls = [];
   let datasetStatus = null;
+  let datasetError = null;
   const row = { account_id: SCOPE.account, campaign_id: SCOPE.campaign, adset_id: SCOPE.adset,
     date_start: date, date_stop: date, spend: '7.50', impressions: '100', reach: '90',
     inline_link_clicks: '2', actions: [{ action_type: 'landing_page_view', value: '1' },
@@ -44,16 +45,20 @@ function fixture(overrides = {}) {
       }
       if (path === `${SCOPE.dataset}/stats`) {
         datasetStatus = overrides.datasetForbidden ? 403 : 200;
-        if (overrides.datasetForbidden) return Response.json({ error: { code: 200, message: 'PRIVATE_MOCK_DETAIL_DO_NOT_LOG' } }, { status: 403 });
+        if (overrides.datasetForbidden) {
+          const error = { code: 200, error_subcode: 33, type: 'OAuthException', message: 'PRIVATE_MOCK_DETAIL_DO_NOT_LOG', fbtrace_id: 'PRIVATE_TRACE' };
+          datasetError = safeDatasetGraphError(error);
+          return Response.json({ error }, { status: 403 });
+        }
         assert.equal(url.searchParams.get('aggregation'), 'event_total_counts');
-        assert.equal(url.searchParams.get('start_time'), '2026-10-26T00:00:00.000Z');
-        assert.equal(url.searchParams.get('end_time'), now.toISOString());
+        assert.equal(url.searchParams.get('start_time'), String(Date.parse('2026-10-26T00:00:00.000Z') / 1000));
+        assert.equal(url.searchParams.get('end_time'), String(now.getTime() / 1000));
         return Response.json({ data: [{ aggregation: 'event_total_counts',
           start_time: '2026-10-26T00:00:00.000Z', data: [{ event: 'PageView', count: '11' }, { event: 'Lead', count: 0 }] }] });
       }
       throw Error('Unexpected endpoint');
     } });
-  return { read, calls, datasetHttpStatus: () => datasetStatus };
+  return { read, calls, datasetHttpStatus: () => datasetStatus, datasetGraphError: () => datasetError };
 }
 test('real reader and collector validate identities before reports, narrow both queries and preserve unknown versus zero', async () => {
   const f = fixture();
@@ -109,10 +114,23 @@ test('optional Dataset remains independent; forbidden reads reveal no raw messag
   const result = await runPreflight({ ...f, reportDate: date, includeDataset: true, now });
   assert.equal(result.status, 'ads_validated');
   assert.deepEqual(result.dataset, { status: 'error', enable_flag_changed: false,
-    error: 'META_PERMISSION_REQUIRED', http_status: 403 });
+    error: 'META_PERMISSION_REQUIRED', http_status: 403,
+    graph_error: { code: 200, subcode: 33, type_category: 'oauth' } });
   assert.equal(JSON.stringify(result).includes('PRIVATE_MOCK'), false);
   assert.equal(JSON.stringify(result).includes('fixture-only'), false);
   assert.equal(safeError(Error('PRIVATE_MOCK_DETAIL_DO_NOT_LOG')), 'PREFLIGHT_FAILED');
+});
+test('Dataset diagnostic copies only finite numeric codes and fixed type categories, never messages or trace metadata', () => {
+  const privateValue = 'PRIVATE_VALUE_DO_NOT_COPY';
+  const result = safeDatasetGraphError({ code: 100, error_subcode: 33, type: 'GraphMethodException',
+    message: privateValue, fbtrace_id: privateValue, access_token: privateValue });
+  assert.deepEqual(result, { code: 100, subcode: 33, type_category: 'graph_method' });
+  assert.equal(JSON.stringify(result).includes(privateValue), false);
+  assert.deepEqual(safeDatasetGraphError({ code: '100', error_subcode: -1, type: privateValue }),
+    { code: null, subcode: null, type_category: 'other' });
+  assert.deepEqual(safeDatasetGraphError({ code: Infinity, error_subcode: 2147483648, type_category: privateValue }),
+    { code: null, subcode: null, type_category: 'other' });
+  assert.deepEqual(safeDatasetGraphError(result), result, 'Already sanitized metadata is checked again before reporting');
 });
 test('optional valid Dataset uses a bounded UTC window with missing event counts left unknown', async () => {
   const result = await runPreflight({ ...fixture(), reportDate: date, includeDataset: true, now });

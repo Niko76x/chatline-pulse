@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
-import { PROJECT, TEAM, CAMPAIGN, ENDPOINT, EVENTS, ADS, runDiyPreflight, inspectAggregate } from '../scripts/diy-funnel-preflight.mjs';
+import { PROJECT, TEAM, CAMPAIGN, ENDPOINT, EVENTS, ADS, runDiyPreflight, inspectAggregate, safeQueryBound } from '../scripts/diy-funnel-preflight.mjs';
 
 const now = new Date('2026-10-26T01:30:00.000Z'), day = '2026-10-26';
 const id = Object.keys(ADS)[0], secret = 'ONLY_FIXTURE_SECRET_DO_NOT_OUTPUT';
@@ -100,6 +100,24 @@ test('no secret means no network; fixed UTC date is not the Berlin calendar date
   let called = false;
   const report = await runDiyPreflight({ token: '', now: new Date('2026-10-25T23:30:00Z'), fetcher: async () => { called = true; } });
   assert.equal(called, false); assert.equal(report.day, '2026-10-25'); assert.equal(report.status, 'not_configured');
+});
+
+test('strict public date echoes diagnose a mismatch without relaxing date acceptance or copying arbitrary text', () => {
+  for (const [value, format] of [[day, 'utc_date'], ['2026-10-26T00:00:00Z','utc_iso'], ['2026-10-26T23:59:59.999999Z','utc_iso'], ['2026-10-26T03:00:00+00:00','utc_iso'], [Date.parse('2026-10-26T03:28:44.154Z'),'epoch_milliseconds_as_utc_iso']]) {
+    const echo = safeQueryBound(value);
+    assert.equal(echo.valid, true); assert.equal(echo.format, format);
+  }
+  for (const value of [secret, '2026-02-30', '2026-02-30T00:00:00Z', '2026-10-26T24:00:00Z', '2026-10-26T03:00:00+02:00', '2026-10-26T03:00:00Z PRIVATE', { value: secret }, 1727278251668513]) {
+    const echo = safeQueryBound(value);
+    assert.equal(echo.valid, false); assert.equal(Object.hasOwn(echo, 'value'), false);
+    assert.equal(JSON.stringify(echo).includes(secret), false);
+  }
+  const mismatch = body(); mismatch.query.until = '2026-10-26T00:00:00.000Z';
+  const result = inspectAggregate(mismatch, { day, event: EVENTS[0] });
+  assert.equal(result.status, 'error'); assert.equal(result.query_checks.until, false);
+  assert.deepEqual(result.query_bound_echo.until, { valid: true, format: 'utc_iso', value: '2026-10-26T00:00:00.000Z' });
+  mismatch.query.until = secret;
+  assert.equal(JSON.stringify(inspectAggregate(mismatch, { day, event: EVENTS[0] })).includes(secret), false);
 });
 
 test('workflow is manual-only, contents-read, main/repository gated, secret only in read step', async () => {

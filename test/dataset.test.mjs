@@ -26,8 +26,10 @@ test('dataset reader requests only the approved aggregate edge and explicit boun
   const source = await collectDatasetStats(async (path, params) => {
     assert.equal(path, `${SCOPE.dataset}/stats`);
     assert.equal(params.aggregation, 'event_total_counts');
-    assert.equal(params.start_time, start.toISOString());
-    assert.equal(params.end_time, now.toISOString());
+    assert.equal(params.start_time, String(start.getTime() / 1000));
+    assert.equal(params.end_time, String(now.getTime() / 1000));
+    assert.match(params.start_time, /^\d+$/);
+    assert.match(params.end_time, /^\d+$/);
     assert.equal(params.fields, 'aggregation,start_time,data');
     return [bucket([{ event: 'PageView', count: '4' }, { value: 'Lead', count: 0 }, { event: 'Unknown private event', count: 99 }])];
   }, { enabled: true, now });
@@ -36,6 +38,37 @@ test('dataset reader requests only the approved aggregate edge and explicit boun
   assert.equal(source.events.find(e => e.key === 'Lead').count, 0);
   assert.equal(source.events.find(e => e.key === 'CompleteRegistration').count, null);
   assert.equal(JSON.stringify(source).includes('Unknown private'), false);
+});
+test('Unix request seconds stay in the current UTC day across the Berlin DST boundary', async () => {
+  for (const current of ['2026-10-25T00:30:00.999Z', '2026-10-25T02:30:00.999Z', '2026-10-26T00:00:00.001Z']) {
+    const observed = new Date(current);
+    const midnight = new Date(`${current.slice(0, 10)}T00:00:00.000Z`);
+    const wireEnd = new Date(Math.floor(observed.getTime() / 1000) * 1000);
+    const source = await collectDatasetStats(async (path, params) => {
+      assert.equal(path, `${SCOPE.dataset}/stats`);
+      assert.equal(params.start_time, String(midnight.getTime() / 1000));
+      assert.equal(params.end_time, String(wireEnd.getTime() / 1000));
+      return [{ aggregation: 'event_total_counts', start_time: midnight.toISOString(), data: [{ value: 'Lead', count: 0 }] }];
+    }, { enabled: true, now: observed });
+    assert.equal(source.observed_at, current);
+    assert.equal(source.period.from, current.slice(0, 10));
+    assert.equal(source.period.to, current.slice(0, 10));
+    assert.ok(source.note.includes(wireEnd.toISOString()));
+  }
+});
+test('response datetimes require explicit timezone and a valid calendar; Unix request format is not guessed as response format', () => {
+  const normalize = time => normalizeDatasetStats([{ ...bucket([{ value: 'Lead', count: 1 }]), start_time: time }], { start, end: now });
+  for (const valid of ['2026-10-25T00:00:00Z', '2026-10-25T00:00:00.000Z', '2026-10-25T01:00:00+0100', '2026-10-25T01:00:00+01:00']) {
+    assert.equal(normalize(valid).find(row => row.key === 'Lead').count, 1);
+  }
+  for (const invalid of [start.getTime() / 1000, String(start.getTime() / 1000), start.getTime(), String(start.getTime()),
+    '2026-10-25', '2026-10-25T00:00:00', 'October 25 2026', '2026-10-25T00:00:00+2460', '2026-10-25T24:00:00Z']) {
+    assert.throws(() => normalize(invalid), /DATASET_INVALID_PERIOD/);
+  }
+  assert.throws(() => normalizeDatasetStats([{ ...bucket([]), start_time: '2026-02-30T00:00:00Z' }], {
+    start: new Date('2026-03-02T00:00:00Z'), end: new Date('2026-03-02T12:00:00Z'),
+  }), /DATASET_INVALID_PERIOD/);
+  assert.throws(() => normalizeDatasetStats([bucket([])], { start: new Date('invalid'), end: now }), /DATASET_INVALID_PERIOD/);
 });
 test('empty stats, malformed counts, duplicate events and duplicate buckets are not converted into success', () => {
   const normalize = rows => normalizeDatasetStats(rows, { start, end: now });

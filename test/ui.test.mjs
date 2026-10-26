@@ -37,10 +37,86 @@ function withMetrics() {
   const fixture = structuredClone(original), row = {date:'2026-10-25',spend:8,impressions:100,reach:80,link_clicks:5,landing_page_views:4,studio_tests:2,call_requests:1,checkouts:0,trials:null};
   fixture.sources.meta.daily = [row]; fixture.sources.meta.ads_daily = [{...row,code:'PIL-PA-01'}]; return fixture;
 }
+function diySource(overrides={}) {
+  const at=new Date().toISOString();
+  return {source_code:'vercel_diy_events_production',site:'start.chatline.app',campaign:'120274644271350555',timezone:'UTC',collection_started_at:'2026-10-26T02:30:39Z',status:'awaiting_events',observed_at:at,attempted_at:at,period:{from:'2026-10-26',to:'2026-10-26'},daily:[],error:null,...overrides};
+}
+function auditSource(overrides={}) {
+  const at=new Date().toISOString(), checks=['scope_validated','destination_present','format_supported','landing_keys_in_url_tags_absent','https_domain','root_path','skin','ref','no_fragment','unique_query_keys','effective_utm_contract'],tags=['utm_source','utm_medium','utm_campaign','utm_content','campaign_id','adset_id','ad_id'];
+  return {source_code:'meta_ad_destination_checks',status:'connected',observed_at:at,attempted_at:at,error:null,complete:true,checked_count:13,request_count:13,ads:CREATIVE_CATALOG.map(row=>({ad_id:row.adId,code:row.code,status:'valid',checked_at:at,attempted_at:at,checks:Object.fromEntries(checks.map(key=>[key,true])),tag_checks:Object.fromEntries(tags.map(key=>[key,true])),extra_keys:[],unrecognized_extra_key_count:0,error:null})),...overrides};
+}
+test('optional sources absent keeps the Meta funnel usable and the link template historical', async () => {
+  const app=await renderFixture(withMetrics(),'#/funnel/diy');
+  assert.match(app.view,/Meta-Zuordnung/); assert.match(app.view,/eigene DIY-Ablauf ist noch nicht verbunden/);
+  assert.equal(app.node('#period-wrap').hidden,false); assert.doesNotMatch(app.view,/data-diy-count=/);
+  app.navigate('#/tracking/links'); assert.match(app.view,/Stand 23.10.2026/); assert.match(app.view,/aktueller Link-Audit ist noch nicht verbunden/);
+  assert.match(app.view,/Anzeigen-\/UTM-Vorlage kopieren/); assert.match(app.view,/Meta ersetzt \{\{…\}\} beim Ausspielen/);
+});
+test('awaiting DIY access is distinct from conversion zero and uses its own UTC period', async () => {
+  const fixture=withMetrics(); fixture.sources.diy_funnel=diySource();
+  const app=await renderFixture(fixture,'#/funnel');
+  assert.equal(app.node('#period-wrap').hidden,true); assert.match(app.view,/Eigener DIY-Ablauf/); assert.match(app.view,/Zugang geprüft · wartet auf Signale/);
+  assert.equal((app.view.match(/data-diy-count="[^"]+">—<\/td>/g)||[]).length,4);
+  assert.doesNotMatch(app.view,/data-diy-count="[^"]+">0/); assert.match(app.view,/kein Nachweis für 0 Studio-Tests/);
+  assert.match(app.view,/Erfassung ab 26\. Okt\., 02:30 UTC/); assert.match(app.view,/laufende UTC-Tag ist unvollständig/);
+  assert.doesNotMatch(app.view,/Facebook-Kontotage|Europe\/Berlin/);
+  app.navigate('#/funnel/meta'); assert.equal(app.node('#period-wrap').hidden,false); assert.match(app.view,/Meta ordnet diese Aktionen/); assert.doesNotMatch(app.view,/data-diy-count=/);
+});
+test('hypothetical later DIY signals are separate additive events with ad-day row coverage and no rate', async () => {
+  const fixture=withMetrics(); fixture.sources.diy_funnel=diySource({status:'connected',daily:[
+    {date:'2026-10-26',code:'PIL-PA-01',studio_started:2,call_requested:1,checkout_started:0,dashboard_activated:1},
+    {date:'2026-10-26',code:'PIL-SA-02',studio_started:null,call_requested:0,checkout_started:null,dashboard_activated:null},
+  ]});
+  const before=structuredClone(fixture),app=await renderFixture(fixture,'#/funnel/diy');
+  assert.match(app.view,/data-diy-count="studio_started">Mind. 2/); assert.match(app.view,/1 von 2 gemeldeten Anzeigen-\/Tageszeilen/);
+  assert.match(app.view,/data-diy-count="checkout_started">—/); assert.match(app.view,/data-diy-count="dashboard_activated">Mind. 1/);
+  assert.doesNotMatch(app.view,/1 von 2 gemeldeten Tagen|>[\d,.]+ %<\/td>/);
+  assert.match(app.view,/kein Beleg für Seitenbesuch oder Zahlung/i); assert.match(app.view,/Kein Nachweis eines geführten Gesprächs/);
+  app.navigate('#/overview'); assert.match(app.view,/Nächster Beleg · Nachweis offen/); assert.equal((app.view.match(/class="metric(?: highlight)?"/g)||[]).length,4);
+  assert.deepEqual(fixture,before);
+});
+test('DIY ad details replace the five Meta signal row without filtering by the Meta period', async () => {
+  const fixture=withMetrics(); fixture.sources.diy_funnel=diySource({status:'connected',daily:[{date:'2026-10-26',code:'PIL-PA-01',studio_started:2,call_requested:1,checkout_started:0,dashboard_activated:1},{date:'2026-10-26',code:'PIL-SA-02',studio_started:99,call_requested:99,checkout_started:99,dashboard_activated:99}]});
+  const app=await renderFixture(fixture,'#/facebook/ad/PIL-PA-01');
+  assert.equal((app.view.match(/data-diy-signal=/g)||[]).length,4); assert.doesNotMatch(app.view,/data-signal=/);
+  assert.match(app.view,/data-diy-signal="studio_started"><b>2<\/b>/); assert.doesNotMatch(app.view,/>99</);
+  assert.match(app.view,/<b>CPM<\/b> 80 €/); assert.match(app.view,/von den Meta-Kennzahlen oben getrennt/);
+  assert.equal(app.node('#period-wrap').hidden,false); app.period('latest'); assert.match(app.view,/data-diy-signal="studio_started"><b>2<\/b>/);
+});
+test('DIY error preserves its previous values and clock while marking failure, even if the clock is fresh', async () => {
+  const fixture=withMetrics(), source=diySource({status:'error',error:'DIY_PERMISSION_REQUIRED',daily:[{date:'2026-10-26',code:'PIL-PA-01',studio_started:1,call_requested:null,checkout_started:null,dashboard_activated:null}]}); fixture.sources.diy_funnel=source;
+  const app=await renderFixture(fixture,'#/funnel/diy'); assert.match(app.view,/Abruf fehlgeschlagen/); assert.match(app.view,/Letzte bekannte Werte bleiben sichtbar/); assert.match(app.view,/data-diy-count="studio_started">1/);
+  assert.doesNotMatch(app.view,/Aktuell abgerufen/); assert.equal(source.observed_at,fixture.sources.diy_funnel.observed_at);
+  app.navigate('#/tracking'); assert.match(app.view,/Eigener DIY-Ablauf/); assert.match(app.view,/Versuch:/);
+});
+test('live link audit distinguishes verified core, unverified extra values and historical template copy', async () => {
+  const fixture=withMetrics(), source=auditSource(); source.ads[0].status='core_verified_extra_review'; source.ads[0].extra_keys=[{key:'utm_id',category:'optional_utm'},{key:'hsa_acc',category:'crm_tracking'}]; fixture.sources.link_audit=source;
+  const app=await renderFixture(fixture,'#/tracking/links');
+  assert.equal((app.view.match(/Kernlink &amp; UTM geprüft/g)||[]).length,13); assert.match(app.view,/13 von 13 Anzeigen/);
+  assert.match(app.view,/utm_id, hsa_acc/); assert.match(app.view,/Die Werte wurden nicht geprüft/);
+  assert.match(app.view,/bestätigten Kernlink nicht automatisch ungültig/); assert.doesNotMatch(app.view,/UTM kaputt|UNEXPECTED_URL_TAG_KEYS/);
+  assert.match(app.view,/hinterlegte Anzeigen-\/UTM-Vorlage vom 23.10/); await app.copy('PIL-PA-01'); assert.match(app.clipboard[0],/\{\{ad.id\}\}/); assert.match(app.node('#copy-status').textContent,/Meta ersetzt \{\{…\}\}/);
+});
+test('partial link audit uses per-ad last-check clocks and never turns retained checks into a new success', async () => {
+  const fixture=withMetrics(), old='2026-10-25T08:00:00.000Z', source=auditSource({status:'partial',complete:false,checked_count:12,error:'LINK_AUDIT_PARTIAL_FAILURE'}); source.ads[0].status='read_error'; source.ads[0].checked_at=old; source.ads[0].error='META_PERMISSION_REQUIRED'; fixture.sources.link_audit=source;
+  const app=await renderFixture(fixture,'#/tracking/links'); assert.match(app.view,/Teilweise abgerufen/); assert.match(app.view,/12 von 13 Anzeigen/); assert.match(app.view,/Abruf fehlgeschlagen/); assert.match(app.view,/25\. Okt\., 09:00/); assert.match(app.view,/Neuer Versuch:/);
+  const first=app.view.match(/<tbody>(<tr>[\s\S]*?<\/tr>)/)[1]; assert.doesNotMatch(first,/Kernlink &amp; UTM geprüft/);
+});
+test('audit configuration failures show safe check names; arbitrary URLs, values, errors and parameter names never render', async () => {
+  const fixture=withMetrics(),source=auditSource(); const row=source.ads[0]; row.status='needs_review'; row.error='PRIVATE_ERROR'; row.checks.skin=false; row.raw_url='https://private.example/PRIVATE_RAW'; row.extra_keys=[{key:'PRIVATE_PARAMETER',category:'PRIVATE_CATEGORY'},{key:'hsa_cam',category:'crm_tracking',value:'PRIVATE_VALUE'}]; row.unrecognized_extra_key_count=1; fixture.sources.link_audit=source;
+  const app=await renderFixture(fixture,'#/tracking/links'); assert.match(app.view,/Konfiguration prüfen/); assert.match(app.view,/Pilates-Skin/); assert.match(app.view,/Weitere nicht zugeordnete Parameter: 1/); assert.match(app.view,/hsa_cam/); assert.doesNotMatch(app.view,/PRIVATE_/);
+});
+test('stale awaiting and pending audit states do not become fresh because the page was opened', async () => {
+  const fixture=withMetrics(); fixture.sources.diy_funnel=diySource({observed_at:'2026-10-26T02:31:00.000Z'});
+  const app=await renderFixture(fixture,'#/funnel/diy'); assert.match(app.view,/Wartet auf Signale · veraltet/); assert.match(app.view,/Letzter belegter Stand/); assert.doesNotMatch(app.view,/Aktuell abgerufen|Zugang geprüft · wartet/);
+  fixture.sources.link_audit=auditSource({status:'pending',observed_at:null,attempted_at:null,checked_count:0,request_count:0,complete:false});
+  fixture.sources.link_audit.ads.forEach(row=>{row.status='pending';row.checked_at=null;row.attempted_at=null;row.checks=Object.fromEntries(Object.keys(row.checks).map(key=>[key,null]));row.tag_checks=Object.fromEntries(Object.keys(row.tag_checks).map(key=>[key,null]));row.unrecognized_extra_key_count=null;});
+  await app.reload(fixture); app.navigate('#/tracking/links'); assert.match(app.view,/Prüfung ausstehend/); assert.doesNotMatch(app.view,/Kernlink &amp; UTM geprüft|Aktuell abgerufen/);
+});
 test('overview has four KPIs, real source status and no invented business targets', async () => {
   const app = await renderFixture();
   assert.equal((app.view.match(/class="metric(?: highlight)?"/g)||[]).length,4);
-  assert.deepEqual([...app.view.matchAll(/class="metric-label">([^<]+)</g)].map(item=>item[1]),['Ausgaben','Linkklicks','Zielseitenaufrufe','Studio-Tests']);
+  assert.deepEqual([...app.view.matchAll(/class="metric-label">([^<]+)</g)].map(item=>item[1]),['Ausgaben','Linkklicks','Zielseitenaufrufe','Lead-Signale']);
   assert.match(app.view,/Meta-Lead-Signale · kein Kunden-Nachweis/); assert.doesNotMatch(app.view,/je Lead-Signal/);
   assert.match(app.view,/Historischer Stand/); assert.match(app.view,/noch nicht gemeinsam festgelegt/);
   assert.match(app.view,/Nächster Beleg · Nachweis offen/); assert.match(app.view,/Ein Studio durchläuft den DIY-Einstieg eigenständig bis zum Dashboard\./);
@@ -61,7 +137,7 @@ test('known positive partial counts are minimums in overview, Facebook, detail a
   source.ads_daily=source.daily.map(row=>({...row,code:'PIL-PA-01'}));
   const before=structuredClone(fixture), app=await renderFixture(fixture);
   assert.match(app.view,/class="metric-label">Zielseitenaufrufe<\/span><strong class="metric-value">Mind. 2<\/strong>/);
-  assert.match(app.view,/class="metric-label">Studio-Tests<\/span><strong class="metric-value">Mind. 1<\/strong>/);
+  assert.match(app.view,/class="metric-label">Lead-Signale<\/span><strong class="metric-value">Mind. 1<\/strong>/);
   assert.match(app.view,/1 von 2 gemeldeten Tagen mit Messwert/); assert.doesNotMatch(app.view,/€ je Lead-Signal/);
   assert.match(app.view,/Nächster Beleg · Nachweis offen/,'Meta-Lead signals never complete the independent-journey milestone');
   app.navigate('#/facebook'); const row=app.view.match(/<tbody>(<tr>[\s\S]*?<\/tr>)/)[1];
@@ -135,9 +211,9 @@ test('legacy website sources remain unknown; daily visitors are never summed acr
 test('four product steps distinguish unknown and zero while rates remain open without a cohort contract', async () => {
   const fixture=withMetrics(), app=await renderFixture(fixture,'#/funnel');
   assert.equal((app.view.match(/class="funnel-stage"/g)||[]).length,4);
-  for(const label of ['Website / Studio eingegeben','Telefon / Testanruf angefordert','Zahlungsseite / Checkout begonnen','Einrichtung / Testphase begonnen']) assert.ok(app.view.includes(label));
+  for(const label of ['Meta-Lead-Signal','Telefon / Testanruf angefordert','Zahlungsseite / Checkout begonnen','Einrichtung / Testphase begonnen']) assert.ok(app.view.includes(label));
   assert.match(app.view,/funnel-count">0<\/td>/); assert.match(app.view,/funnel-count">—(?:<span|<\/td>)/);
-  assert.match(app.view,/Anteile und Conversionraten bleiben offen/); assert.match(app.view,/keine zusammenhängende Nutzergruppe/); assert.doesNotMatch(app.view,/>[\d,.]+ %<\/td>|E-Mail|Emaileingabe|Zahlung bestätigt/);
+  assert.match(app.view,/Die Schritte zählen nicht zwangsläufig dieselben Studios; daher keine Conversionrate/); assert.doesNotMatch(app.view,/Anteil \/ Rate/); assert.doesNotMatch(app.view,/>[\d,.]+ %<\/td>|E-Mail|Emaileingabe|Zahlung bestätigt/);
   fixture.sources.meta.daily[0].call_requests=5; const excessive=await renderFixture(fixture,'#/funnel'); assert.doesNotMatch(excessive.view,/>250 %<\/td>/);
 });
 test('tracking preserves independent source failures, old labels, counts and timestamps safely', async () => {

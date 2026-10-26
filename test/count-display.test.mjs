@@ -23,6 +23,13 @@ test('complete measurements retain exact zero or counts, with no lower-bound lab
 test('the display helper cannot add reach, unique visitors, money or computed rates', () => {
   for(const key of ['reach','visitors','spend','cpc','cpm','ctr','cost_per_test']) assert.equal(reportedCount([{[key]:3},{[key]:null}],key).value,null);
 });
+test('DIY additive event counts use row coverage without creating unique visitor totals', () => {
+  for(const key of ['studio_started','call_requested','checkout_started','dashboard_activated']) {
+    const result=reportedCount([{[key]:2},{[key]:null}],key);
+    assert.equal(result.value,2); assert.equal(result.minimum,true); assert.equal(result.known_days,1); assert.equal(result.reported_days,2);
+  }
+  assert.equal(reportedCount([{dashboard_activated:0},{dashboard_activated:null}],'dashboard_activated').value,null);
+});
 test('malformed, negative and unsafe counts are unknown rather than coerced into observations', () => {
   for(const value of ['2',-1,NaN,Infinity,1.5]) {
     const result=reportedCount([{checkouts:2},{checkouts:value}],'checkouts'); assert.equal(result.value,2); assert.equal(result.minimum,true); assert.equal(result.known_days,1);

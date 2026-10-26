@@ -1,3 +1,7 @@
+import { ADS as DIY_AD_IDS } from '../scripts/diy-funnel-preflight.mjs';
+import { collectDiyFunnel, validateDiyFunnelSource, mergeDiyFunnel } from '../lib/diy-funnel.mjs';
+import { assertLinkAuditScope, validateLinkAudit, collectLinkAudit, mergeLinkAudit, linkAuditAttemptedInSlot } from '../lib/link-audit.js';
+
 // These are reviewed ChatLine assets. Request parameters cannot change them.
 export const SCOPE = Object.freeze({
   account: '2128240694419507',
@@ -17,6 +21,8 @@ export const AD_IDS = Object.freeze({
   '120275422266140555': 'PIL-SA-03', '120275421929310555': 'PIL-SA-04',
   '120275421929320555': 'PIL-VID-01',
 });
+assertLinkAuditScope(SCOPE, AD_IDS);
+assertLinkAuditScope(SCOPE, DIY_AD_IDS);
 // Verified in the HeyHo Systems Work profile. These are project-production
 // aggregates, including the listed aliases; no host-only filter is assumed.
 // Browser/environment input cannot substitute a project or enumerate the team.
@@ -336,7 +342,7 @@ export function createAnalyticsDiagnosticFetcher({ enabled = false, fetcher = fe
 }
 
 
-const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews').split(' '));
+const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated').split(' '));
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
 function scan(value, depth = 0) {
   if (depth > 15) throw new Error('SNAPSHOT_INVALID');
@@ -360,6 +366,8 @@ export function validateSnapshot(data) {
     }
     if (source.statuses?.some(s => !Object.values(AD_IDS).includes(s.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   }
+  if (data.sources.link_audit !== undefined) validateLinkAudit(data.sources.link_audit);
+  if (data.sources.diy_funnel !== undefined) validateDiyFunnelSource(data.sources.diy_funnel);
   const sites = data.sources.analytics?.sites || [];
   if (!Array.isArray(sites) || sites.length > 2 || new Set(sites.map(s => s.site)).size !== sites.length) throw new Error('SNAPSHOT_ANALYTICS_SCOPE_MISMATCH');
   for (const site of sites) {
@@ -373,7 +381,7 @@ export function validateSnapshot(data) {
   }
   return data;
 }
-export function canSkipCollection(previous, { slot, now = new Date(), analyticsProjects = ANALYTICS_PROJECTS, metaEnabled = false, datasetEnabled = false } = {}) {
+export function canSkipCoreCollection(previous, { slot, now = new Date(), analyticsProjects = ANALYTICS_PROJECTS, metaEnabled = false, datasetEnabled = false } = {}) {
   const start = Date.parse(slot), current = now.getTime();
   if (!Number.isFinite(start) || !Number.isFinite(current)) return false;
   const completedInSlot = source => {
@@ -384,6 +392,18 @@ export function canSkipCollection(previous, { slot, now = new Date(), analyticsP
   const datasetDone = !datasetEnabled || completedInSlot(previous.sources.website_events) && previous.sources.website_events.source_code === 'meta_dataset_stats';
   const anyEnabled = metaEnabled || datasetEnabled || analyticsProjects.length > 0;
   return anyEnabled && previous.snapshot_id === slot && (!metaEnabled || completedInSlot(previous.sources.meta)) && analyticsDone && datasetDone;
+}
+export function canSkipCollection(previous, options = {}) {
+  const { analyticsProjects = ANALYTICS_PROJECTS, metaEnabled = false, datasetEnabled = false, linkAuditEnabled = false, diyFunnelEnabled = false } = options;
+  const hasCore = metaEnabled || datasetEnabled || analyticsProjects.length > 0;
+  return (hasCore || linkAuditEnabled || diyFunnelEnabled) && (!hasCore || canSkipCoreCollection(previous, options)) &&
+    (!linkAuditEnabled || linkAuditAttemptedInSlot(previous.sources.link_audit, options)) &&
+    (!diyFunnelEnabled || diyFunnelAttemptedInSlot(previous.sources.diy_funnel, options));
+}
+export function diyFunnelAttemptedInSlot(source, { slot, now = new Date() } = {}) {
+  const start = Date.parse(slot), attempted = Date.parse(source?.attempted_at), current = now.getTime();
+  return source?.source_code === 'vercel_diy_events_production' && Number.isFinite(start) && Number.isFinite(attempted) &&
+    attempted >= start && attempted < start + 1800000 && attempted <= current;
 }
 export function mergeAnalytics(previous, results, { now = new Date(), slot = null } = {}) {
   validateSnapshot(previous);
@@ -531,37 +551,66 @@ export function mergeDatasetStats(previous, result, { now = new Date(), error = 
 }
 
 
-export function assertConfiguredSources({ metaEnabled = false, datasetEnabled = false, metaOptions = {}, analyticsOptions = {} } = {}) {
+export function assertConfiguredSources({ metaEnabled = false, datasetEnabled = false, linkAuditEnabled = false, diyFunnelEnabled = false, metaOptions = {}, analyticsOptions = {} } = {}) {
   const metaReady = Boolean(metaOptions.token && /^v\d{2,3}\.\d+$/.test(metaOptions.version || ''));
   const analyticsSites = configuredAnalyticsSites(analyticsOptions.tokens);
-  if (!(metaReady && (metaEnabled || datasetEnabled)) && !analyticsSites.length) throw new Error('NO_ENABLED_CONFIGURED_SOURCE');
+  if (!(metaReady && (metaEnabled || datasetEnabled || linkAuditEnabled)) && !analyticsSites.length) throw new Error('NO_ENABLED_CONFIGURED_SOURCE');
 }
 
-export async function refreshSources(previous, { now = new Date(), slot = null, metaEnabled = false, datasetEnabled = false, metaOptions = {}, analyticsOptions = {} } = {}) {
-  assertConfiguredSources({ metaEnabled, datasetEnabled, metaOptions, analyticsOptions });
+export async function refreshSources(previous, { now = new Date(), slot = null, metaEnabled = false, datasetEnabled = false, linkAuditEnabled = false, diyFunnelEnabled = false, metaOptions = {}, analyticsOptions = {}, linkAuditOptions = {} } = {}) {
+  assertConfiguredSources({ metaEnabled, datasetEnabled, linkAuditEnabled, diyFunnelEnabled, metaOptions, analyticsOptions });
   validateSnapshot(previous);
   let next = structuredClone(previous), metaReader, metaInitError = null, success = true;
-  if (metaEnabled || datasetEnabled) {
-    try { metaReader = createMetaReader(metaOptions); }
-    catch (error) { metaInitError = error.code || error.message; }
+  const warnings = [];
+  const configuredSites = configuredAnalyticsSites(analyticsOptions.tokens);
+  const analyticsProjects = ANALYTICS_PROJECTS.filter(project => configuredSites.includes(project.site));
+  const hasCore = metaEnabled || datasetEnabled || analyticsProjects.length > 0;
+  // Enabling the optional sidecar must not re-read already complete core sources.
+  const coreDone = (linkAuditEnabled || diyFunnelEnabled) && (!hasCore || canSkipCoreCollection(previous, { slot, now, analyticsProjects, metaEnabled, datasetEnabled }));
+  if (!coreDone) {
+    if (metaEnabled || datasetEnabled) {
+      try { metaReader = createMetaReader(metaOptions); }
+      catch (error) { metaInitError = error.code || error.message; }
+    }
+    if (metaEnabled) {
+      try {
+        if (metaInitError) throw new Error(metaInitError);
+        next = mergeMeta(next, await collectAds(metaReader, now), { now, slot });
+      } catch (error) { next = mergeMeta(next, null, { now, slot, error: error.code || error.message }); success = false; }
+    }
+    // The disabled Meta source is copied verbatim, including its status and timestamps.
+    const analyticsResults = await collectWebAnalytics({ ...analyticsOptions, now });
+    next = mergeAnalytics(next, analyticsResults, { now, slot });
+    success = success && !analyticsResults.some(source => source.status === 'error');
+    if (datasetEnabled) {
+      try {
+        if (metaInitError) throw new Error(metaInitError);
+        next = mergeDatasetStats(next, await collectDatasetStats(metaReader, { enabled: true, now }), { now });
+      } catch (error) { next = mergeDatasetStats(next, null, { now, error: error.code || error.message }); success = false; }
+    }
   }
-  if (metaEnabled) {
+  if (diyFunnelEnabled && !diyFunnelAttemptedInSlot(previous.sources.diy_funnel, { slot, now })) {
     try {
-      if (metaInitError) throw new Error(metaInitError);
-      next = mergeMeta(next, await collectAds(metaReader, now), { now, slot });
-    } catch (error) { next = mergeMeta(next, null, { now, slot, error: error.code || error.message }); success = false; }
+      const result = await collectDiyFunnel({ token: analyticsOptions.tokens?.['start.chatline.app'], fetcher: analyticsOptions.fetcher, now });
+      next.sources.diy_funnel = mergeDiyFunnel(previous.sources.diy_funnel, result, { now });
+      next.collected_at = now.toISOString();
+    } catch (error) {
+      next.sources.diy_funnel = mergeDiyFunnel(previous.sources.diy_funnel, null, { now, error: error?.code || error?.message || 'DIY_FUNNEL_READ_FAILED' });
+      warnings.push('DIY_FUNNEL_READ_FAILED');
+    }
+    if (slot) next.snapshot_id = slot;
   }
-  // The disabled Meta source is copied verbatim, including its status and timestamps.
-  const analyticsResults = await collectWebAnalytics({ ...analyticsOptions, now });
-  next = mergeAnalytics(next, analyticsResults, { now, slot });
-  success = success && !analyticsResults.some(source => source.status === 'error');
-  if (datasetEnabled) {
-    try {
-      if (metaInitError) throw new Error(metaInitError);
-      next = mergeDatasetStats(next, await collectDatasetStats(metaReader, { enabled: true, now }), { now });
-    } catch (error) { next = mergeDatasetStats(next, null, { now, error: error.code || error.message }); success = false; }
+  if (linkAuditEnabled && !linkAuditAttemptedInSlot(previous.sources.link_audit, { slot, now })) {
+    let audit;
+    try { audit = await collectLinkAudit({ ...linkAuditOptions, enabled: true, token: metaOptions.token, version: metaOptions.version, fetcher: metaOptions.fetcher, now }); }
+    catch { audit = await collectLinkAudit({ enabled: true, now }); }
+    next.sources.link_audit = mergeLinkAudit(previous.sources.link_audit, audit);
+    if (slot) next.snapshot_id = slot;
+    if (next.sources.link_audit.checked_count) next.collected_at = now.toISOString();
+    if (!next.sources.link_audit.complete) warnings.push('LINK_AUDIT_READ_FAILED');
+    // An optional audit failure must not turn fresh performance/analytics into failure.
   }
-  return { snapshot: validateSnapshot(next), success };
+  return { snapshot: validateSnapshot(next), success, warnings };
 }
 
 import { readFile } from 'node:fs/promises';

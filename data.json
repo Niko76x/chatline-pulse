@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-25T20:00:00.000Z",
-  "collected_at": "2026-10-25T20:07:13.866Z",
+  "snapshot_id": "2026-10-26T00:00:00.000Z",
+  "collected_at": "2026-10-26T00:10:37.239Z",
   "sources": {
     "meta": {
       "status": "historical",
@@ -149,23 +149,23 @@
       ]
     },
     "analytics": {
-      "status": "partial",
-      "observed_at": "2026-10-25T20:07:13.866Z",
-      "attempted_at": "2026-10-25T20:07:13.866Z",
-      "error": "ANALYTICS_PARTIAL_FAILURE",
+      "status": "connected",
+      "observed_at": "2026-10-26T00:10:37.239Z",
+      "attempted_at": "2026-10-26T00:10:37.239Z",
+      "error": null,
       "sites": [
         {
           "site": "chatline.app",
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-25T20:07:13.866Z",
-          "attempted_at": "2026-10-25T20:07:13.866Z",
+          "observed_at": "2026-10-26T00:10:37.239Z",
+          "attempted_at": "2026-10-26T00:10:37.239Z",
           "error": null,
           "timezone": "UTC",
           "period": {
             "from": "2026-10-22",
-            "to": "2026-10-25"
+            "to": "2026-10-26"
           },
           "daily": [
             {
@@ -187,17 +187,54 @@
               "date": "2026-10-25",
               "visitors": 0,
               "pageviews": 0
+            },
+            {
+              "date": "2026-10-26",
+              "visitors": 0,
+              "pageviews": 0
             }
           ]
         },
         {
           "site": "start.chatline.app",
-          "observed_at": null,
-          "attempted_at": "2026-10-25T20:07:13.866Z",
+          "label": "Projekt limitless · start.chatline.app",
+          "source_code": "vercel_project_production",
+          "status": "connected",
+          "observed_at": "2026-10-26T00:10:37.239Z",
+          "attempted_at": "2026-10-26T00:10:37.239Z",
+          "error": null,
           "timezone": "UTC",
-          "daily": [],
-          "status": "error",
-          "error": "ANALYTICS_READ_FAILED"
+          "period": {
+            "from": "2026-10-22",
+            "to": "2026-10-26"
+          },
+          "daily": [
+            {
+              "date": "2026-10-22",
+              "visitors": 0,
+              "pageviews": 0
+            },
+            {
+              "date": "2026-10-23",
+              "visitors": 0,
+              "pageviews": 0
+            },
+            {
+              "date": "2026-10-24",
+              "visitors": 0,
+              "pageviews": 0
+            },
+            {
+              "date": "2026-10-25",
+              "visitors": 0,
+              "pageviews": 0
+            },
+            {
+              "date": "2026-10-26",
+              "visitors": 1,
+              "pageviews": 1
+            }
+          ]
         }
       ]
     },

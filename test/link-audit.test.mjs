@@ -1,4 +1,4 @@
-import test from 'node:test';
+mport test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -186,7 +186,7 @@ test('API module graph imports with Git blob LF and checkout CRLF, without execu
   try {
     for (const eol of ['\n', '\r\n']) {
       const folder = join(directory, eol === '\n' ? 'git-blob' : 'checkout');
-      for (const path of ['package.json', 'api/data.js', 'lib/link-audit.js', 'scripts/meta-destination-preflight.mjs', 'lib/diy-funnel.mjs', 'scripts/diy-funnel-preflight.mjs', 'public/data/fallback.json']) {
+      for (const path of ['package.json', 'api/data.js', 'lib/csv-meta.mjs', 'lib/link-audit.js', 'scripts/meta-destination-preflight.mjs', 'lib/diy-funnel.mjs', 'scripts/diy-funnel-preflight.mjs', 'public/data/fallback.json']) {
         const target = join(folder, path); await mkdir(dirname(target), { recursive: true });
         const source = (await readFile(new URL(`../${path}`, import.meta.url), 'utf8')).replace(/\r\n/g, '\n').replace(/\n/g, eol);
         await writeFile(target, source);

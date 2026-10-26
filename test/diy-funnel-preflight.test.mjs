@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
-import { PROJECT, TEAM, CAMPAIGN, ENDPOINT, EVENTS, ADS, runDiyPreflight, inspectAggregate, safeQueryBound } from '../scripts/diy-funnel-preflight.mjs';
+import { PROJECT, TEAM, CAMPAIGN, ENDPOINT, EVENTS, ADS, runDiyPreflight, inspectAggregate, safeQueryBound, requestedWindow } from '../scripts/diy-funnel-preflight.mjs';
 
 const now = new Date('2026-10-26T01:30:00.000Z'), day = '2026-10-26';
+const window = requestedWindow(now);
 const id = Object.keys(ADS)[0], secret = 'ONLY_FIXTURE_SECRET_DO_NOT_OUTPUT';
 const filter = event => `environment eq 'production' and eventName eq '${event}' and eventData/campaign_id eq '${CAMPAIGN}'`;
 const body = (event = EVENTS[0], rows = [{ eventData: id, count: 3, visitors: 2 }]) => ({
-  version: 1, query: { since: day, until: '2026-10-27T00:00:00.000Z', filter: filter(event), groupBy: ['eventData/ad_id'], limit: 32 }, data: rows,
+  version: 1, query: { since: day, until: '2026-10-26T02:00:00.000Z', filter: filter(event), groupBy: ['eventData/ad_id'], limit: 32 }, data: rows,
 });
 
 test('only four fixed current-UTC-day GETs; token is a header and only approved aggregates survive', async () => {
@@ -25,7 +26,7 @@ test('only four fixed current-UTC-day GETs; token is a header and only approved 
     assert.equal(`${call.url.origin}${call.url.pathname}`, ENDPOINT);
     assert.deepEqual([...call.url.searchParams.keys()].sort(), ['by','filter','limit','projectId','since','teamId','until'].sort());
     assert.equal(call.url.searchParams.get('projectId'), PROJECT); assert.equal(call.url.searchParams.get('teamId'), TEAM);
-    assert.equal(call.url.searchParams.get('since'), day); assert.equal(call.url.searchParams.get('until'), day);
+    assert.equal(call.url.searchParams.get('since'), String(window.since)); assert.equal(call.url.searchParams.get('until'), String(window.until));
     assert.equal(call.url.searchParams.get('by'), 'eventData/ad_id'); assert.equal(call.url.searchParams.get('limit'), '32');
     assert.equal(call.url.searchParams.get('filter'), filter(EVENTS[i]));
     assert.equal(call.options.method, 'GET'); assert.equal(call.options.redirect, 'error');
@@ -56,7 +57,7 @@ test('unknown ads, duplicate rows, Others, wrong asset context and private row v
     [{ eventData: id, count: 1, visitors: 1, projectId: 'PRIVATE_PROJECT' }],
     [{ eventData: { ad_id: id, campaign_id: 'PRIVATE_CAMPAIGN' }, count: 1, visitors: 1 }],
   ]) {
-    const result = inspectAggregate(body(EVENTS[0], rows), { day, event: EVENTS[0] });
+    const result = inspectAggregate(body(EVENTS[0], rows), { window, event: EVENTS[0] });
     assert.equal(result.status, 'error'); assert.equal(result.error, 'PREFLIGHT_SCOPE_MISMATCH'); assert.deepEqual(result.rows, []);
     assert.equal(JSON.stringify(result).includes('PRIVATE'), false);
   }
@@ -64,15 +65,15 @@ test('unknown ads, duplicate rows, Others, wrong asset context and private row v
 
 test('metrics and query/period mismatches stay unvalidated and do not expose query values', () => {
   for (const metrics of [{ count: '3', visitors: 1 }, { count: -1, visitors: 1 }, { count: 1, visitors: 2 }, { count: 1 }, { count: 1.5, visitors: 1 }]) {
-    const result = inspectAggregate(body(EVENTS[0], [{ eventData: id, ...metrics }]), { day, event: EVENTS[0] });
+    const result = inspectAggregate(body(EVENTS[0], [{ eventData: id, ...metrics }]), { window, event: EVENTS[0] });
     assert.equal(result.error, 'PREFLIGHT_METRIC_SHAPE_UNVALIDATED'); assert.deepEqual(result.rows, []);
   }
   for (const query of [{ since: '2026-10-25' }, { until: '2026-10-27T12:00:00Z' }, { filter: 'PRIVATE_QUERY' }, { groupBy: ['userId'] }]) {
     const value = body(); value.query = { ...value.query, ...query };
-    const result = inspectAggregate(value, { day, event: EVENTS[0] });
+    const result = inspectAggregate(value, { window, event: EVENTS[0] });
     assert.equal(result.error, 'PREFLIGHT_QUERY_MISMATCH'); assert.equal(JSON.stringify(result).includes('PRIVATE_QUERY'), false);
   }
-  const outOfDay = inspectAggregate(body(EVENTS[0], [{ eventData: id, count: 1, visitors: 1, timestamp: '2026-10-25T22:00:00Z' }]), { day, event: EVENTS[0] });
+  const outOfDay = inspectAggregate(body(EVENTS[0], [{ eventData: id, count: 1, visitors: 1, timestamp: '2026-10-25T22:00:00Z' }]), { window, event: EVENTS[0] });
   assert.equal(outOfDay.error, 'PREFLIGHT_PERIOD_MISMATCH');
 });
 
@@ -89,7 +90,7 @@ test('HTTP errors are classified; bodies/exceptions are never logged or returned
 });
 
 test('unrecognized response shape and invalid JSON reveal known field names only', async () => {
-  const shape = inspectAggregate({ version: 2, query: body().query, data: { groups: [{ PRIVATE: secret }], PRIVATE_FIELD: secret } }, { day, event: EVENTS[0] });
+  const shape = inspectAggregate({ version: 2, query: body().query, data: { groups: [{ PRIVATE: secret }], PRIVATE_FIELD: secret } }, { window, event: EVENTS[0] });
   assert.equal(shape.error, 'PREFLIGHT_RESPONSE_SHAPE_UNVALIDATED'); assert.equal(shape.api_version, 2);
   assert.deepEqual(shape.known_data_fields, ['groups']); assert.equal(JSON.stringify(shape).includes(secret), false);
   const invalid = await runDiyPreflight({ token: secret, now, fetcher: async () => ({ ok: true, status: 200, json: async () => { throw Error(secret); } }) });
@@ -113,11 +114,51 @@ test('strict public date echoes diagnose a mismatch without relaxing date accept
     assert.equal(JSON.stringify(echo).includes(secret), false);
   }
   const mismatch = body(); mismatch.query.until = '2026-10-26T00:00:00.000Z';
-  const result = inspectAggregate(mismatch, { day, event: EVENTS[0] });
+  const result = inspectAggregate(mismatch, { window, event: EVENTS[0] });
   assert.equal(result.status, 'error'); assert.equal(result.query_checks.until, false);
   assert.deepEqual(result.query_bound_echo.until, { valid: true, format: 'utc_iso', value: '2026-10-26T00:00:00.000Z' });
   mismatch.query.until = secret;
-  assert.equal(JSON.stringify(inspectAggregate(mismatch, { day, event: EVENTS[0] })).includes(secret), false);
+  assert.equal(JSON.stringify(inspectAggregate(mismatch, { window, event: EVENTS[0] })).includes(secret), false);
+});
+
+test('only exact requested timestamps or precisely derived next-hour boundaries can pass', () => {
+  for (const [until, mode] of [
+    [window.until, 'exact_request'], [new Date(window.until).toISOString(), 'exact_request'],
+    [window.rounded_until, 'derived_next_utc_hour'], [new Date(window.rounded_until).toISOString(), 'derived_next_utc_hour'],
+  ]) {
+    const value = body(); value.query.since = window.since; value.query.until = until;
+    const result = inspectAggregate(value, { window, event: EVENTS[0] });
+    assert.equal(result.status, 'aggregate_read_validated'); assert.equal(result.query_checks.until_mode, mode);
+  }
+  for (const until of [day, '2026-10-26T01:00:00Z', '2026-10-26T03:00:00Z', '2026-10-26T12:00:00Z', '2026-10-27T00:00:00Z', '2026-10-26T02:00:00.000000001Z']) {
+    const value = body(); value.query.until = until;
+    const result = inspectAggregate(value, { window, event: EVENTS[0] });
+    assert.equal(result.error, 'PREFLIGHT_QUERY_MISMATCH'); assert.equal(result.query_checks.until, false);
+    assert.deepEqual(result.rows, []);
+  }
+  const wrongSince = body(); wrongSince.query.since = '2026-10-26T00:00:00.000000001Z';
+  assert.equal(inspectAggregate(wrongSince, { window, event: EVENTS[0] }).error, 'PREFLIGHT_QUERY_MISMATCH');
+});
+
+test('UTC midnight, inclusive hour boundary and post-deployment current moment are explicit', async () => {
+  const afterDeploy = new Date('2026-10-26T03:52:41.400Z'), activeWindow = requestedWindow(afterDeploy);
+  assert.equal(new Date(activeWindow.since).toISOString(), '2026-10-26T00:00:00.000Z');
+  assert.equal(activeWindow.until, afterDeploy.getTime());
+  assert.equal(new Date(activeWindow.rounded_until).toISOString(), '2026-10-26T04:00:00.000Z');
+  let calls = 0;
+  const report = await runDiyPreflight({ token: secret, now: afterDeploy, fetcher: async url => {
+    calls++;
+    assert.equal(new URL(url).searchParams.get('until'), String(afterDeploy.getTime()));
+    const event = EVENTS[calls - 1];
+    const value = body(event, []); value.query.until = '2026-10-26T04:00:00Z';
+    return Response.json(value);
+  } });
+  assert.equal(calls, 4); assert.equal(report.status, 'awaiting_events'); assert.equal(report.event_reception_proven, false);
+  assert.equal(report.requested_window.until_utc, '2026-10-26T03:52:41.400Z');
+  const late = requestedWindow(new Date('2026-10-25T23:30:00Z'));
+  assert.equal(late.day, '2026-10-25'); assert.equal(new Date(late.rounded_until).toISOString(), '2026-10-26T00:00:00.000Z');
+  const exactly = requestedWindow(new Date('2026-10-26T03:00:00Z'));
+  assert.equal(new Date(exactly.rounded_until).toISOString(), '2026-10-26T04:00:00.000Z');
 });
 
 test('workflow is manual-only, contents-read, main/repository gated, secret only in read step', async () => {

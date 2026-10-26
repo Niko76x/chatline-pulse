@@ -164,5 +164,6 @@ test('external assets retain strict self-only CSP and the tested helper is exact
   const config=JSON.parse(await readFile(new URL('../vercel.json',import.meta.url),'utf8')), policy=config.headers[0].headers.find(h=>h.key==='Content-Security-Policy').value;
   assert.match(html,/src="\/assets\/pulse.js"/); assert.match(html,/href="\/assets\/pulse.css"/); assert.doesNotMatch(html,/<style|style=|<script[^>]*>[\s\S]+?<\/script>|on(?:click|change)=/i);
   assert.match(policy,/script-src 'self'; style-src 'self'; connect-src 'self'/); assert.doesNotMatch(policy,/unsafe-inline|unsafe-eval|sha256/); assert.match(policy,/frame-ancestors 'none'/);
-  assert.equal(await readFile(new URL('../public/assets/model.js',import.meta.url),'utf8'),await readFile(new URL('./model.mjs',import.meta.url),'utf8'));
+  // GitHub uploads may preserve CRLF; compare source content without checkout-specific line endings.
+  assert.equal((await readFile(new URL('../public/assets/model.js',import.meta.url),'utf8')).replace(/\r\n/g,'\n'),(await readFile(new URL('./model.mjs',import.meta.url),'utf8')).replace(/\r\n/g,'\n'));
 });

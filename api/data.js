@@ -1,4 +1,4 @@
-mport { ADS as DIY_AD_IDS } from '../scripts/diy-funnel-preflight.mjs';
+import { ADS as DIY_AD_IDS } from '../scripts/diy-funnel-preflight.mjs';
 import { collectDiyFunnel, validateDiyFunnelSource, mergeDiyFunnel } from '../lib/diy-funnel.mjs';
 import { assertLinkAuditScope, validateLinkAudit, collectLinkAudit, mergeLinkAudit, linkAuditAttemptedInSlot } from '../lib/link-audit.js';
 import { validateCsvMetaSource, csvMetaIsProtected } from '../lib/csv-meta.mjs';

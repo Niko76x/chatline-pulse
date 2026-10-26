@@ -1,0 +1,29 @@
+name: ChatLine destinations · manual read-only preflight
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: chatline-meta-destination-preflight
+  cancel-in-progress: false
+jobs:
+  read:
+    if: github.repository == 'Niko76x/chatline-pulse' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Verify syntax and offline destination fixtures without credentials
+        run: |
+          node --check scripts/meta-destination-preflight.mjs
+          node --test test/meta-destination-preflight.test.mjs
+      - name: Read the thirteen approved ChatLine ad destinations
+        shell: bash
+        env:
+          META_REPORTING_ACCESS_TOKEN: ${{ secrets.META_REPORTING_ACCESS_TOKEN }}
+        run: node scripts/meta-destination-preflight.mjs | tee "$RUNNER_TEMP/meta-destination-preflight.json"

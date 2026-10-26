@@ -1,0 +1,129 @@
+import { pathToFileURL } from 'node:url';
+
+// A manual, four-request diagnostic. No publisher, event sender or dynamic
+// asset/project selection is imported. These are public reviewed identifiers.
+export const PROJECT = 'prj_cKWblSdgOD2QY0tUExAkoqB3Z5jH';
+export const TEAM = 'team_i2XlerNOfSTLE5EGj65B1vau';
+export const CAMPAIGN = '120274644271350555';
+export const ENDPOINT = 'https://api.vercel.com/v1/query/web-analytics/events/aggregate';
+export const EVENTS = Object.freeze(['diy_studio_started', 'diy_call_requested', 'diy_checkout_started', 'diy_dashboard_activated']);
+export const ADS = Object.freeze({
+  '120275421779180555': 'PIL-PA-01', '120275422266100555': 'PIL-PA-02',
+  '120275421929330555': 'PIL-PA-03', '120275422266130555': 'PIL-PA-04',
+  '120275421929340555': 'PIL-PR-01', '120275422266170555': 'PIL-PR-02',
+  '120275422266160555': 'PIL-PR-03', '120275422266150555': 'PIL-PR-04',
+  '120275422266110555': 'PIL-SA-01', '120275422266120555': 'PIL-SA-02',
+  '120275422266140555': 'PIL-SA-03', '120275421929310555': 'PIL-SA-04',
+  '120275421929320555': 'PIL-VID-01',
+});
+const FIELDS = new Set(['version', 'query', 'data', 'groups', 'rows', 'values', 'count', 'visitors', 'eventData', 'ad_id', 'campaign_id', 'timestamp', 'eventName', 'projectId', 'environment']);
+const knownFields = value => value && typeof value === 'object' && !Array.isArray(value)
+  ? Object.keys(value).filter(key => FIELDS.has(key)).sort() : [];
+const kind = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
+const safeCount = value => Number.isSafeInteger(value) && value >= 0;
+const filterFor = event => `environment eq 'production' and eventName eq '${event}' and eventData/campaign_id eq '${CAMPAIGN}'`;
+const httpError = status => status === 401 ? 'ANALYTICS_LOGIN_REQUIRED' : status === 403 ? 'ANALYTICS_PERMISSION_REQUIRED' : status === 402 ? 'ANALYTICS_PLAN_REQUIRED' : status === 429 ? 'ANALYTICS_RATE_LIMITED' : status >= 500 ? 'ANALYTICS_UNAVAILABLE' : 'ANALYTICS_READ_FAILED';
+
+function queryChecks(query, day, filter) {
+  const start = Date.parse(`${day}T00:00:00.000Z`);
+  const midnight = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T00:00:00(?:\.000)?Z$/.test(value) ? Date.parse(value) : NaN;
+  return {
+    present: Boolean(query && typeof query === 'object' && !Array.isArray(query)),
+    since: query?.since === day || midnight(query?.since) === start,
+    // Existing visits API echoes an inclusive date as next-day exclusive
+    // midnight. Accept precisely that representation, never an arbitrary time.
+    until: query?.until === day || midnight(query?.until) === start + 86400000,
+    filter: query?.filter === filter,
+    group: !Object.hasOwn(query || {}, 'groupBy') ? 'absent' : JSON.stringify(query.groupBy) === '["eventData/ad_id"]' ? 'matches' : 'different',
+    limit: !Object.hasOwn(query || {}, 'limit') ? null : query.limit === 32 || query.limit === '32',
+  };
+}
+
+/** Sanitize first; never return the response, arbitrary keys, or error text. */
+export function inspectAggregate(body, { day, event }) {
+  const checks = queryChecks(body?.query, day, filterFor(event));
+  const rows = Array.isArray(body?.data) ? body.data : null;
+  const summary = {
+    api_version: Number.isSafeInteger(body?.version) && body.version >= 0 && body.version <= 10000 ? body.version : null,
+    known_top_fields: knownFields(body), data_type: kind(body?.data),
+    known_data_fields: knownFields(body?.data),
+    known_row_fields: rows ? [...new Set(rows.slice(0, 32).flatMap(knownFields))].sort() : [],
+    known_event_data_fields: rows ? [...new Set(rows.slice(0, 32).flatMap(row => knownFields(row?.eventData)))].sort() : [],
+    query_checks: checks,
+  };
+  const invalid = error => ({ ...summary, status: 'error', error, rows: [], event_reception_proven: false });
+  if (body?.version !== 1 || !rows || rows.length > 32) return invalid('PREFLIGHT_RESPONSE_SHAPE_UNVALIDATED');
+  if (!checks.present || !checks.since || !checks.until || !checks.filter || checks.group === 'different' || checks.limit === false)
+    return invalid('PREFLIGHT_QUERY_MISMATCH');
+  if (body.paging || body.pagination || body.nextPage) return invalid('PREFLIGHT_INCOMPLETE_RESPONSE');
+  const safeRows = [], seen = new Set();
+  for (const row of rows) {
+    // Both representations are safe to diagnose. The preflight reports their
+    // kinds above; a future source normalizer still needs a real read review.
+    const id = typeof row?.eventData === 'string' ? row.eventData : row?.eventData?.ad_id;
+    if (typeof id !== 'string' || !Object.hasOwn(ADS, id) || seen.has(id) ||
+        (row.projectId !== undefined && row.projectId !== PROJECT) ||
+        (row.environment !== undefined && row.environment !== 'production') ||
+        (row.eventName !== undefined && row.eventName !== event) ||
+        (row.eventData && typeof row.eventData === 'object' && row.eventData.campaign_id !== undefined && row.eventData.campaign_id !== CAMPAIGN))
+      return invalid('PREFLIGHT_SCOPE_MISMATCH');
+    if (row.timestamp !== undefined && (typeof row.timestamp !== 'string' || !Number.isFinite(Date.parse(row.timestamp)) || new Date(row.timestamp).toISOString().slice(0, 10) !== day))
+      return invalid('PREFLIGHT_PERIOD_MISMATCH');
+    if (!safeCount(row.count) || !safeCount(row.visitors) || row.visitors > row.count)
+      return invalid('PREFLIGHT_METRIC_SHAPE_UNVALIDATED');
+    seen.add(id);
+    safeRows.push({ ad_id: id, code: ADS[id], count: row.count, visitors: row.visitors });
+  }
+  return { ...summary, status: safeRows.length ? 'aggregate_read_validated' : 'awaiting_events', error: null,
+    rows: safeRows, event_reception_proven: safeRows.some(row => row.count > 0) };
+}
+
+export async function runDiyPreflight({ token, fetcher = fetch, now = new Date() } = {}) {
+  if (!Number.isFinite(now?.getTime?.())) throw new Error('PREFLIGHT_INVALID_TIME');
+  const day = now.toISOString().slice(0, 10);
+  const report = { status: 'not_configured', checked_at: now.toISOString(), timezone: 'UTC', day,
+    scope: { site: 'start.chatline.app', project: PROJECT, team: TEAM, campaign: CAMPAIGN, approved_ads: 13 },
+    snapshot_written: false, published: false, events_generated: false, results: [] };
+  if (typeof token !== 'string' || !token.trim() || token.length > 4096) return { ...report, error: 'ANALYTICS_NOT_CONFIGURED' };
+  for (const event of EVENTS) {
+    const url = new URL(ENDPOINT), filter = filterFor(event);
+    for (const [key, value] of Object.entries({ projectId: PROJECT, teamId: TEAM, since: day, until: day, by: 'eventData/ad_id', limit: '32', filter }))
+      url.searchParams.set(key, value);
+    // This is the fixed requested query, never an echo of arbitrary API text.
+    const request = { event, since: day, until: day, by: 'eventData/ad_id', limit: 32, filter };
+    let response;
+    try {
+      response = await fetcher(url, { method: 'GET', headers: { Authorization: `Bearer ${token.trim()}` }, redirect: 'error', signal: AbortSignal.timeout(12000) });
+    } catch {
+      report.results.push({ request, status: 'error', error: 'ANALYTICS_UNAVAILABLE', http_status: null, rows: [], event_reception_proven: false }); continue;
+    }
+    const http_status = Number.isInteger(response?.status) && response.status >= 100 && response.status <= 599 ? response.status : null;
+    if (!response.ok) {
+      // An error body may contain private request details. Never parse/log it.
+      report.results.push({ request, status: 'error', error: httpError(http_status), http_status, rows: [], event_reception_proven: false }); continue;
+    }
+    let body;
+    try { body = await response.json(); }
+    catch { report.results.push({ request, status: 'error', error: 'ANALYTICS_INVALID_JSON', http_status, rows: [], event_reception_proven: false }); continue; }
+    report.results.push({ request, http_status, ...inspectAggregate(body, { day, event }) });
+  }
+  report.status = report.results.some(row => row.status === 'error') ? 'failed'
+    : report.results.some(row => row.rows.length) ? 'aggregate_reads_validated' : 'awaiting_events';
+  report.event_reception_proven = report.results.some(row => row.event_reception_proven);
+  return report;
+}
+
+async function main() {
+  if (process.env.GITHUB_REPOSITORY !== 'Niko76x/chatline-pulse' || process.env.GITHUB_REF !== 'refs/heads/main' || process.env.GITHUB_EVENT_NAME !== 'workflow_dispatch')
+    throw new Error('PREFLIGHT_EXECUTION_NOT_ALLOWED');
+  const result = await runDiyPreflight({ token: process.env.VERCEL_ANALYTICS_LIMITLESS_TOKEN });
+  process.stdout.write(`${JSON.stringify(result)}\n`);
+  if (result.status === 'failed' || result.status === 'not_configured') process.exitCode = 1;
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch(error => {
+    const safe = ['PREFLIGHT_INVALID_TIME', 'PREFLIGHT_EXECUTION_NOT_ALLOWED'].includes(error?.message) ? error.message : 'PREFLIGHT_FAILED';
+    process.stdout.write(`${JSON.stringify({ status: 'failed', error: safe, snapshot_written: false, published: false, events_generated: false })}\n`);
+    process.exitCode = 1;
+  });
+}

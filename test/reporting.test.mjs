@@ -57,6 +57,24 @@ test('wrong dataset cannot enter an otherwise matching adset report', async () =
   const read = async path => path.startsWith('act_') ? { id: SCOPE.account, currency: 'EUR', timezone_name: 'Europe/Berlin' } : { id: SCOPE.adset, account_id: SCOPE.account, campaign_id: SCOPE.campaign, promoted_object: { pixel_id: 'wrong' } };
   await assert.rejects(collectAds(read, now), /DATASET_MISMATCH/);
 });
+test('a missing or different account timezone stops before later assets and preserves previous Meta observations', async () => {
+  for (const timezone_name of [undefined, 'UTC', 'Europe/Vienna']) {
+    const calls = [];
+    const read = async path => {
+      calls.push(path);
+      return { id: SCOPE.account, currency: 'EUR', timezone_name };
+    };
+    let failure;
+    try { await collectAds(read, now); } catch (error) { failure = error; }
+    assert.equal(failure?.code, 'ACCOUNT_CONFIG_MISMATCH');
+    assert.deepEqual(calls, [`act_${SCOPE.account}`], 'No adset, campaign or insights read after a timezone mismatch');
+    const next = mergeMeta(original, null, { now, error: failure.code });
+    assert.equal(next.sources.meta.observed_at, original.sources.meta.observed_at);
+    assert.deepEqual(next.sources.meta.daily, original.sources.meta.daily);
+    assert.deepEqual(next.sources.meta.ads_daily, original.sources.meta.ads_daily);
+    assert.equal(next.collected_at, original.collected_at);
+  }
+});
 test('failed collection preserves every source observation time and last successful collection', () => {
   const next = mergeMeta(original, null, { now, error: 'META_LOGIN_REQUIRED', slot: 'slot' });
   assert.equal(next.collected_at, original.collected_at);

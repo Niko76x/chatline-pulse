@@ -1,4 +1,4 @@
-mport test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { validateSnapshot, mergeMeta, refreshSources, canSkipCoreCollection, ANALYTICS_PROJECTS } from '../api/data.js';

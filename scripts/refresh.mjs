@@ -16,7 +16,9 @@ async function github(path, options = {}) {
 if (publish && (process.env.PULSE_SYNC_ENABLED !== 'true' || process.env.GITHUB_REPOSITORY !== SCOPE.repository || !token)) throw new Error('PUBLISH_NOT_CONFIGURED');
 const metaEnabled = process.env.META_REPORTING_ENABLED === 'true';
 const datasetEnabled = process.env.META_DATASET_STATS_ENABLED === 'true';
-const sourceOptions = { now, slot, metaEnabled, datasetEnabled,
+const linkAuditEnabled = process.env.META_LINK_AUDIT_ENABLED === 'true';
+const diyFunnelEnabled = process.env.DIY_FUNNEL_ENABLED === 'true';
+const sourceOptions = { now, slot, metaEnabled, datasetEnabled, linkAuditEnabled, diyFunnelEnabled,
   metaOptions: { token: process.env.META_REPORTING_ACCESS_TOKEN, version: process.env.META_GRAPH_VERSION },
   analyticsOptions: { fetcher: createAnalyticsDiagnosticFetcher({ enabled: process.env.ANALYTICS_DIAGNOSTICS_ENABLED === 'true' }), tokens: {
     'chatline.app': process.env.VERCEL_ANALYTICS_CHATLINE_WEBSITE_TOKEN,
@@ -34,8 +36,8 @@ if (publish) {
   }
 }
 old ||= validateSnapshot(JSON.parse(await readFile(new URL('../public/data/fallback.json', import.meta.url), 'utf8')));
-if (canSkipCollection(old, { slot, now, metaEnabled, datasetEnabled })) { process.stdout.write('Already published successfully for this slot.\n'); process.exit(0); }
-const { snapshot: next, success } = await refreshSources(old, sourceOptions);
+if (canSkipCollection(old, { slot, now, metaEnabled, datasetEnabled, linkAuditEnabled, diyFunnelEnabled })) { process.stdout.write('Sources already collected or attempted for this slot; no duplicate reads.\n'); process.exit(0); }
+const { snapshot: next, success, warnings } = await refreshSources(old, sourceOptions);
 if (publish) {
   // Branch creation is an explicit setup task. Never create it implicitly from the worker.
   const branch = await github(`git/ref/heads/${SCOPE.dataBranch}`);
@@ -47,5 +49,7 @@ if (publish) {
 } else {
   await writeFile(new URL('../preview-result.json', import.meta.url), JSON.stringify(next, null, 2) + '\n');
 }
+if (warnings?.includes('DIY_FUNNEL_READ_FAILED')) process.stdout.write('Optional DIY funnel read failed; prior event observations retained.\n');
+if (warnings?.includes('LINK_AUDIT_READ_FAILED')) process.stdout.write('Optional link audit incomplete; prior checks retained where reads failed.\n');
 process.stdout.write(success ? 'ChatLine aggregate collected.\n' : 'Source read failed; previous observation times preserved.\n');
 if (!success) process.exitCode = 1;

@@ -1,5 +1,5 @@
 // Presentation only: never substitute a lower bound into strict totals or rates.
-const ADDITIVE_COUNTS = new Set(['impressions', 'link_clicks', 'landing_page_views', 'studio_tests', 'call_requests', 'checkouts', 'trials']);
+const ADDITIVE_COUNTS = new Set(['impressions', 'link_clicks', 'landing_page_views', 'studio_tests', 'call_requests', 'checkouts', 'trials', 'studio_started', 'call_requested', 'checkout_started', 'dashboard_activated']);
 
 export function reportedCount(rows, key) {
   const totalDays = Array.isArray(rows) ? rows.length : 0;

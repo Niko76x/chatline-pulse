@@ -6,30 +6,62 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-26T01:30:00.000Z",
-  "collected_at": "2026-10-26T01:38:23.587Z",
+  "snapshot_id": "2026-10-26T02:00:00.000Z",
+  "collected_at": "2026-10-26T02:12:03.140Z",
   "sources": {
     "meta": {
-      "status": "historical",
-      "observed_at": "2026-10-25T14:17:21.414Z",
-      "attempted_at": null,
-      "error": null,
+      "observed_at": "2026-10-26T02:12:03.140Z",
       "timezone": "Europe/Berlin",
       "period": {
-        "from": "2026-10-25",
-        "to": "2026-10-25"
+        "from": "2026-10-22",
+        "to": "2026-10-26"
       },
-      "complete_test_window": false,
       "delivery": "ACTIVE",
-      "budget_daily": 15,
-      "attribution": "Manuell gelesener Ads Manager · bestehender Zeitraum; keine neue API-Abfrage",
+      "budget_daily": 30,
+      "attribution": "Metas Adset-Attribution · Ereignisdatum der Conversion",
       "daily": [
         {
+          "date": "2026-10-23",
+          "spend": 16.6,
+          "impressions": 971,
+          "reach": 770,
+          "link_clicks": 9,
+          "landing_page_views": 1,
+          "studio_tests": 1,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "spend": 14.95,
+          "impressions": 785,
+          "reach": 636,
+          "link_clicks": 7,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
           "date": "2026-10-25",
-          "spend": 18.83,
-          "impressions": 632,
-          "reach": 486,
-          "link_clicks": 5,
+          "spend": 27.85,
+          "impressions": 1067,
+          "reach": 727,
+          "link_clicks": 15,
+          "landing_page_views": 2,
+          "studio_tests": 1,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-26",
+          "spend": 1.09,
+          "impressions": 222,
+          "reach": 44,
+          "link_clicks": 1,
           "landing_page_views": null,
           "studio_tests": null,
           "call_requests": null,
@@ -37,52 +69,439 @@
           "trials": null
         }
       ],
-      "ads_daily": [],
+      "ads_daily": [
+        {
+          "date": "2026-10-23",
+          "code": "PIL-PA-01",
+          "spend": 6.2,
+          "impressions": 383,
+          "reach": 336,
+          "link_clicks": 5,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-SA-04",
+          "spend": 0.04,
+          "impressions": 2,
+          "reach": 2,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-VID-01",
+          "spend": 0.28,
+          "impressions": 21,
+          "reach": 19,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-PA-03",
+          "spend": 0.85,
+          "impressions": 57,
+          "reach": 47,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-PR-01",
+          "spend": 0.09,
+          "impressions": 1,
+          "reach": 1,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-SA-01",
+          "spend": 0.09,
+          "impressions": 16,
+          "reach": 13,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-SA-02",
+          "spend": 1.55,
+          "impressions": 91,
+          "reach": 86,
+          "link_clicks": 2,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-PA-04",
+          "spend": 6.44,
+          "impressions": 317,
+          "reach": 264,
+          "link_clicks": 2,
+          "landing_page_views": 1,
+          "studio_tests": 1,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-SA-03",
+          "spend": 0.2,
+          "impressions": 9,
+          "reach": 9,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-PR-04",
+          "spend": 0.03,
+          "impressions": 7,
+          "reach": 5,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-PR-03",
+          "spend": 0.82,
+          "impressions": 62,
+          "reach": 62,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-23",
+          "code": "PIL-PR-02",
+          "spend": 0.01,
+          "impressions": 5,
+          "reach": 5,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-PA-01",
+          "spend": 1.43,
+          "impressions": 87,
+          "reach": 73,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-SA-04",
+          "spend": 0,
+          "impressions": 1,
+          "reach": 1,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-VID-01",
+          "spend": 0.22,
+          "impressions": 12,
+          "reach": 11,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-PA-03",
+          "spend": 0.06,
+          "impressions": 4,
+          "reach": 4,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-PR-01",
+          "spend": 0.02,
+          "impressions": 2,
+          "reach": 2,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-PA-02",
+          "spend": 0.01,
+          "impressions": 1,
+          "reach": 1,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-SA-01",
+          "spend": 0.05,
+          "impressions": 1,
+          "reach": 1,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-SA-02",
+          "spend": 0.4,
+          "impressions": 29,
+          "reach": 27,
+          "link_clicks": 1,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-PA-04",
+          "spend": 12.5,
+          "impressions": 638,
+          "reach": 534,
+          "link_clicks": 6,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-PR-04",
+          "spend": 0.02,
+          "impressions": 1,
+          "reach": 1,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-PR-03",
+          "spend": 0.19,
+          "impressions": 5,
+          "reach": 5,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-24",
+          "code": "PIL-PR-02",
+          "spend": 0.05,
+          "impressions": 4,
+          "reach": 4,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-25",
+          "code": "PIL-PA-01",
+          "spend": 2.6,
+          "impressions": 98,
+          "reach": 82,
+          "link_clicks": 1,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-25",
+          "code": "PIL-VID-01",
+          "spend": 0.75,
+          "impressions": 33,
+          "reach": 31,
+          "link_clicks": 1,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-25",
+          "code": "PIL-SA-02",
+          "spend": 3.61,
+          "impressions": 163,
+          "reach": 118,
+          "link_clicks": 3,
+          "landing_page_views": 1,
+          "studio_tests": 1,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-25",
+          "code": "PIL-PA-04",
+          "spend": 20.89,
+          "impressions": 773,
+          "reach": 592,
+          "link_clicks": 10,
+          "landing_page_views": 1,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-26",
+          "code": "PIL-PA-01",
+          "spend": 0.09,
+          "impressions": 7,
+          "reach": 3,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-26",
+          "code": "PIL-VID-01",
+          "spend": 0.01,
+          "impressions": 1,
+          "reach": 1,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-26",
+          "code": "PIL-SA-02",
+          "spend": 0.81,
+          "impressions": 211,
+          "reach": 37,
+          "link_clicks": 1,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        },
+        {
+          "date": "2026-10-26",
+          "code": "PIL-PA-04",
+          "spend": 0.18,
+          "impressions": 3,
+          "reach": 3,
+          "link_clicks": 0,
+          "landing_page_views": null,
+          "studio_tests": null,
+          "call_requests": null,
+          "checkouts": null,
+          "trials": null
+        }
+      ],
       "statuses": [
+        {
+          "code": "PIL-PA-04",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-VID-01",
+          "status": "ACTIVE",
+          "delivery": "ACTIVE"
+        },
         {
           "code": "PIL-PA-01",
           "status": "ACTIVE",
           "delivery": "ACTIVE"
-        },
-        {
-          "code": "PIL-PA-02",
-          "status": "PAUSED",
-          "delivery": "PAUSED"
-        },
-        {
-          "code": "PIL-PA-03",
-          "status": "PAUSED",
-          "delivery": "PAUSED"
-        },
-        {
-          "code": "PIL-PA-04",
-          "status": "ACTIVE",
-          "delivery": "ACTIVE"
-        },
-        {
-          "code": "PIL-PR-01",
-          "status": "PAUSED",
-          "delivery": "PAUSED"
-        },
-        {
-          "code": "PIL-PR-02",
-          "status": "PAUSED",
-          "delivery": "PAUSED"
-        },
-        {
-          "code": "PIL-PR-03",
-          "status": "PAUSED",
-          "delivery": "PAUSED"
-        },
-        {
-          "code": "PIL-PR-04",
-          "status": "PAUSED",
-          "delivery": "PAUSED"
-        },
-        {
-          "code": "PIL-SA-01",
-          "status": "PAUSED",
-          "delivery": "PAUSED"
         },
         {
           "code": "PIL-SA-02",
@@ -95,16 +514,50 @@
           "delivery": "PAUSED"
         },
         {
+          "code": "PIL-PR-01",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PR-03",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-SA-01",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PA-03",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PR-04",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
           "code": "PIL-SA-04",
           "status": "PAUSED",
           "delivery": "PAUSED"
         },
         {
-          "code": "PIL-VID-01",
-          "status": "ACTIVE",
-          "delivery": "ACTIVE"
+          "code": "PIL-PA-02",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
+        },
+        {
+          "code": "PIL-PR-02",
+          "status": "PAUSED",
+          "delivery": "PAUSED"
         }
-      ]
+      ],
+      "status": "connected",
+      "attempted_at": "2026-10-26T02:12:03.140Z",
+      "error": null,
+      "complete_test_window": true
     },
     "website_events": {
       "status": "historical",
@@ -150,8 +603,8 @@
     },
     "analytics": {
       "status": "connected",
-      "observed_at": "2026-10-26T01:38:23.587Z",
-      "attempted_at": "2026-10-26T01:38:23.587Z",
+      "observed_at": "2026-10-26T02:12:03.140Z",
+      "attempted_at": "2026-10-26T02:12:03.140Z",
       "error": null,
       "sites": [
         {
@@ -159,8 +612,8 @@
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-26T01:38:23.587Z",
-          "attempted_at": "2026-10-26T01:38:23.587Z",
+          "observed_at": "2026-10-26T02:12:03.140Z",
+          "attempted_at": "2026-10-26T02:12:03.140Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -200,8 +653,8 @@
           "label": "Projekt limitless · start.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-26T01:38:23.587Z",
-          "attempted_at": "2026-10-26T01:38:23.587Z",
+          "observed_at": "2026-10-26T02:12:03.140Z",
+          "attempted_at": "2026-10-26T02:12:03.140Z",
           "error": null,
           "timezone": "UTC",
           "period": {

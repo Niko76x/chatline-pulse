@@ -1,6 +1,7 @@
 import { ADS as DIY_AD_IDS } from '../scripts/diy-funnel-preflight.mjs';
 import { collectDiyFunnel, validateDiyFunnelSource, mergeDiyFunnel } from '../lib/diy-funnel.mjs';
 import { assertLinkAuditScope, validateLinkAudit, collectLinkAudit, mergeLinkAudit, linkAuditAttemptedInSlot } from '../lib/link-audit.js';
+import { validateCsvMetaSource, csvMetaIsProtected } from '../lib/csv-meta.mjs';
 
 // These are reviewed ChatLine assets. Request parameters cannot change them.
 export const SCOPE = Object.freeze({
@@ -342,7 +343,7 @@ export function createAnalyticsDiagnosticFetcher({ enabled = false, fetcher = fe
 }
 
 
-const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated').split(' '));
+const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated method manual_update edition_label exported_at imported_at valid_until attribution_setting reporting_basis').split(' '));
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
 function scan(value, depth = 0) {
   if (depth > 15) throw new Error('SNAPSHOT_INVALID');
@@ -358,6 +359,7 @@ export function validateSnapshot(data) {
   scan(data);
   if (data.schema_version !== 2 || Object.entries({ account: SCOPE.account, dataset: SCOPE.dataset, campaign: SCOPE.campaign, adset: SCOPE.adset }).some(([k, v]) => data.scope?.[k] !== v)) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   if (!Array.isArray(data.ads) || data.ads.length !== Object.keys(AD_IDS).length || new Set(data.ads.map(a => a.code)).size !== data.ads.length || data.ads.some(a => !Object.values(AD_IDS).includes(a.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
+  validateCsvMetaSource(data.sources?.meta);
   for (const source of Object.values(data.sources || {})) {
     if (!timestamp(source.observed_at) || !timestamp(source.attempted_at)) throw new Error('SNAPSHOT_INVALID_DATE');
     for (const row of [...(source.daily || []), ...(source.ads_daily || [])]) {
@@ -382,6 +384,7 @@ export function validateSnapshot(data) {
   return data;
 }
 export function canSkipCoreCollection(previous, { slot, now = new Date(), analyticsProjects = ANALYTICS_PROJECTS, metaEnabled = false, datasetEnabled = false } = {}) {
+  const metaCollectionEnabled = metaEnabled && !csvMetaIsProtected(previous.sources.meta, now);
   const start = Date.parse(slot), current = now.getTime();
   if (!Number.isFinite(start) || !Number.isFinite(current)) return false;
   const completedInSlot = source => {
@@ -390,8 +393,8 @@ export function canSkipCoreCollection(previous, { slot, now = new Date(), analyt
   };
   const analyticsDone = analyticsProjects.every(p => completedInSlot(previous.sources.analytics.sites?.find(s => s.site === p.site)));
   const datasetDone = !datasetEnabled || completedInSlot(previous.sources.website_events) && previous.sources.website_events.source_code === 'meta_dataset_stats';
-  const anyEnabled = metaEnabled || datasetEnabled || analyticsProjects.length > 0;
-  return anyEnabled && previous.snapshot_id === slot && (!metaEnabled || completedInSlot(previous.sources.meta)) && analyticsDone && datasetDone;
+  const anyEnabled = metaCollectionEnabled || datasetEnabled || analyticsProjects.length > 0;
+  return anyEnabled && previous.snapshot_id === slot && (!metaCollectionEnabled || completedInSlot(previous.sources.meta)) && analyticsDone && datasetDone;
 }
 export function canSkipCollection(previous, options = {}) {
   const { analyticsProjects = ANALYTICS_PROJECTS, metaEnabled = false, datasetEnabled = false, linkAuditEnabled = false, diyFunnelEnabled = false } = options;
@@ -431,6 +434,9 @@ export function mergeAnalytics(previous, results, { now = new Date(), slot = nul
 }
 export function mergeMeta(previous, result, { now = new Date(), error = null, slot = null } = {}) {
   validateSnapshot(previous);
+  // Defense in depth: a same-day CSV observation is never relabelled as an API
+  // success or failed API attempt while its explicitly bounded hold is active.
+  if (csvMetaIsProtected(previous.sources.meta, now)) return structuredClone(previous);
   const next = structuredClone(previous);
   next.snapshot_id = slot || next.snapshot_id;
   if (error) {
@@ -560,25 +566,27 @@ export function assertConfiguredSources({ metaEnabled = false, datasetEnabled = 
 export async function refreshSources(previous, { now = new Date(), slot = null, metaEnabled = false, datasetEnabled = false, linkAuditEnabled = false, diyFunnelEnabled = false, metaOptions = {}, analyticsOptions = {}, linkAuditOptions = {} } = {}) {
   assertConfiguredSources({ metaEnabled, datasetEnabled, linkAuditEnabled, diyFunnelEnabled, metaOptions, analyticsOptions });
   validateSnapshot(previous);
+  const metaCollectionEnabled = metaEnabled && !csvMetaIsProtected(previous.sources.meta, now);
   let next = structuredClone(previous), metaReader, metaInitError = null, success = true;
   const warnings = [];
   const configuredSites = configuredAnalyticsSites(analyticsOptions.tokens);
   const analyticsProjects = ANALYTICS_PROJECTS.filter(project => configuredSites.includes(project.site));
-  const hasCore = metaEnabled || datasetEnabled || analyticsProjects.length > 0;
+  const hasCore = metaCollectionEnabled || datasetEnabled || analyticsProjects.length > 0;
   // Enabling the optional sidecar must not re-read already complete core sources.
-  const coreDone = (linkAuditEnabled || diyFunnelEnabled) && (!hasCore || canSkipCoreCollection(previous, { slot, now, analyticsProjects, metaEnabled, datasetEnabled }));
+  const coreDone = (linkAuditEnabled || diyFunnelEnabled) && (!hasCore || canSkipCoreCollection(previous, { slot, now, analyticsProjects, metaEnabled: metaCollectionEnabled, datasetEnabled }));
   if (!coreDone) {
-    if (metaEnabled || datasetEnabled) {
+    if (metaCollectionEnabled || datasetEnabled) {
       try { metaReader = createMetaReader(metaOptions); }
       catch (error) { metaInitError = error.code || error.message; }
     }
-    if (metaEnabled) {
+    if (metaCollectionEnabled) {
       try {
         if (metaInitError) throw new Error(metaInitError);
         next = mergeMeta(next, await collectAds(metaReader, now), { now, slot });
       } catch (error) { next = mergeMeta(next, null, { now, slot, error: error.code || error.message }); success = false; }
     }
-    // The disabled Meta source is copied verbatim, including its status and timestamps.
+    // Disabled or protected CSV Meta is copied verbatim, including observation
+    // and import times. Independent successful sources can advance collected_at.
     const analyticsResults = await collectWebAnalytics({ ...analyticsOptions, now });
     next = mergeAnalytics(next, analyticsResults, { now, slot });
     success = success && !analyticsResults.some(source => source.status === 'error');

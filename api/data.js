@@ -445,12 +445,29 @@ const validCount = count => {
   return value;
 };
 
+// The SDK defines returned start_time as datetime. Require an explicit
+// ISO datetime/timezone; request Unix seconds do not prove Unix responses.
+function datasetBucketTime(value) {
+  const parts = typeof value === 'string' && value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?(Z|[+-]\d{2}:?\d{2})$/);
+  if (!parts) fail('DATASET_INVALID_PERIOD');
+  const [, year, month, day, hour, minute, second, milliseconds = '000', zone] = parts;
+  const calendar = new Date(Date.UTC(+year, +month - 1, +day, +hour, +minute, +second, +milliseconds));
+  if (calendar.getUTCFullYear() !== +year || calendar.getUTCMonth() !== +month - 1 || calendar.getUTCDate() !== +day ||
+      calendar.getUTCHours() !== +hour || calendar.getUTCMinutes() !== +minute || calendar.getUTCSeconds() !== +second ||
+      zone !== 'Z' && (+zone.slice(1, 3) > 23 || +zone.slice(-2) > 59)) fail('DATASET_INVALID_PERIOD');
+  const time = Date.parse(value);
+  if (!Number.isFinite(time)) fail('DATASET_INVALID_PERIOD');
+  return time;
+}
+
 export function normalizeDatasetStats(buckets, { start, end }) {
   if (!Array.isArray(buckets) || !buckets.length) fail('DATASET_NO_STATS');
+  if (!(start instanceof Date) || !(end instanceof Date) || !Number.isFinite(start.getTime()) ||
+      !Number.isFinite(end.getTime()) || end < start) fail('DATASET_INVALID_PERIOD');
   const counts = new Map(), coverage = new Map(), seenBuckets = new Set();
   for (const bucket of buckets) {
     if (bucket.aggregation !== 'event_total_counts' || !Array.isArray(bucket.data)) fail('DATASET_INVALID_RESPONSE');
-    const bucketTime = Date.parse(bucket.start_time);
+    const bucketTime = datasetBucketTime(bucket.start_time);
     if (!Number.isFinite(bucketTime) || bucketTime < start.getTime() || bucketTime > end.getTime() || seenBuckets.has(bucketTime)) fail('DATASET_INVALID_PERIOD');
     seenBuckets.add(bucketTime);
     const seenEvents = new Set();
@@ -483,15 +500,16 @@ export async function collectDatasetStats(read, { enabled = false, now = new Dat
   // A bounded current UTC day avoids an ever-growing historical stats query.
   // This period is independent from the ad account's local reporting day.
   const start = new Date(`${now.toISOString().slice(0, 10)}T00:00:00.000Z`);
+  const end = new Date(Math.floor(now.getTime() / 1000) * 1000);
   const buckets = await read(`${SCOPE.dataset}/stats`, {
-    aggregation: 'event_total_counts', start_time: start.toISOString(),
-    end_time: now.toISOString(), fields: 'aggregation,start_time,data',
+    aggregation: 'event_total_counts', start_time: String(start.getTime() / 1000),
+    end_time: String(end.getTime() / 1000), fields: 'aggregation,start_time,data',
   });
   return {
     dataset: SCOPE.dataset, source_code: 'meta_dataset_stats', timezone: 'UTC',
     observed_at: now.toISOString(), period: { from: start.toISOString().slice(0, 10), to: now.toISOString().slice(0, 10) },
-    note: `Gemeldete Ereigniszählungen im API-Zeitfenster ${start.toISOString()} bis ${now.toISOString()}. Keine eindeutigen Menschen; Browser-/Server-Deduplizierung hier nicht unabhängig bestätigt.`,
-    events: normalizeDatasetStats(buckets, { start, end: now }),
+    note: `Gemeldete Ereigniszählungen im API-Zeitfenster ${start.toISOString()} bis ${end.toISOString()}. Keine eindeutigen Menschen; Browser-/Server-Deduplizierung hier nicht unabhängig bestätigt.`,
+    events: normalizeDatasetStats(buckets, { start, end }),
   };
 }
 

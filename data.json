@@ -6,11 +6,11 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-26T04:00:00.000Z",
-  "collected_at": "2026-10-26T04:07:29.635Z",
+  "snapshot_id": "2026-10-26T04:30:00.000Z",
+  "collected_at": "2026-10-26T04:53:50.802Z",
   "sources": {
     "meta": {
-      "observed_at": "2026-10-26T04:07:29.635Z",
+      "observed_at": "2026-10-26T04:53:50.802Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -58,9 +58,9 @@
         },
         {
           "date": "2026-10-26",
-          "spend": 1.25,
-          "impressions": 234,
-          "reach": 53,
+          "spend": 1.48,
+          "impressions": 245,
+          "reach": 65,
           "link_clicks": 1,
           "landing_page_views": null,
           "studio_tests": null,
@@ -450,9 +450,9 @@
         {
           "date": "2026-10-26",
           "code": "PIL-VID-01",
-          "spend": 0.01,
-          "impressions": 1,
-          "reach": 1,
+          "spend": 0.13,
+          "impressions": 2,
+          "reach": 2,
           "link_clicks": 0,
           "landing_page_views": null,
           "studio_tests": null,
@@ -463,9 +463,9 @@
         {
           "date": "2026-10-26",
           "code": "PIL-SA-02",
-          "spend": 0.96,
-          "impressions": 222,
-          "reach": 45,
+          "spend": 1.07,
+          "impressions": 232,
+          "reach": 56,
           "link_clicks": 1,
           "landing_page_views": null,
           "studio_tests": null,
@@ -555,7 +555,7 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-10-26T04:07:29.635Z",
+      "attempted_at": "2026-10-26T04:53:50.802Z",
       "error": null,
       "complete_test_window": true
     },
@@ -603,8 +603,8 @@
     },
     "analytics": {
       "status": "connected",
-      "observed_at": "2026-10-26T04:07:29.635Z",
-      "attempted_at": "2026-10-26T04:07:29.635Z",
+      "observed_at": "2026-10-26T04:53:50.802Z",
+      "attempted_at": "2026-10-26T04:53:50.802Z",
       "error": null,
       "sites": [
         {
@@ -612,8 +612,8 @@
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-26T04:07:29.635Z",
-          "attempted_at": "2026-10-26T04:07:29.635Z",
+          "observed_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -653,8 +653,8 @@
           "label": "Projekt limitless · start.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-26T04:07:29.635Z",
-          "attempted_at": "2026-10-26T04:07:29.635Z",
+          "observed_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -696,6 +696,582 @@
       "observed_at": null,
       "attempted_at": null,
       "error": null
+    },
+    "diy_funnel": {
+      "source_code": "vercel_diy_events_production",
+      "site": "start.chatline.app",
+      "campaign": "120274644271350555",
+      "timezone": "UTC",
+      "collection_started_at": "2026-10-26T02:30:39Z",
+      "status": "awaiting_events",
+      "observed_at": "2026-10-26T04:53:50.802Z",
+      "attempted_at": "2026-10-26T04:53:50.802Z",
+      "period": {
+        "from": "2026-10-26",
+        "to": "2026-10-26"
+      },
+      "daily": [],
+      "error": null
+    },
+    "link_audit": {
+      "source_code": "meta_ad_destination_checks",
+      "status": "connected",
+      "observed_at": "2026-10-26T04:53:50.802Z",
+      "attempted_at": "2026-10-26T04:53:50.802Z",
+      "complete": true,
+      "checked_count": 13,
+      "request_count": 13,
+      "error": null,
+      "ads": [
+        {
+          "ad_id": "120275421779180555",
+          "code": "PIL-PA-01",
+          "status": "core_verified_extra_review",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [
+            {
+              "key": "utm_id",
+              "category": "optional_utm"
+            },
+            {
+              "key": "hsa_acc",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_cam",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_grp",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_ad",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_src",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_net",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_ver",
+              "category": "crm_tracking"
+            }
+          ],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275422266100555",
+          "code": "PIL-PA-02",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275421929330555",
+          "code": "PIL-PA-03",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275422266130555",
+          "code": "PIL-PA-04",
+          "status": "core_verified_extra_review",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [
+            {
+              "key": "utm_id",
+              "category": "optional_utm"
+            },
+            {
+              "key": "hsa_acc",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_cam",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_grp",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_ad",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_src",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_net",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_ver",
+              "category": "crm_tracking"
+            }
+          ],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275421929340555",
+          "code": "PIL-PR-01",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275422266170555",
+          "code": "PIL-PR-02",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275422266160555",
+          "code": "PIL-PR-03",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275422266150555",
+          "code": "PIL-PR-04",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275422266110555",
+          "code": "PIL-SA-01",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275422266120555",
+          "code": "PIL-SA-02",
+          "status": "core_verified_extra_review",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [
+            {
+              "key": "utm_id",
+              "category": "optional_utm"
+            },
+            {
+              "key": "hsa_acc",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_cam",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_grp",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_ad",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_src",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_net",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_ver",
+              "category": "crm_tracking"
+            }
+          ],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275422266140555",
+          "code": "PIL-SA-03",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275421929310555",
+          "code": "PIL-SA-04",
+          "status": "valid",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        },
+        {
+          "ad_id": "120275421929320555",
+          "code": "PIL-VID-01",
+          "status": "core_verified_extra_review",
+          "checked_at": "2026-10-26T04:53:50.802Z",
+          "attempted_at": "2026-10-26T04:53:50.802Z",
+          "checks": {
+            "scope_validated": true,
+            "destination_present": true,
+            "format_supported": true,
+            "landing_keys_in_url_tags_absent": true,
+            "https_domain": true,
+            "root_path": true,
+            "skin": true,
+            "ref": true,
+            "no_fragment": true,
+            "unique_query_keys": true,
+            "effective_utm_contract": true
+          },
+          "tag_checks": {
+            "utm_source": true,
+            "utm_medium": true,
+            "utm_campaign": true,
+            "utm_content": true,
+            "campaign_id": true,
+            "adset_id": true,
+            "ad_id": true
+          },
+          "extra_keys": [
+            {
+              "key": "utm_id",
+              "category": "optional_utm"
+            },
+            {
+              "key": "hsa_acc",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_cam",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_grp",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_ad",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_src",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_net",
+              "category": "crm_tracking"
+            },
+            {
+              "key": "hsa_ver",
+              "category": "crm_tracking"
+            }
+          ],
+          "unrecognized_extra_key_count": 0,
+          "error": null
+        }
+      ]
     }
   },
   "verification": {

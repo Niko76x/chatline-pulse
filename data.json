@@ -6,12 +6,12 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-27T17:00:00.000Z",
-  "collected_at": "2026-10-27T17:01:47.189Z",
+  "snapshot_id": "2026-10-27T17:05:42.636Z",
+  "collected_at": "2026-10-27T17:05:42.636Z",
   "sources": {
     "meta": {
-      "observed_at": "2026-10-27T12:01:02.698Z",
-      "attempted_at": "2026-10-27T12:15:09.947Z",
+      "observed_at": "2026-10-27T17:04:16.113Z",
+      "attempted_at": "2026-10-27T17:05:42.636Z",
       "status": "connected",
       "error": null,
       "method": "csv",
@@ -1118,43 +1118,43 @@
           "code": "PIL-PA-01",
           "status": "ACTIVE",
           "delivery": "ADSET_PAUSED",
-          "checked_at": "2026-10-27T12:20:10.148Z"
+          "checked_at": "2026-10-27T17:05:58.885Z"
         },
         {
           "code": "PIL-PA-04",
           "status": "PAUSED",
           "delivery": "PAUSED",
-          "checked_at": "2026-10-27T12:20:34.219Z"
+          "checked_at": "2026-10-27T17:06:00.304Z"
         },
         {
           "code": "PIL-VID-01",
           "status": "ACTIVE",
           "delivery": "ADSET_PAUSED",
-          "checked_at": "2026-10-27T12:20:36.527Z"
+          "checked_at": "2026-10-27T17:06:02.482Z"
         },
         {
           "code": "PIL-SA-02",
           "status": "ACTIVE",
           "delivery": "ADSET_PAUSED",
-          "checked_at": "2026-10-27T12:20:38.621Z"
+          "checked_at": "2026-10-27T17:06:04.592Z"
         },
         {
           "code": "PIL-SA-03",
           "status": "PAUSED",
           "delivery": "PAUSED",
-          "checked_at": "2026-10-27T12:20:40.792Z"
+          "checked_at": "2026-10-27T17:06:07.717Z"
         },
         {
           "code": "PIL-PR-01",
           "status": "PAUSED",
           "delivery": "PAUSED",
-          "checked_at": "2026-10-27T12:20:50.122Z"
+          "checked_at": "2026-10-27T17:06:09.644Z"
         },
         {
           "code": "PIL-PR-03",
           "status": "PAUSED",
           "delivery": "PAUSED",
-          "checked_at": "2026-10-27T12:20:52.340Z"
+          "checked_at": "2026-10-27T17:06:12.582Z"
         },
         {
           "code": "PIL-SA-01",
@@ -1195,20 +1195,20 @@
       ],
       "complete_test_window": true,
       "manual_update": {
-        "edition_label": "Tagesupdate 27.10.2026, 13:22",
-        "exported_at": "2026-10-27T12:01:02.698Z",
-        "imported_at": "2026-10-27T12:22:29.270Z",
+        "edition_label": "Tagesupdate 27.10.2026, 18:05",
+        "exported_at": "2026-10-27T17:04:16.113Z",
+        "imported_at": "2026-10-27T17:05:42.636Z",
         "valid_until": "2026-10-27T23:00:00.000Z",
         "attribution_setting": "7-day click, 1-day view, or 1-day engaged-view",
         "reporting_basis": "ads_manager_export",
         "timezone": "Europe/Berlin"
       },
-      "note": "Laufender Tag unvollständig. Fehlende Anzeigen-Tage sind unbekannt. Anzeigen-Gesamtwerte und Tagesexporte wurden nacheinander erstellt; laufende Auslieferung kann zwischen Exporten steigen. Alle 13 Schalter am 27.10. 13:20–13:21 Berlin einzeln gelesen: drei an, zehn aus; Kampagne und Adset aus. 30 EUR konfiguriertes Kampagnen-Tagesbudget um ca. 13:21 Berlin gelesen. Status/Budget sind keine Ausgaben."
+      "note": "Laufender Tag unvollständig. Fehlende Anzeigen-Tage sind unbekannt. Anzeigen-Gesamtwerte und Tagesexporte wurden nacheinander erstellt; laufende Auslieferung kann zwischen Exporten steigen. Konfiguration nur teilweise neu gelesen; pro Anzeige gilt checked_at. Kampagnenbudget: letzter vollständig belegter Stand von 13:21 Berlin, nicht als aktueller Abend-Budgetcheck ausgeben. Meta-Browser am 27.10. ca. 18:06 Berlin zur parallelen Arbeit übergeben; danach keine neue Konfigurationslesung."
     },
     "website_events": {
       "status": "connected",
-      "observed_at": "2026-10-27T12:08:52.712Z",
-      "attempted_at": "2026-10-27T12:08:52.712Z",
+      "observed_at": "2026-10-27T17:03:33.834Z",
+      "attempted_at": "2026-10-27T17:03:33.834Z",
       "error": null,
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
@@ -1217,7 +1217,7 @@
         "to": "2026-10-27"
       },
       "note": "Events Manager 22.–27.10., Eingänge vor Verarbeitung. Lead: 8 Browser + 9 Server, EMQ 4,4/10. StartTrial-Zeile nicht vorhanden: unbekannt. Relative letzte Empfangszeiten wie angezeigt beim Read.",
-      "diagnostics": "Diagnostik am 27.10.2026 gelesen: keine aktiven Fehler in den letzten drei Tagen gemeldet.",
+      "diagnostics": "Diagnostik am 27.10.2026 im Abendlauf gelesen: keine aktiven Fehler in den letzten drei Tagen gemeldet.",
       "deduplication": "Lead-Deduplizierung: Still Parsing Your Data; keine bestätigte vollständige Deduplizierung.",
       "events": [
         {
@@ -1225,21 +1225,21 @@
           "label": "Seitenereignis",
           "count": 107,
           "connection_method": "Browser",
-          "last_received": "ca. 1 Stunde vor Abruf"
+          "last_received": "5 Stunden vor Abruf"
         },
         {
           "key": "Lead",
           "label": "Lead-Signale",
           "count": 17,
           "connection_method": "Browser + Server",
-          "last_received": "ca. 1 Stunde vor Abruf"
+          "last_received": "6 Stunden vor Abruf"
         },
         {
           "key": "CompleteRegistration",
           "label": "Testanruf angefordert",
           "count": 6,
           "connection_method": "Browser + Server",
-          "last_received": "4 Tage vor Abruf"
+          "last_received": "5 Tage vor Abruf"
         },
         {
           "key": "InitiateCheckout",
@@ -1260,7 +1260,7 @@
           "label": "Selbsttest-Klick",
           "count": 4,
           "connection_method": "Browser",
-          "last_received": "ca. 1 Stunde vor Abruf"
+          "last_received": "6 Stunden vor Abruf"
         },
         {
           "key": "CtaClick",
@@ -1956,8 +1956,8 @@
     "meta_traffic": {
       "campaign": "120275454337270555",
       "adset": "120275454337280555",
-      "observed_at": "2026-10-27T11:57:06.395Z",
-      "attempted_at": "2026-10-27T12:15:09.947Z",
+      "observed_at": "2026-10-27T17:01:46.995Z",
+      "attempted_at": "2026-10-27T17:05:42.636Z",
       "status": "connected",
       "error": null,
       "method": "csv",
@@ -2021,8 +2021,8 @@
         {
           "date": "2026-10-26",
           "spend": 21.97,
-          "impressions": 12860,
-          "reach": 2592,
+          "impressions": 12862,
+          "reach": 2596,
           "link_clicks": 126,
           "landing_page_views": 72,
           "studio_tests": null,
@@ -2032,11 +2032,11 @@
         },
         {
           "date": "2026-10-27",
-          "spend": 13.98,
-          "impressions": 7773,
-          "reach": 1599,
-          "link_clicks": 79,
-          "landing_page_views": 36,
+          "spend": 16.7,
+          "impressions": 8498,
+          "reach": 2027,
+          "link_clicks": 93,
+          "landing_page_views": 46,
           "studio_tests": null,
           "call_requests": null,
           "checkouts": null,
@@ -2321,8 +2321,8 @@
           "date": "2026-10-26",
           "code": "PIL-PA-01",
           "spend": 8.38,
-          "impressions": 4584,
-          "reach": 1430,
+          "impressions": 4586,
+          "reach": 1432,
           "link_clicks": 41,
           "landing_page_views": 32,
           "studio_tests": null,
@@ -2372,11 +2372,11 @@
         {
           "date": "2026-10-27",
           "code": "PIL-LM-01",
-          "spend": 3.38,
-          "impressions": 2541,
-          "reach": 481,
-          "link_clicks": 16,
-          "landing_page_views": 11,
+          "spend": 3.69,
+          "impressions": 2661,
+          "reach": 589,
+          "link_clicks": 17,
+          "landing_page_views": 12,
           "studio_tests": null,
           "call_requests": null,
           "checkouts": null,
@@ -2385,11 +2385,11 @@
         {
           "date": "2026-10-27",
           "code": "PIL-PA-01",
-          "spend": 4.78,
-          "impressions": 2107,
-          "reach": 906,
-          "link_clicks": 22,
-          "landing_page_views": 14,
+          "spend": 6.07,
+          "impressions": 2476,
+          "reach": 1180,
+          "link_clicks": 30,
+          "landing_page_views": 20,
           "studio_tests": null,
           "call_requests": null,
           "checkouts": null,
@@ -2398,10 +2398,10 @@
         {
           "date": "2026-10-27",
           "code": "PIL-PA-04",
-          "spend": 4.05,
-          "impressions": 1840,
-          "reach": 363,
-          "link_clicks": 33,
+          "spend": 4.88,
+          "impressions": 1991,
+          "reach": 444,
+          "link_clicks": 35,
           "landing_page_views": 7,
           "studio_tests": null,
           "call_requests": null,
@@ -2411,11 +2411,11 @@
         {
           "date": "2026-10-27",
           "code": "PIL-SA-02",
-          "spend": 0.65,
-          "impressions": 1094,
-          "reach": 147,
-          "link_clicks": 1,
-          "landing_page_views": null,
+          "spend": 0.73,
+          "impressions": 1131,
+          "reach": 173,
+          "link_clicks": 2,
+          "landing_page_views": 1,
           "studio_tests": null,
           "call_requests": null,
           "checkouts": null,
@@ -2424,11 +2424,11 @@
         {
           "date": "2026-10-27",
           "code": "PIL-VID-01",
-          "spend": 1.12,
-          "impressions": 191,
-          "reach": 160,
-          "link_clicks": 7,
-          "landing_page_views": 4,
+          "spend": 1.33,
+          "impressions": 239,
+          "reach": 196,
+          "link_clicks": 9,
+          "landing_page_views": 6,
           "studio_tests": null,
           "call_requests": null,
           "checkouts": null,
@@ -2437,42 +2437,47 @@
       ],
       "statuses": [
         {
-          "code": "PIL-PA-01",
-          "status": "ACTIVE",
-          "delivery": "ACTIVE"
-        },
-        {
-          "code": "PIL-PA-04",
-          "status": "ACTIVE",
-          "delivery": "ACTIVE"
-        },
-        {
           "code": "PIL-LM-01",
           "status": "ACTIVE",
-          "delivery": "ACTIVE"
-        },
-        {
-          "code": "PIL-SA-02",
-          "status": "ACTIVE",
-          "delivery": "ACTIVE"
+          "delivery": "ACTIVE",
+          "checked_at": "2026-10-27T17:04:37.259Z"
         },
         {
           "code": "PIL-VID-01",
           "status": "ACTIVE",
-          "delivery": "ACTIVE"
+          "delivery": "ACTIVE",
+          "checked_at": "2026-10-27T17:04:49.137Z"
+        },
+        {
+          "code": "PIL-SA-02",
+          "status": "ACTIVE",
+          "delivery": "ACTIVE",
+          "checked_at": "2026-10-27T17:04:53.286Z"
+        },
+        {
+          "code": "PIL-PA-04",
+          "status": "ACTIVE",
+          "delivery": "ACTIVE",
+          "checked_at": "2026-10-27T17:04:57.598Z"
+        },
+        {
+          "code": "PIL-PA-01",
+          "status": "ACTIVE",
+          "delivery": "ACTIVE",
+          "checked_at": "2026-10-27T17:05:01.804Z"
         }
       ],
       "complete_test_window": true,
       "manual_update": {
-        "edition_label": "Tagesupdate 27.10.2026, 13:22",
-        "exported_at": "2026-10-27T11:57:06.395Z",
-        "imported_at": "2026-10-27T12:22:29.270Z",
+        "edition_label": "Tagesupdate 27.10.2026, 18:05",
+        "exported_at": "2026-10-27T17:01:46.995Z",
+        "imported_at": "2026-10-27T17:05:42.636Z",
         "valid_until": "2026-10-27T23:00:00.000Z",
         "attribution_setting": "7-day click or 1-day view",
         "reporting_basis": "ads_manager_export",
         "timezone": "Europe/Berlin"
       },
-      "note": "Laufender Tag unvollständig. Fehlende Anzeigen-Tage sind unbekannt. Anzeigen-Gesamtwerte und Tagesexporte wurden nacheinander erstellt; laufende Auslieferung kann zwischen Exporten steigen. Alle fünf gespeicherten Start-Ziele mit skin=pilates, individuellem Ref und Kern-UTMs/IDs am 27.10. ca. 13:14 Berlin lesend geprüft. Zusätzliche hsa-Parameter separat, ihre Weiterverarbeitung ist nicht bestätigt. Dies belegt weder die DIY-Zuordnung noch CAPI-Empfang. Dataset 1727278251668513 bei allen fünf veröffentlichten Anzeigen lesend bestätigt (27.10., bis 13:17 Berlin)."
+      "note": "Laufender Tag unvollständig. Fehlende Anzeigen-Tage sind unbekannt. Anzeigen-Gesamtwerte und Tagesexporte wurden nacheinander erstellt; laufende Auslieferung kann zwischen Exporten steigen. Alle fünf gespeicherten Ziele, Kern-UTMs/IDs und Dataset 1727278251668513 im Abendlauf 18:04–18:05 Berlin gelesen. Zusatzparameter separat, Weiterverarbeitung unbestätigt. Eigene Start-DIY-Zuordnung weiter unbestätigt. Ausgaben und Budget entsprechen dem datierten Export vor dem Browser-Handoff; spätere Budgetarbeit ist hier nicht belegt."
     }
   },
   "verification": {

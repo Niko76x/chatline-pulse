@@ -1,3 +1,4 @@
+import { TRAFFIC, TRAFFIC_ADS } from '../public/assets/campaigns.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -7,6 +8,8 @@ import { freshness, summarize, reviewAd, analyticsView } from '../public/assets/
 import { CREATIVE_CATALOG } from '../public/assets/creative-catalog.js';
 import { reportedCount } from '../public/assets/count-display.js';
 const original = JSON.parse(await readFile(new URL('../public/data/fallback.json', import.meta.url), 'utf8'));
+
+
 const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 const client = (await readFile(new URL('../public/assets/pulse.js', import.meta.url), 'utf8')).replace(/^import[^\n]+;\r?\n/gm, '');
 
@@ -22,7 +25,7 @@ async function renderFixture(snapshot = structuredClone(original), hash = '#/ove
   let incoming = snapshot, transport = { status: 'snapshot' }, fail = false;
   const context = { document: { querySelector: node, querySelectorAll: () => nav, addEventListener: (k,v) => { events[k] = v; } },
     window: { addEventListener: (k,v) => { win[k] = v; } }, location, setInterval: () => {}, Intl, Date,
-    freshness, summarize, reviewAd, analyticsView, CREATIVE_CATALOG: catalog, reportedCount, navigator: { clipboard: { writeText: async text => clipboard.push(text) } },
+    TRAFFIC, TRAFFIC_ADS, freshness, summarize, reviewAd, analyticsView, CREATIVE_CATALOG: catalog, reportedCount, navigator: { clipboard: { writeText: async text => clipboard.push(text) } },
     fetch: async (url, options) => { requests.push([url,options]); assert.equal(url, '/api/data'); if (fail) throw Error('test failure'); return { ok:true, json:async () => ({snapshot:incoming,transport}) }; } };
   await vm.runInNewContext(`(async () => { ${client}\n })()`, context, { timeout:1500 });
   return { node, nav, clipboard, requests, get view() { return node('#view').innerHTML; },
@@ -253,4 +256,17 @@ test('external assets retain strict self-only CSP and the tested helper is exact
   assert.match(policy,/script-src 'self'; style-src 'self'; connect-src 'self'/); assert.doesNotMatch(policy,/unsafe-inline|unsafe-eval|sha256/); assert.match(policy,/frame-ancestors 'none'/);
   // GitHub uploads may preserve CRLF; compare source content without checkout-specific line endings.
   assert.equal((await readFile(new URL('../public/assets/model.js',import.meta.url),'utf8')).replace(/\r\n/g,'\n'),(await readFile(new URL('./model.mjs',import.meta.url),'utf8')).replace(/\r\n/g,'\n'));
+});
+
+test('campaign selector separates five traffic ads, metrics, exact IDs and the unconfirmed DIY attribution', async()=>{
+ const snapshot=structuredClone(original), at=new Date().toISOString();
+ snapshot.sources.meta_traffic={campaign:TRAFFIC.campaign,adset:TRAFFIC.adset,status:'connected',observed_at:at,attempted_at:at,timezone:'Europe/Berlin',period:{from:'2026-10-22',to:'2026-10-27'},complete_test_window:true,daily:[{date:'2026-10-27',spend:35,impressions:1000,link_clicks:200,landing_page_views:100,studio_tests:null}],ads_daily:TRAFFIC_ADS.map(ad=>({date:'2026-10-27',code:ad.code,spend:7,link_clicks:40,impressions:200})),statuses:TRAFFIC_ADS.map(ad=>({code:ad.code,status:'ACTIVE',delivery:'ACTIVE'}))};
+ const app=await renderFixture(snapshot,'#/overview');
+ assert.match(app.view,/Ursprünglicher Pilates-Test/);assert.match(app.view,/Traffic · Deutschland/);
+ app.select('campaign','traffic');assert.match(app.view,/DIY-Zuordnung unbestätigt/);assert.match(app.view,/35 €/);
+ app.navigate('#/facebook');assert.equal((app.view.match(/<tr><td><a class="table-name"/g)||[]).length,5);assert.match(app.view,/PIL-LM-01/);
+ app.navigate('#/facebook/ad/PIL-PA-01');assert.match(app.view,/120275454337290555/);assert.doesNotMatch(app.view,/selected_ad_ids=120275421779180555/);
+ app.navigate('#/funnel/diy');assert.match(app.view,/DIY-Zuordnung unbestätigt/);assert.doesNotMatch(app.view,/data-diy-count=/);
+ app.navigate('#/tracking/links');assert.doesNotMatch(app.view,/data-copy=/);
+ app.select('campaign','original');app.navigate('#/facebook');assert.equal((app.view.match(/<tr><td><a class="table-name"/g)||[]).length,13);
 });

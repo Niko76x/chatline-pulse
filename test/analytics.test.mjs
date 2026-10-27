@@ -188,6 +188,8 @@ test('same-slot retry requires every active source and ignores explicitly disabl
   assert.equal(canSkipCollection(old,{slot,now,metaEnabled:false}),true);
   assert.equal(canSkipCollection(old,{slot,now,metaEnabled:true}),false);
   old.sources.meta.status='connected'; old.sources.meta.observed_at=now.toISOString();
+  assert.equal(canSkipCollection(old,{slot,now,metaEnabled:true}),false,'The traffic campaign must also be freshly collected');
+  old.sources.meta_traffic={status:'connected',observed_at:now.toISOString()};
   assert.equal(canSkipCollection(old,{slot,now,metaEnabled:true}),true);
   old.sources.analytics.sites[1].status='error';
   assert.equal(canSkipCollection(old,{slot,now,metaEnabled:false}),false);
@@ -202,6 +204,7 @@ test('newly activated source cannot reuse an older success within a same-slot Me
   const old=structuredClone(original);old.snapshot_id=slot;old.sources.meta.status='connected';old.sources.meta.observed_at='2026-10-25T18:07:00.000Z';
   old.sources.website_events.status='connected';old.sources.website_events.source_code='meta_dataset_stats';old.sources.website_events.observed_at='2026-10-25T17:37:00.000Z';
   old.sources.analytics.sites=[{site:'chatline.app',status:'connected',observed_at:'2026-10-25T17:37:00.000Z',daily:[]}];
+  old.sources.meta_traffic={status:'connected',observed_at:old.sources.meta.observed_at};
   assert.equal(canSkipCollection(old,{slot,now:current,metaEnabled:true,analyticsProjects:[]}),true);
   assert.equal(canSkipCollection(old,{slot,now:current,metaEnabled:true,datasetEnabled:true,analyticsProjects:[]}),false);
   assert.equal(canSkipCollection(old,{slot,now:current,metaEnabled:true,analyticsProjects:[projects[0]]}),false);

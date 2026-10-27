@@ -1,3 +1,4 @@
+import { TRAFFIC, TRAFFIC_AD_IDS } from '../public/assets/campaigns.js';
 import { ADS as DIY_AD_IDS } from '../scripts/diy-funnel-preflight.mjs';
 import { collectDiyFunnel, validateDiyFunnelSource, mergeDiyFunnel } from '../lib/diy-funnel.mjs';
 import { assertLinkAuditScope, validateLinkAudit, collectLinkAudit, mergeLinkAudit, linkAuditAttemptedInSlot } from '../lib/link-audit.js';
@@ -33,9 +34,10 @@ export const ANALYTICS_PROJECTS = Object.freeze([
   Object.freeze({ site: 'start.chatline.app', projectId: 'prj_cKWblSdgOD2QY0tUExAkoqB3Z5jH', teamId: 'team_i2XlerNOfSTLE5EGj65B1vau', scope: 'project',
     hosts: Object.freeze(['start.chatline.app']), label: 'Projekt limitless · start.chatline.app' }),
 ]);
-export function assertScope(row, { ad = false } = {}) {
-  if (String(row.account_id) !== SCOPE.account || String(row.campaign_id) !== SCOPE.campaign ||
-      String(row.adset_id ?? row.id) !== SCOPE.adset || (ad && !AD_IDS[String(row.ad_id ?? row.id)])) {
+export function assertScope(row, { ad = false, scope = SCOPE, ids = AD_IDS } = {}) {
+  if (scope !== SCOPE && scope !== TRAFFIC) throw new Error('SCOPE_MISMATCH');
+  if (String(row.account_id) !== scope.account || String(row.campaign_id) !== scope.campaign ||
+      String(row.adset_id ?? row.id) !== scope.adset || (ad && !ids[String(row.ad_id ?? row.id)])) {
     throw new Error('SCOPE_MISMATCH');
   }
   return row;
@@ -44,7 +46,7 @@ export function assertScope(row, { ad = false } = {}) {
 
 const ROOT = 'https://graph.facebook.com';
 const ALLOWED = new Set([`act_${SCOPE.account}`, SCOPE.campaign, SCOPE.adset,
-  `${SCOPE.adset}/insights`, `${SCOPE.adset}/ads`, `${SCOPE.dataset}/stats`]);
+  `${SCOPE.adset}/insights`, `${SCOPE.adset}/ads`, TRAFFIC.campaign, TRAFFIC.adset, `${TRAFFIC.adset}/insights`, `${TRAFFIC.adset}/ads`, `${SCOPE.dataset}/stats`]);
 export class ReadError extends Error {
   constructor(code) { super(code); this.code = code; }
 }
@@ -94,11 +96,11 @@ function action(rows, key) {
   // Missing action rows do not prove a measured zero.
   return row ? number(row.value) : null;
 }
-export function normalizeInsight(row, ad = false) {
-  assertScope(row, { ad });
+export function normalizeInsight(row, ad = false, scope = SCOPE, ids = AD_IDS) {
+  assertScope(row, { ad, scope, ids });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date_start || '') || row.date_start !== row.date_stop) throw new ReadError('META_INVALID_PERIOD');
   return {
-    date: row.date_start, ...(ad ? { code: AD_IDS[row.ad_id] } : {}),
+    date: row.date_start, ...(ad ? { code: ids[row.ad_id] } : {}),
     spend: number(row.spend), impressions: number(row.impressions), reach: number(row.reach),
     link_clicks: number(row.inline_link_clicks), landing_page_views: action(row.actions, 'landing_page_view'),
     studio_tests: action(row.actions, 'offsite_conversion.fb_pixel_lead'),
@@ -107,34 +109,37 @@ export function normalizeInsight(row, ad = false) {
     trials: action(row.actions, 'offsite_conversion.fb_pixel_start_trial'),
   };
 }
-export async function collectAds(read, now = new Date()) {
-  const account = await read(`act_${SCOPE.account}`, { fields: 'id,currency,timezone_name' });
-  if (String(account.id).replace(/^act_/, '') !== SCOPE.account || account.currency !== 'EUR' || account.timezone_name !== 'Europe/Berlin') throw new ReadError('ACCOUNT_CONFIG_MISMATCH');
+export async function collectAds(read, now = new Date(), scope = SCOPE) {
+  if (scope !== SCOPE && scope !== TRAFFIC) throw new Error('SCOPE_MISMATCH');
+  const ids = scope === TRAFFIC ? TRAFFIC_AD_IDS : AD_IDS;
+  const account = await read(`act_${scope.account}`, { fields: 'id,currency,timezone_name' });
+  if (String(account.id).replace(/^act_/, '') !== scope.account || account.currency !== 'EUR' || account.timezone_name !== 'Europe/Berlin') throw new ReadError('ACCOUNT_CONFIG_MISMATCH');
   let today;
   try { today = new Intl.DateTimeFormat('en-CA', { timeZone: account.timezone_name }).format(now); }
   catch { throw new ReadError('ACCOUNT_CONFIG_MISMATCH'); }
-  const adset = await read(SCOPE.adset, { fields: 'id,account_id,campaign_id,effective_status,promoted_object' });
-  assertScope(adset);
-  if (String(adset.promoted_object?.pixel_id) !== SCOPE.dataset) throw new ReadError('DATASET_MISMATCH');
-  const campaign = await read(SCOPE.campaign, { fields: 'id,account_id,daily_budget,effective_status' });
-  if (String(campaign.id) !== SCOPE.campaign || String(campaign.account_id) !== SCOPE.account) throw new ReadError('SCOPE_MISMATCH');
+  const adset = await read(scope.adset, { fields: 'id,account_id,campaign_id,effective_status,promoted_object' });
+  assertScope(adset, { scope, ids });
+  if ((scope === SCOPE || adset.promoted_object?.pixel_id) && String(adset.promoted_object?.pixel_id) !== SCOPE.dataset) throw new ReadError('DATASET_MISMATCH');
+  const campaign = await read(scope.campaign, { fields: 'id,account_id,daily_budget,effective_status' });
+  if (String(campaign.id) !== scope.campaign || String(campaign.account_id) !== scope.account) throw new ReadError('SCOPE_MISMATCH');
   const params = { fields: 'account_id,campaign_id,adset_id,ad_id,date_start,date_stop,spend,impressions,reach,inline_link_clicks,actions',
     time_range: { since: SCOPE.since, until: today }, time_increment: 1,
     use_unified_attribution_setting: true, action_report_time: 'conversion', limit: 1000 };
   const [totals, ads, statuses] = await Promise.all([
-    read(`${SCOPE.adset}/insights`, { ...params, level: 'adset' }),
-    read(`${SCOPE.adset}/insights`, { ...params, level: 'ad' }),
-    read(`${SCOPE.adset}/ads`, { fields: 'id,account_id,campaign_id,adset_id,status,effective_status', limit: 100 }),
+    read(`${scope.adset}/insights`, { ...params, level: 'adset' }),
+    read(`${scope.adset}/insights`, { ...params, level: 'ad' }),
+    read(`${scope.adset}/ads`, { fields: 'id,account_id,campaign_id,adset_id,status,effective_status', limit: 100 }),
   ]);
   if (![totals, ads, statuses].every(Array.isArray)) throw new ReadError('META_INVALID_RESPONSE');
   if ([...totals, ...ads].some(r => r.date_start < SCOPE.since || r.date_stop > today)) throw new ReadError('META_INVALID_PERIOD');
   return {
+    ...(scope === TRAFFIC ? { campaign: scope.campaign, adset: scope.adset } : {}),
     observed_at: now.toISOString(), timezone: account.timezone_name,
     period: { from: SCOPE.since, to: today }, delivery: adset.effective_status,
     budget_daily: number(campaign.daily_budget) === null ? null : number(campaign.daily_budget) / 100,
     attribution: 'Metas Adset-Attribution · Ereignisdatum der Conversion',
-    daily: totals.map(r => normalizeInsight(r)), ads_daily: ads.map(r => normalizeInsight(r, true)),
-    statuses: statuses.map(row => { assertScope(row, { ad: true }); return { code: AD_IDS[row.id], status: row.status, delivery: row.effective_status }; }),
+    daily: totals.map(r => normalizeInsight(r, false, scope, ids)), ads_daily: ads.map(r => normalizeInsight(r, true, scope, ids)),
+    statuses: statuses.map(row => { assertScope(row, { ad: true, scope, ids }); return { code: ids[row.id], status: row.status, delivery: row.effective_status }; }),
   };
 }
 
@@ -343,7 +348,7 @@ export function createAnalyticsDiagnosticFetcher({ enabled = false, fetcher = fe
 }
 
 
-const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated method manual_update edition_label exported_at imported_at valid_until attribution_setting reporting_basis').split(' '));
+const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated method manual_update edition_label exported_at imported_at valid_until attribution_setting reporting_basis meta_traffic connection_method last_received emq diagnostics deduplication').split(' '));
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
 function scan(value, depth = 0) {
   if (depth > 15) throw new Error('SNAPSHOT_INVALID');
@@ -355,18 +360,39 @@ function scan(value, depth = 0) {
   for (const [k, v] of Object.entries(value)) { if (!ALLOWED_KEYS.has(k)) throw new Error('SNAPSHOT_UNKNOWN_FIELD'); scan(v, depth + 1); }
 }
 const timestamp = value => value === null || (typeof value === 'string' && Number.isFinite(Date.parse(value)));
+export function validateTrafficSource(source) {
+  if (!source || source.campaign !== TRAFFIC.campaign || source.adset !== TRAFFIC.adset || source.timezone !== 'Europe/Berlin') throw new Error('SNAPSHOT_SCOPE_MISMATCH');
+  validateCsvMetaSource(source);
+  const codes = Object.values(TRAFFIC_AD_IDS);
+  for (const rows of [source.daily, source.ads_daily, source.statuses]) if (!Array.isArray(rows)) throw new Error('SNAPSHOT_INVALID');
+  const seen = new Set();
+  const dates = new Set();
+  for (const row of source.daily) {
+    if (dates.has(row.date) || row.date < source.period?.from || row.date > source.period?.to) throw new Error('SNAPSHOT_INVALID_DATE');
+    dates.add(row.date);
+  }
+  for (const row of source.ads_daily) {
+    const key = `${row.date}:${row.code}`;
+    if (!codes.includes(row.code) || seen.has(key) || row.date < source.period?.from || row.date > source.period?.to) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
+    seen.add(key);
+  }
+  if (source.statuses.length !== codes.length || new Set(source.statuses.map(r => r.code)).size !== codes.length || source.statuses.some(r => !codes.includes(r.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
+  return source;
+}
 export function validateSnapshot(data) {
   scan(data);
   if (data.schema_version !== 2 || Object.entries({ account: SCOPE.account, dataset: SCOPE.dataset, campaign: SCOPE.campaign, adset: SCOPE.adset }).some(([k, v]) => data.scope?.[k] !== v)) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   if (!Array.isArray(data.ads) || data.ads.length !== Object.keys(AD_IDS).length || new Set(data.ads.map(a => a.code)).size !== data.ads.length || data.ads.some(a => !Object.values(AD_IDS).includes(a.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   validateCsvMetaSource(data.sources?.meta);
-  for (const source of Object.values(data.sources || {})) {
+  if (data.sources?.meta_traffic !== undefined) validateTrafficSource(data.sources.meta_traffic);
+  for (const [key, source] of Object.entries(data.sources || {})) {
+    const sourceIds = key === 'meta_traffic' ? TRAFFIC_AD_IDS : AD_IDS;
     if (!timestamp(source.observed_at) || !timestamp(source.attempted_at)) throw new Error('SNAPSHOT_INVALID_DATE');
     for (const row of [...(source.daily || []), ...(source.ads_daily || [])]) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date || '')) throw new Error('SNAPSHOT_INVALID_DATE');
-      if (row.code && !Object.values(AD_IDS).includes(row.code)) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
+      if (row.code && !Object.values(sourceIds).includes(row.code)) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
     }
-    if (source.statuses?.some(s => !Object.values(AD_IDS).includes(s.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
+    if (source.statuses?.some(s => !Object.values(sourceIds).includes(s.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   }
   if (data.sources.link_audit !== undefined) validateLinkAudit(data.sources.link_audit);
   if (data.sources.diy_funnel !== undefined) validateDiyFunnelSource(data.sources.diy_funnel);
@@ -399,7 +425,9 @@ export function canSkipCoreCollection(previous, { slot, now = new Date(), analyt
 export function canSkipCollection(previous, options = {}) {
   const { analyticsProjects = ANALYTICS_PROJECTS, metaEnabled = false, datasetEnabled = false, linkAuditEnabled = false, diyFunnelEnabled = false } = options;
   const hasCore = metaEnabled || datasetEnabled || analyticsProjects.length > 0;
-  return (hasCore || linkAuditEnabled || diyFunnelEnabled) && (!hasCore || canSkipCoreCollection(previous, options)) &&
+  const traffic = previous.sources.meta_traffic;
+  const trafficDone = !metaEnabled || csvMetaIsProtected(traffic, options.now) || traffic?.status === 'connected' && traffic.observed_at === previous.sources.meta.observed_at;
+  return trafficDone && (hasCore || linkAuditEnabled || diyFunnelEnabled) && (!hasCore || canSkipCoreCollection(previous, options)) &&
     (!linkAuditEnabled || linkAuditAttemptedInSlot(previous.sources.link_audit, options)) &&
     (!diyFunnelEnabled || diyFunnelAttemptedInSlot(previous.sources.diy_funnel, options));
 }
@@ -595,6 +623,16 @@ export async function refreshSources(previous, { now = new Date(), slot = null, 
         if (metaInitError) throw new Error(metaInitError);
         next = mergeDatasetStats(next, await collectDatasetStats(metaReader, { enabled: true, now }), { now });
       } catch (error) { next = mergeDatasetStats(next, null, { now, error: error.code || error.message }); success = false; }
+    }
+  }
+  if (metaEnabled && !csvMetaIsProtected(previous.sources.meta_traffic, now)) {
+    try {
+      const result = await collectAds(createMetaReader(metaOptions), now, TRAFFIC);
+      next.sources.meta_traffic = { ...result, status: 'connected', attempted_at: now.toISOString(), error: null, complete_test_window: false };
+      next.collected_at = now.toISOString();
+    } catch {
+      if (next.sources.meta_traffic) next.sources.meta_traffic = { ...next.sources.meta_traffic, status: 'error', attempted_at: now.toISOString(), error: 'META_READ_FAILED' };
+      success = false;
     }
   }
   if (diyFunnelEnabled && !diyFunnelAttemptedInSlot(previous.sources.diy_funnel, { slot, now })) {

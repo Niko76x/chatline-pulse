@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { TRAFFIC, TRAFFIC_AD_IDS } from '../public/assets/campaigns.js';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { validateSnapshot, mergeMeta, refreshSources, canSkipCoreCollection, ANALYTICS_PROJECTS } from '../api/data.js';
@@ -13,6 +14,7 @@ function fixture() {
     manual_update: { edition_label: 'Tagesupdate 26.10.2026, 10:00', exported_at: '2026-10-26T10:00:00.000Z',
       imported_at: '2026-10-26T10:05:00.000Z', valid_until: '2026-10-26T23:00:00.000Z',
       attribution_setting: CSV_ATTRIBUTION_SETTING, reporting_basis: 'ads_manager_export', timezone: 'Europe/Berlin' } });
+  value.sources.meta_traffic = { ...structuredClone(value.sources.meta), campaign: TRAFFIC.campaign, adset: TRAFFIC.adset, ads_daily: [], statuses: Object.values(TRAFFIC_AD_IDS).map(code => ({code,status:'ACTIVE',delivery:'ACTIVE'})) };
   return value;
 }
 const tokens = { 'chatline.app': 'fixture-website-token', 'start.chatline.app': 'fixture-diy-token' };
@@ -100,6 +102,6 @@ test('expired CSV returns to the real Meta read path and independently preserves
   const previous = fixture(); let metaReads = 0;
   const result = await refreshSources(previous, { now: new Date('2026-10-26T23:00:00Z'), metaEnabled: true,
     metaOptions: { token: 'fixture-meta-token', version: 'v99.0', fetcher: async () => { metaReads++; return { ok: false, status: 403, json: async () => ({ error: { code: 190 } }) }; } } });
-  assert.equal(metaReads, 1); assert.equal(result.success, false);
+  assert.equal(metaReads, 2); assert.equal(result.success, false);
   assert.equal(result.snapshot.sources.meta.status, 'error'); assert.deepEqual(result.snapshot.sources.meta.daily, previous.sources.meta.daily);
 });

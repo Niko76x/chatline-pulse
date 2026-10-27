@@ -348,7 +348,7 @@ export function createAnalyticsDiagnosticFetcher({ enabled = false, fetcher = fe
 }
 
 
-const ALLOWED_KEYS = new Set(('schema_version scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated method manual_update edition_label exported_at imported_at valid_until attribution_setting reporting_basis meta_traffic connection_method last_received emq diagnostics deduplication').split(' '));
+const ALLOWED_KEYS = new Set(('schema_version clicks scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated method manual_update edition_label exported_at imported_at valid_until attribution_setting reporting_basis meta_traffic connection_method last_received emq diagnostics deduplication').split(' '));
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
 function scan(value, depth = 0) {
   if (depth > 15) throw new Error('SNAPSHOT_INVALID');
@@ -379,11 +379,30 @@ export function validateTrafficSource(source) {
   if (source.statuses.length !== codes.length || new Set(source.statuses.map(r => r.code)).size !== codes.length || source.statuses.some(r => !codes.includes(r.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   return source;
 }
+export function validateSearchConsoleSource(source) {
+  if (source === undefined) return source;
+  if (source.status === 'not_connected' && !source.source_code && source.observed_at === null && !source.daily?.length) return source;
+  const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value || '') && Number.isFinite(Date.parse(value)) && new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) === value;
+  if (source.source_code !== 'gsc_web_ui_csv' || source.method !== 'csv' || source.site !== 'chatline.app' ||
+      source.label !== 'chatline.app + start.chatline.app' || source.timezone !== 'America/Los_Angeles' ||
+      !['connected', 'error', 'historical'].includes(source.status) || !source.observed_at ||
+      !validDate(source.period?.from) || !validDate(source.period?.to) || source.period.from < SCOPE.since || source.period.to < source.period.from ||
+      !Array.isArray(source.daily)) throw new Error('SNAPSHOT_GSC_SCOPE_MISMATCH');
+  const expected = (Date.parse(source.period.to) - Date.parse(source.period.from)) / 86400000 + 1;
+  if (expected > 700 || source.daily.length !== expected) throw new Error('SNAPSHOT_GSC_INVALID_DAYS');
+  source.daily.forEach((row, index) => {
+    const date = new Date(Date.parse(source.period.from) + index * 86400000).toISOString().slice(0, 10);
+    if (row.date !== date || Object.keys(row).some(key => !['date', 'clicks', 'impressions'].includes(key)) ||
+        ['clicks', 'impressions'].some(key => row[key] !== null && (!Number.isSafeInteger(row[key]) || row[key] < 0))) throw new Error('SNAPSHOT_GSC_INVALID_DAYS');
+  });
+  return source;
+}
 export function validateSnapshot(data) {
   scan(data);
   if (data.schema_version !== 2 || Object.entries({ account: SCOPE.account, dataset: SCOPE.dataset, campaign: SCOPE.campaign, adset: SCOPE.adset }).some(([k, v]) => data.scope?.[k] !== v)) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   if (!Array.isArray(data.ads) || data.ads.length !== Object.keys(AD_IDS).length || new Set(data.ads.map(a => a.code)).size !== data.ads.length || data.ads.some(a => !Object.values(AD_IDS).includes(a.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
   validateCsvMetaSource(data.sources?.meta);
+  validateSearchConsoleSource(data.sources?.search_console);
   if (data.sources?.meta_traffic !== undefined) validateTrafficSource(data.sources.meta_traffic);
   for (const [key, source] of Object.entries(data.sources || {})) {
     const sourceIds = key === 'meta_traffic' ? TRAFFIC_AD_IDS : AD_IDS;

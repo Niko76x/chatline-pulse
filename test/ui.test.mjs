@@ -270,3 +270,26 @@ test('campaign selector separates five traffic ads, metrics, exact IDs and the u
  app.navigate('#/tracking/links');assert.doesNotMatch(app.view,/data-copy=/);
  app.select('campaign','original');app.navigate('#/facebook');assert.equal((app.view.match(/<tr><td><a class="table-name"/g)||[]).length,13);
 });
+
+import {validateSnapshot, mergeAnalytics, ANALYTICS_PROJECTS} from '../api/data.js';
+function gscFixture() {
+ return {source_code:'gsc_web_ui_csv',method:'csv',site:'chatline.app',label:'chatline.app + start.chatline.app',status:'connected',observed_at:'2026-10-27T17:46:00.599Z',attempted_at:'2026-10-27T17:46:00.599Z',error:null,timezone:'America/Los_Angeles',period:{from:'2026-10-22',to:'2026-10-26'},daily:[10,7,3,6,5].map((impressions,index)=>({date:'2026-10-'+(22+index),clicks:0,impressions})),note:'26.10. vorläufig; 27.10. nicht als abgeschlossener Nulltag übernommen.'};
+}
+test('GSC permits only the two approved hosts, PT calendar days and nullable aggregate counts',()=>{
+ const snapshot=structuredClone(original);snapshot.sources.search_console=gscFixture();validateSnapshot(snapshot);
+ const mutations=[s=>s.site='other.invalid',s=>s.label='other.invalid',s=>s.timezone='Europe/Berlin',s=>s.daily[1].date=s.daily[0].date,s=>s.daily[0].clicks=-1,s=>s.daily[0].impressions=1.5,s=>s.daily[0].ref='private-page',s=>s.daily.pop(),s=>s.period.to='2026-02-30',s=>s.observed_at='invalid'];
+ for(const mutate of mutations){const bad=structuredClone(snapshot);mutate(bad.sources.search_console);assert.throws(()=>validateSnapshot(bad),/SNAPSHOT/);}
+ snapshot.sources.search_console.daily[0].clicks=null;validateSnapshot(snapshot);
+});
+test('independent analytics refresh preserves the manual GSC counts and source clock exactly',()=>{
+ const snapshot=structuredClone(original);snapshot.sources.search_console=gscFixture();const at='2026-10-27T18:00:00.000Z';
+ const next=mergeAnalytics(snapshot,ANALYTICS_PROJECTS.map(p=>({site:p.site,label:p.label,status:'connected',observed_at:at,attempted_at:at,error:null,timezone:'UTC',daily:[]})),{now:new Date(at)});
+ assert.deepEqual(next.sources.search_console,snapshot.sources.search_console);
+});
+test('GSC UI separates combined organic counts, PT period, preliminary days and failed source reads',async()=>{
+ const snapshot=structuredClone(original);snapshot.sources.search_console=gscFixture();const app=await renderFixture(snapshot,'#/website');
+ assert.match(app.view,/Organische Suche · beide Hosts/);assert.match(app.view,/Gemeldete Suchklicks<\/span><strong class="metric-value">0/);assert.match(app.view,/31/);assert.match(app.view,/Pacific Time/);assert.match(app.view,/26. Okt. 2026/);assert.match(app.view,/jüngsten GSC-Werte sind vorläufig/);assert.doesNotMatch(app.view,/Suchklicks und Suchimpressionen sind noch nicht verfügbar/);
+ app.select('campaign','traffic');assert.match(app.view,/kein kampagnen- oder hostbezogener Besuchernachweis/i);
+ snapshot.sources.search_console.status='error';snapshot.sources.search_console.daily[0].clicks=null;await app.reload(snapshot);assert.match(app.view,/neue Abruf ist fehlgeschlagen/);assert.match(app.view,/Gemeldete Suchklicks<\/span><strong class="metric-value">—/);
+ app.navigate('#/tracking');assert.match(app.view,/Google · organische Suche/);assert.match(app.view,/GSC-Messtage: Pacific Time/);
+});

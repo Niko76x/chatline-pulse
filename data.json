@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-27T12:18:16.148Z",
-  "collected_at": "2026-10-27T12:18:16.148Z",
+  "snapshot_id": "2026-10-27T12:22:29.270Z",
+  "collected_at": "2026-10-27T12:22:29.270Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-27T12:01:02.698Z",
@@ -21,7 +21,7 @@
         "to": "2026-10-27"
       },
       "delivery": "PAUSED",
-      "budget_daily": null,
+      "budget_daily": 30,
       "attribution": "Meta Ads Manager CSV · 7-day click, 1-day view, or 1-day engaged-view; Ereigniszeitpunkt im Export nicht separat ausgewiesen",
       "daily": [
         {
@@ -1116,81 +1116,94 @@
       "statuses": [
         {
           "code": "PIL-PA-01",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
-        },
-        {
-          "code": "PIL-SA-04",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
-        },
-        {
-          "code": "PIL-VID-01",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
-        },
-        {
-          "code": "PIL-PA-03",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
-        },
-        {
-          "code": "PIL-PR-01",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
-        },
-        {
-          "code": "PIL-PA-02",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
-        },
-        {
-          "code": "PIL-SA-01",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
-        },
-        {
-          "code": "PIL-SA-02",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
+          "status": "ACTIVE",
+          "delivery": "ADSET_PAUSED",
+          "checked_at": "2026-10-27T12:20:10.148Z"
         },
         {
           "code": "PIL-PA-04",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:20:34.219Z"
+        },
+        {
+          "code": "PIL-VID-01",
+          "status": "ACTIVE",
+          "delivery": "ADSET_PAUSED",
+          "checked_at": "2026-10-27T12:20:36.527Z"
+        },
+        {
+          "code": "PIL-SA-02",
+          "status": "ACTIVE",
+          "delivery": "ADSET_PAUSED",
+          "checked_at": "2026-10-27T12:20:38.621Z"
         },
         {
           "code": "PIL-SA-03",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:20:40.792Z"
         },
         {
-          "code": "PIL-PR-04",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
+          "code": "PIL-PR-01",
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:20:50.122Z"
         },
         {
           "code": "PIL-PR-03",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:20:52.340Z"
+        },
+        {
+          "code": "PIL-SA-01",
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:20:54.689Z"
+        },
+        {
+          "code": "PIL-PA-03",
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:20:56.839Z"
+        },
+        {
+          "code": "PIL-PR-04",
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:20:59.498Z"
+        },
+        {
+          "code": "PIL-SA-04",
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:21:28.827Z"
+        },
+        {
+          "code": "PIL-PA-02",
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:21:30.759Z"
         },
         {
           "code": "PIL-PR-02",
-          "status": null,
-          "delivery": "ADSET_PAUSED"
+          "status": "PAUSED",
+          "delivery": "PAUSED",
+          "checked_at": "2026-10-27T12:21:32.595Z"
         }
       ],
       "complete_test_window": true,
       "manual_update": {
-        "edition_label": "Tagesupdate 27.10.2026, 13:18",
+        "edition_label": "Tagesupdate 27.10.2026, 13:22",
         "exported_at": "2026-10-27T12:01:02.698Z",
-        "imported_at": "2026-10-27T12:18:16.148Z",
+        "imported_at": "2026-10-27T12:22:29.270Z",
         "valid_until": "2026-10-27T23:00:00.000Z",
         "attribution_setting": "7-day click, 1-day view, or 1-day engaged-view",
         "reporting_basis": "ads_manager_export",
         "timezone": "Europe/Berlin"
       },
-      "note": "Laufender Tag unvollständig. Fehlende Anzeigen-Tage sind unbekannt. Anzeigen-Gesamtwerte und Tagesexporte wurden nacheinander erstellt; laufende Auslieferung kann zwischen Exporten steigen. Konfigurierter Einzelstatus und Kampagnenbudget wurden nicht vollständig neu gelesen: unbekannt. Effektive Auslieferung aus dem CSV ist davon getrennt."
+      "note": "Laufender Tag unvollständig. Fehlende Anzeigen-Tage sind unbekannt. Anzeigen-Gesamtwerte und Tagesexporte wurden nacheinander erstellt; laufende Auslieferung kann zwischen Exporten steigen. Alle 13 Schalter am 27.10. 13:20–13:21 Berlin einzeln gelesen: drei an, zehn aus; Kampagne und Adset aus. 30 EUR konfiguriertes Kampagnen-Tagesbudget um ca. 13:21 Berlin gelesen. Status/Budget sind keine Ausgaben."
     },
     "website_events": {
       "status": "connected",
@@ -2451,9 +2464,9 @@
       ],
       "complete_test_window": true,
       "manual_update": {
-        "edition_label": "Tagesupdate 27.10.2026, 13:18",
+        "edition_label": "Tagesupdate 27.10.2026, 13:22",
         "exported_at": "2026-10-27T11:57:06.395Z",
-        "imported_at": "2026-10-27T12:18:16.148Z",
+        "imported_at": "2026-10-27T12:22:29.270Z",
         "valid_until": "2026-10-27T23:00:00.000Z",
         "attribution_setting": "7-day click or 1-day view",
         "reporting_basis": "ads_manager_export",

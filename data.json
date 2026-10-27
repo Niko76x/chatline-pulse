@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-27T17:05:42.636Z",
-  "collected_at": "2026-10-27T17:05:42.636Z",
+  "snapshot_id": "2026-10-27T17:54:22.801Z",
+  "collected_at": "2026-10-27T17:54:22.801Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-27T17:04:16.113Z",
@@ -1372,10 +1372,47 @@
       ]
     },
     "search_console": {
-      "status": "not_connected",
-      "observed_at": null,
-      "attempted_at": null,
-      "error": null
+      "source_code": "gsc_web_ui_csv",
+      "method": "csv",
+      "site": "chatline.app",
+      "label": "chatline.app + start.chatline.app",
+      "status": "connected",
+      "observed_at": "2026-10-27T17:46:00.599Z",
+      "attempted_at": "2026-10-27T17:46:00.599Z",
+      "error": null,
+      "timezone": "America/Los_Angeles",
+      "period": {
+        "from": "2026-10-22",
+        "to": "2026-10-26"
+      },
+      "daily": [
+        {
+          "date": "2026-10-22",
+          "clicks": 0,
+          "impressions": 10
+        },
+        {
+          "date": "2026-10-23",
+          "clicks": 0,
+          "impressions": 7
+        },
+        {
+          "date": "2026-10-24",
+          "clicks": 0,
+          "impressions": 3
+        },
+        {
+          "date": "2026-10-25",
+          "clicks": 0,
+          "impressions": 6
+        },
+        {
+          "date": "2026-10-26",
+          "clicks": 0,
+          "impressions": 5
+        }
+      ],
+      "note": "Domain-Property chatline.app, Web (text-based), URL-Regex begrenzt auf https://chatline.app/ und https://start.chatline.app/. Ausgewählt 22.–27.10.; übernommene Messwerte 22.–26.10. Pacific Time. 26.10. vorläufig. 27.10. zeigte 0/0 bei leeren CTR-/Positionswerten und wird nicht als abgeschlossener Nulltag übernommen. Google-Anzeige beim Abruf: zuletzt vor vier Stunden aktualisiert. Gefilterte Summen können unvollständig sein; keine Suchbegriffe oder einzelnen URLs veröffentlicht."
     },
     "diy_funnel": {
       "source_code": "vercel_diy_events_production",

@@ -366,9 +366,14 @@ export function validateTrafficSource(source) {
   const codes = Object.values(TRAFFIC_AD_IDS);
   for (const rows of [source.daily, source.ads_daily, source.statuses]) if (!Array.isArray(rows)) throw new Error('SNAPSHOT_INVALID');
   const seen = new Set();
+  const dates = new Set();
+  for (const row of source.daily) {
+    if (dates.has(row.date) || row.date < source.period?.from || row.date > source.period?.to) throw new Error('SNAPSHOT_INVALID_DATE');
+    dates.add(row.date);
+  }
   for (const row of source.ads_daily) {
     const key = `${row.date}:${row.code}`;
-    if (!codes.includes(row.code) || seen.has(key)) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
+    if (!codes.includes(row.code) || seen.has(key) || row.date < source.period?.from || row.date > source.period?.to) throw new Error('SNAPSHOT_SCOPE_MISMATCH');
     seen.add(key);
   }
   if (source.statuses.length !== codes.length || new Set(source.statuses.map(r => r.code)).size !== codes.length || source.statuses.some(r => !codes.includes(r.code))) throw new Error('SNAPSHOT_SCOPE_MISMATCH');

@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-27T17:54:22.801Z",
-  "collected_at": "2026-10-27T17:54:22.801Z",
+  "snapshot_id": "2026-10-27T18:10:57.904Z",
+  "collected_at": "2026-10-27T18:10:57.904Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-27T17:04:16.113Z",
@@ -2004,7 +2004,7 @@
         "to": "2026-10-27"
       },
       "delivery": "ACTIVE",
-      "budget_daily": 30,
+      "budget_daily": 20,
       "attribution": "Meta Ads Manager CSV · 7-day click or 1-day view; Ereigniszeitpunkt im Export nicht separat ausgewiesen",
       "daily": [
         {
@@ -2514,7 +2514,7 @@
         "reporting_basis": "ads_manager_export",
         "timezone": "Europe/Berlin"
       },
-      "note": "Laufender Tag unvollständig. Fehlende Anzeigen-Tage sind unbekannt. Anzeigen-Gesamtwerte und Tagesexporte wurden nacheinander erstellt; laufende Auslieferung kann zwischen Exporten steigen. Alle fünf gespeicherten Ziele, Kern-UTMs/IDs und Dataset 1727278251668513 im Abendlauf 18:04–18:05 Berlin gelesen. Zusatzparameter separat, Weiterverarbeitung unbestätigt. Eigene Start-DIY-Zuordnung weiter unbestätigt. Ausgaben und Budget entsprechen dem datierten Export vor dem Browser-Handoff; spätere Budgetarbeit ist hier nicht belegt."
+      "note": "Laufender Tag unvollständig. Fehlende Anzeigen-Tage sind unbekannt. Anzeigen-Gesamtwerte und Tagesexporte wurden nacheinander erstellt; laufende Auslieferung kann zwischen Exporten steigen. Alle fünf gespeicherten Ziele, Kern-UTMs/IDs und Dataset 1727278251668513 im Abendlauf 18:04–18:05 Berlin gelesen. Zusatzparameter separat, Weiterverarbeitung unbestätigt. Eigene Start-DIY-Zuordnung weiter unbestätigt. Leistungsdaten und übrige Konfigurationsfelder behalten ihre bisherigen Quellzeitpunkte. Budget separat durch kalten Konfigurations-Read bestätigt am 27.10.2026 um 19:08:43 Berlin (2026-10-27T18:08:43.362Z): 20 EUR/Tag im Durchschnitt für dieses Traffic-Adset. Kein harter Tagesdeckel. Diese Budgetangabe ist kein neuer vollständiger Meta-Read."
     }
   },
   "verification": {

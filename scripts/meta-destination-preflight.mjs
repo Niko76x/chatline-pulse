@@ -39,7 +39,7 @@ export function expectedTags(id, { campaignKey = 'original' } = {}) {
   if (!Object.hasOwn(contract.ads, id)) return null;
   return {
     utm_source: ['{{site_source_name}}'], utm_medium: ['paid_social'],
-    utm_campaign: [contract.utmCampaign], utm_content: [contract.ads[id].toLowerCase()],
+    utm_campaign: [contract.utmCampaign], utm_content: [`${contract.utmContentPrefix || ''}${contract.ads[id].toLowerCase()}`],
     campaign_id: ['{{campaign.id}}', contract.campaign], adset_id: ['{{adset.id}}', contract.adset], ad_id: ['{{ad.id}}', id],
   };
 }

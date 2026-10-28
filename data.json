@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-28T08:30:00.000Z",
-  "collected_at": "2026-10-28T08:55:53.523Z",
+  "snapshot_id": "2026-10-28T09:26:55.071Z",
+  "collected_at": "2026-10-28T09:26:55.071Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-28T08:55:53.523Z",
@@ -560,68 +560,69 @@
       "complete_test_window": true
     },
     "website_events": {
-      "status": "error",
-      "observed_at": "2026-10-27T17:03:33.834Z",
-      "attempted_at": "2026-10-28T08:06:41.006Z",
-      "error": "META_LOGIN_REQUIRED",
+      "status": "connected",
+      "observed_at": "2026-10-28T09:25:58.060Z",
+      "attempted_at": "2026-10-28T09:25:58.060Z",
+      "error": null,
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
       "period": {
-        "from": "2026-10-22",
-        "to": "2026-10-27"
+        "from": "2026-10-28",
+        "to": "2026-10-28"
       },
-      "note": "Events Manager 22.–27.10., Eingänge vor Verarbeitung. Lead: 8 Browser + 9 Server, EMQ 4,4/10. StartTrial-Zeile nicht vorhanden: unbekannt. Relative letzte Empfangszeiten wie angezeigt beim Read.",
-      "diagnostics": "Diagnostik am 27.10.2026 im Abendlauf gelesen: keine aktiven Fehler in den letzten drei Tagen gemeldet.",
-      "deduplication": "Lead-Deduplizierung: Still Parsing Your Data; keine bestätigte vollständige Deduplizierung.",
+      "note": "Nur heute, 28.10.2026 (Europe/Berlin), unvollständiger Tag. Frischer UI-Read im korrekten Dataset; Eingänge vor Verarbeitung. Lead: 1 Server-Eingang, EMQ 5,4/10. Kein Nachweis eines qualifizierten Studios oder einer Kampagnenzuordnung. Andere Ereigniszeilen heute nicht angezeigt: unbekannt. Historisches Fenster 22.–27.10. hier nicht erneut gelesen; dessen frühere Summen werden nicht auf heute umdatiert. Relative Empfangszeiten wie beim Abruf angezeigt.",
+      "diagnostics": "Diagnostik separat am 2026-10-28T09:26:25.103Z gelesen: keine aktiven Fehler. Die UI zeigt hier in den letzten drei Tagen erkannte Fehler.",
+      "deduplication": "Heute nicht separat bestätigt; keine vollständige Deduplizierung belegt.",
       "events": [
         {
           "key": "PageView",
           "label": "Seitenereignis",
-          "count": 107,
+          "count": 1,
           "connection_method": "Browser",
-          "last_received": "5 Stunden vor Abruf"
+          "last_received": "9 Stunden vor Abruf"
         },
         {
           "key": "Lead",
           "label": "Lead-Signale",
-          "count": 17,
-          "connection_method": "Browser + Server",
-          "last_received": "6 Stunden vor Abruf"
+          "count": 1,
+          "connection_method": "Server",
+          "last_received": "1 Stunde vor Abruf",
+          "emq": 5.4
         },
         {
           "key": "CompleteRegistration",
           "label": "Testanruf angefordert",
-          "count": 6,
-          "connection_method": "Browser + Server",
-          "last_received": "5 Tage vor Abruf"
+          "count": null,
+          "connection_method": "Unbekannt",
+          "last_received": "heute nicht als Zeile angezeigt"
         },
         {
           "key": "InitiateCheckout",
           "label": "Checkout angelegt",
-          "count": 3,
-          "connection_method": "Browser + Server",
-          "last_received": "5 Tage vor Abruf"
+          "count": null,
+          "connection_method": "Unbekannt",
+          "last_received": "heute nicht als Zeile angezeigt"
         },
         {
           "key": "StartTrial",
           "label": "Kostenlose Testphase",
           "count": null,
           "connection_method": "Unbekannt",
-          "last_received": "nicht als Zeile vorhanden"
+          "last_received": "heute nicht als Zeile angezeigt"
         },
         {
           "key": "SelfTestClick",
           "label": "Selbsttest-Klick",
-          "count": 4,
-          "connection_method": "Browser",
-          "last_received": "6 Stunden vor Abruf"
+          "count": null,
+          "connection_method": "Unbekannt",
+          "last_received": "heute nicht als Zeile angezeigt"
         },
         {
           "key": "CtaClick",
           "label": "CTA-Klick",
-          "count": 1,
-          "connection_method": "Browser",
-          "last_received": "1 Tag vor Abruf"
+          "count": null,
+          "connection_method": "Unbekannt",
+          "last_received": "heute nicht als Zeile angezeigt"
         }
       ]
     },

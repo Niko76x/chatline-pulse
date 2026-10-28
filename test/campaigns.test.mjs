@@ -34,3 +34,15 @@ test('traffic failure preserves traffic observations and original data when sour
  assert.equal(result.success,false);assert.equal(result.snapshot.sources.meta_traffic.status,'error');
  assert.equal(result.snapshot.sources.meta_traffic.observed_at,before.observed_at);assert.deepEqual(result.snapshot.sources.meta_traffic.daily,before.daily);
 });
+
+test('daily budget uses campaign budget first, otherwise the scoped adset, never an invented zero',async()=>{
+ for(const [campaignBudget,adsetBudget,expected] of [[undefined,'2000',20],['0','2000',20],['3000','2000',30],[undefined,undefined,null]]){
+  const result=await collectAds(async(path,params)=>{
+   if(path.startsWith('act_'))return {id:TRAFFIC.account,currency:'EUR',timezone_name:'Europe/Berlin'};
+   if(path===TRAFFIC.adset){assert.match(params.fields,/daily_budget/);return {id:TRAFFIC.adset,account_id:TRAFFIC.account,campaign_id:TRAFFIC.campaign,effective_status:'ACTIVE',daily_budget:adsetBudget};}
+   if(path===TRAFFIC.campaign)return {id:TRAFFIC.campaign,account_id:TRAFFIC.account,daily_budget:campaignBudget};
+   if(path.endsWith('/ads'))return Object.keys(TRAFFIC_AD_IDS).map(id=>({id,account_id:TRAFFIC.account,campaign_id:TRAFFIC.campaign,adset_id:TRAFFIC.adset,status:'ACTIVE',effective_status:'ACTIVE'}));
+   assert.equal(path,TRAFFIC.adset+'/insights');return [row];
+  },now,TRAFFIC);assert.equal(result.budget_daily,expected);
+ }
+});

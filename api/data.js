@@ -117,11 +117,12 @@ export async function collectAds(read, now = new Date(), scope = SCOPE) {
   let today;
   try { today = new Intl.DateTimeFormat('en-CA', { timeZone: account.timezone_name }).format(now); }
   catch { throw new ReadError('ACCOUNT_CONFIG_MISMATCH'); }
-  const adset = await read(scope.adset, { fields: 'id,account_id,campaign_id,effective_status,promoted_object' });
+  const adset = await read(scope.adset, { fields: 'id,account_id,campaign_id,effective_status,promoted_object,daily_budget' });
   assertScope(adset, { scope, ids });
   if ((scope === SCOPE || adset.promoted_object?.pixel_id) && String(adset.promoted_object?.pixel_id) !== SCOPE.dataset) throw new ReadError('DATASET_MISMATCH');
   const campaign = await read(scope.campaign, { fields: 'id,account_id,daily_budget,effective_status' });
   if (String(campaign.id) !== scope.campaign || String(campaign.account_id) !== scope.account) throw new ReadError('SCOPE_MISMATCH');
+  const budget = number(campaign.daily_budget) || number(adset.daily_budget);
   const params = { fields: 'account_id,campaign_id,adset_id,ad_id,date_start,date_stop,spend,impressions,reach,inline_link_clicks,actions',
     time_range: { since: SCOPE.since, until: today }, time_increment: 1,
     use_unified_attribution_setting: true, action_report_time: 'conversion', limit: 1000 };
@@ -136,7 +137,7 @@ export async function collectAds(read, now = new Date(), scope = SCOPE) {
     ...(scope === TRAFFIC ? { campaign: scope.campaign, adset: scope.adset } : {}),
     observed_at: now.toISOString(), timezone: account.timezone_name,
     period: { from: SCOPE.since, to: today }, delivery: adset.effective_status,
-    budget_daily: number(campaign.daily_budget) === null ? null : number(campaign.daily_budget) / 100,
+    budget_daily: budget === null ? null : budget / 100,
     attribution: 'Metas Adset-Attribution · Ereignisdatum der Conversion',
     daily: totals.map(r => normalizeInsight(r, false, scope, ids)), ads_daily: ads.map(r => normalizeInsight(r, true, scope, ids)),
     statuses: statuses.map(row => { assertScope(row, { ad: true, scope, ids }); return { code: ids[row.id], status: row.status, delivery: row.effective_status }; }),

@@ -29,6 +29,9 @@ const EXTRA_KEY_NAMES = Object.freeze({
   hsa_src: 'crm_tracking', hsa_net: 'crm_tracking', hsa_ver: 'crm_tracking', hsa_la: 'crm_tracking',
   hsa_kw: 'crm_tracking', hsa_tgt: 'crm_tracking', hsa_mt: 'crm_tracking', hsa_mtk: 'crm_tracking',
 });
+// These exact names already have separate sidecar review categories. They do
+// not control the landing route; accepting their location never validates values.
+export const SCOPED_NON_LANDING_TRACKING_KEYS = Object.freeze(['utm_id', 'hsa_acc', 'hsa_cam', 'hsa_grp', 'hsa_ad', 'hsa_src', 'hsa_net', 'hsa_ver']);
 const URL_FIELDS = Object.freeze([
   ['object_story_spec.link_data.link', value => value?.link_data?.link],
   ['object_story_spec.link_data.call_to_action.value.link', value => value?.link_data?.call_to_action?.value?.link],
@@ -97,7 +100,7 @@ export function inspectAdDestination(body, id, { campaignKey = 'original' } = {}
   const expectedRef = `${contract.refPrefix}${contract.ads[id].toLowerCase()}`;
   const expectedRefMacro = `${contract.refPrefix.replace(contract.adset, '{{adset.id}}')}${contract.ads[id].toLowerCase()}`;
   const scopedTagRef = tags.getAll('ref').length === 1 && [expectedRef, expectedRefMacro].includes(tags.get('ref'));
-  const scopedTagLocations = !tags.has('skin') && (!tags.has('ref') || scopedTagRef) && [...tags.keys()].every(key => key === 'ref' || TAG_KEYS.includes(key));
+  const scopedTagLocations = !tags.has('skin') && (!tags.has('ref') || scopedTagRef) && [...tags.keys()].every(key => key === 'ref' || TAG_KEYS.includes(key) || SCOPED_NON_LANDING_TRACKING_KEYS.includes(key));
   if (scopedEffectiveRef ? !scopedTagLocations : tags.has('skin') || tags.has('ref')) result.failures.push('LANDING_KEYS_IN_URL_TAGS');
   if (tagReport.unknown_key_count) result.failures.push('UNEXPECTED_URL_TAG_KEYS');
   if (!tagReport.unique) result.failures.push('AMBIGUOUS_URL_TAGS');

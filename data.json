@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-28T08:00:00.000Z",
-  "collected_at": "2026-10-28T08:07:25.783Z",
+  "snapshot_id": "2026-10-28T08:16:35.663Z",
+  "collected_at": "2026-10-28T08:16:35.663Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-28T08:07:25.783Z",
@@ -557,13 +557,14 @@
       "status": "connected",
       "attempted_at": "2026-10-28T08:07:25.783Z",
       "error": null,
-      "complete_test_window": true
+      "complete_test_window": true,
+      "note": "Bestehender lesender Meta-API-Abruf am 28.10.2026 um 09:07:25 Berlin. Der zusätzliche Ads-Manager-/CSV-/Konfigurationsabgleich im Browser scheiterte am fehlenden Facebook-Login. Keine aktuellen UI-Diagnosen oder heute neu gelesenen Traffic-UTMs belegt. Fehlende API-Zeilen bleiben unbekannt; keine Studio-Qualifizierung aus Meta-Signalen ableiten."
     },
     "website_events": {
-      "status": "connected",
+      "status": "error",
       "observed_at": "2026-10-27T17:03:33.834Z",
-      "attempted_at": "2026-10-27T17:03:33.834Z",
-      "error": null,
+      "attempted_at": "2026-10-28T08:06:41.006Z",
+      "error": "META_LOGIN_REQUIRED",
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
       "period": {
@@ -740,10 +741,10 @@
       "method": "csv",
       "site": "chatline.app",
       "label": "chatline.app + start.chatline.app",
-      "status": "connected",
+      "status": "error",
       "observed_at": "2026-10-27T17:46:00.599Z",
-      "attempted_at": "2026-10-27T17:46:00.599Z",
-      "error": null,
+      "attempted_at": "2026-10-28T08:10:48.089Z",
+      "error": "GSC_LOGIN_REQUIRED",
       "timezone": "America/Los_Angeles",
       "period": {
         "from": "2026-10-22",
@@ -1364,7 +1365,7 @@
         "to": "2026-10-28"
       },
       "delivery": "ACTIVE",
-      "budget_daily": null,
+      "budget_daily": 20,
       "attribution": "Metas Adset-Attribution · Ereignisdatum der Conversion",
       "daily": [
         {
@@ -1631,7 +1632,8 @@
       "status": "connected",
       "attempted_at": "2026-10-28T08:07:25.783Z",
       "error": null,
-      "complete_test_window": false
+      "complete_test_window": false,
+      "note": "Bestehender lesender Meta-API-Abruf am 28.10.2026 um 09:07:25 Berlin. Der zusätzliche Ads-Manager-/CSV-/Konfigurationsabgleich im Browser scheiterte am fehlenden Facebook-Login. Keine aktuellen UI-Diagnosen oder heute neu gelesenen Traffic-UTMs belegt. Fehlende API-Zeilen bleiben unbekannt; keine Studio-Qualifizierung aus Meta-Signalen ableiten. Budget: letzter separat bestätigter Konfigurationsstand vom 27.10.2026, 19:08:43 Berlin (2026-10-27T18:08:43.362Z): 20 EUR/Tag im Durchschnitt. Kein harter Tagesdeckel und kein neuer Budget-Read am 28.10. Die Traffic-Zuordnung im eigenen DIY-Funnel bleibt unbestätigt; CRM-/LAL-Entwürfe sind ausgeschlossen."
     }
   },
   "verification": {

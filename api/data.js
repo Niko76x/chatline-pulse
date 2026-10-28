@@ -396,6 +396,7 @@ const ALLOWED_KEYS = new Set(('schema_version clicks scope account dataset campa
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
 for (const source of TRACKING_SOURCES) { ALLOWED_KEYS.add(source.diy); ALLOWED_KEYS.add(source.links); }
 for (const { key } of META_COHORTS) ALLOWED_KEYS.add(key);
+ALLOWED_KEYS.add('landing_parameter_locations_valid');
 function scan(value, depth = 0) {
   if (depth > 15) throw new Error('SNAPSHOT_INVALID');
   if (value === null || typeof value === 'boolean') return;

@@ -60,6 +60,7 @@ function inspectTagParams(params, id, campaignKey = 'original') {
 /** Inspect stored configuration only. Do not fetch or follow a destination. */
 export function inspectAdDestination(body, id, { campaignKey = 'original' } = {}) {
   const contract = trackingContract(campaignKey);
+  const scopedEffectiveRef = campaignKey === 'crm' || campaignKey === 'lookalike';
   if (!Object.hasOwn(contract.ads, id)) throw new Error('DESTINATION_SCOPE_CHANGED');
   const result = { ad_id: id, code: contract.ads[id], status: 'needs_review', scope_validated: false, failures: [], destinations: [], url_tags: null };
   if (!body || body.id !== id || body.account_id !== contract.account || body.campaign_id !== contract.campaign || body.adset_id !== contract.adset) {
@@ -93,7 +94,11 @@ export function inspectAdDestination(body, id, { campaignKey = 'original' } = {}
   const tags = new URLSearchParams(rawTags || '');
   const tagReport = inspectTagParams(tags, id, campaignKey);
   result.url_tags = { field_present: typeof rawTags === 'string', ...tagReport };
-  if (tags.has('skin') || tags.has('ref')) result.failures.push('LANDING_KEYS_IN_URL_TAGS');
+  const expectedRef = `${contract.refPrefix}${contract.ads[id].toLowerCase()}`;
+  const expectedRefMacro = `${contract.refPrefix.replace(contract.adset, '{{adset.id}}')}${contract.ads[id].toLowerCase()}`;
+  const scopedTagRef = tags.getAll('ref').length === 1 && [expectedRef, expectedRefMacro].includes(tags.get('ref'));
+  const scopedTagLocations = !tags.has('skin') && (!tags.has('ref') || scopedTagRef) && [...tags.keys()].every(key => key === 'ref' || TAG_KEYS.includes(key));
+  if (scopedEffectiveRef ? !scopedTagLocations : tags.has('skin') || tags.has('ref')) result.failures.push('LANDING_KEYS_IN_URL_TAGS');
   if (tagReport.unknown_key_count) result.failures.push('UNEXPECTED_URL_TAG_KEYS');
   if (!tagReport.unique) result.failures.push('AMBIGUOUS_URL_TAGS');
   for (const [field, read] of URL_FIELDS) {
@@ -105,11 +110,18 @@ export function inspectAdDestination(body, id, { campaignKey = 'original' } = {}
     const combined = new URLSearchParams(url.search);
     for (const [key, value] of tags) combined.append(key, value);
     const effective = inspectTagParams(combined, id, campaignKey);
+    // Only the two authorized cohorts may store this exact own-adset macro in
+    // url_tags. Check its eventual value against verified metadata, not arbitrary
+    // macro substitution; duplicate or conflicting ref locations remain invalid.
+    const effectiveRefValid = combined.getAll('ref').length === 1 &&
+      (url.searchParams.getAll('ref').length === 1 && !tags.has('ref') && url.searchParams.get('ref') === expectedRef ||
+       !url.searchParams.has('ref') && scopedTagRef);
     const checks = {
+      ...(scopedEffectiveRef ? { landing_parameter_locations_valid: scopedTagLocations && effectiveRefValid } : {}),
       https_domain: url.origin === ORIGIN && !url.username && !url.password,
       root_path: url.pathname === '/',
       skin: url.searchParams.getAll('skin').length === 1 && url.searchParams.get('skin') === 'pilates',
-      ref: url.searchParams.getAll('ref').length === 1 && url.searchParams.get('ref') === `${contract.refPrefix}${contract.ads[id].toLowerCase()}`,
+      ref: scopedEffectiveRef ? effectiveRefValid : url.searchParams.getAll('ref').length === 1 && url.searchParams.get('ref') === expectedRef,
       no_fragment: !url.hash,
       known_query_keys: effective.unknown_key_count === 0,
       unique_query_keys: effective.unique,

@@ -409,6 +409,14 @@ test('empty and failed new Meta sources render unknown days or retained old obse
  const old='2026-10-28T08:00:00.000Z';source.status='error';source.error='META_LOGIN_REQUIRED';source.observed_at=old;source.daily=performanceSource(CRM,CRM_ADS,0.8,2).daily;await app.reload(snapshot);
  assert.match(app.view,/letzte Meta-Abruf ist fehlgeschlagen/);assert.match(app.view,/frühere Werte und Zeitpunkte bleiben erhalten/);assert.match(app.view,/class="metric-label">Ausgaben<\/span><strong class="metric-value">0,8 €/);assert.match(app.view,/28\. Okt\., 09:00/);assert.doesNotMatch(app.view,/Aktuell abgerufen/);
 });
+test('effective-ref audit labels are truthful while legacy failed placement checks keep their historical wording',async()=>{
+ const fixture=withMetrics(),at=new Date().toISOString();
+ const source=auditSource({checked_count:3,request_count:3,ads:CRM_ADS.map(ad=>({...auditSource().ads[0],ad_id:ad.ad_id,code:ad.code,checked_at:at,attempted_at:at}))});
+ for(const row of source.ads){delete row.checks.landing_keys_in_url_tags_absent;row.checks.landing_parameter_locations_valid=true;}
+ fixture.sources.link_audit_crm=source;const app=await renderFixture(fixture,'#/tracking/links');app.select('campaign','crm');assert.equal((app.view.match(/Kernlink &amp; UTM geprüft/g)||[]).length,3);
+ const row=source.ads[0];row.status='needs_review';row.error='DESTINATION_CONFIG_REVIEW_REQUIRED';row.checks.landing_parameter_locations_valid=false;await app.reload(fixture);assert.match(app.view,/Offen: Effektive Parameteraufteilung/);
+ delete row.checks.landing_parameter_locations_valid;row.checks.landing_keys_in_url_tags_absent=false;row.checks.ref=false;await app.reload(fixture);assert.match(app.view,/Offen: Anzeigenreferenz, Zielparameter|Offen: Zielparameter, Anzeigenreferenz/);assert.doesNotMatch(app.view,/Offen: Effektive Parameteraufteilung/);
+});
 
 import {validateSnapshot, mergeAnalytics, ANALYTICS_PROJECTS} from '../api/data.js';
 function gscFixture() {

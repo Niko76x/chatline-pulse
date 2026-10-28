@@ -25,6 +25,11 @@ export const AD_IDS = Object.freeze({
 });
 assertLinkAuditScope(SCOPE, AD_IDS);
 assertLinkAuditScope(SCOPE, DIY_AD_IDS);
+assertLinkAuditScope(TRAFFIC, TRAFFIC_AD_IDS, { campaignKey: 'traffic' });
+const TRACKING_SOURCES = Object.freeze([
+  Object.freeze({ campaignKey: 'original', diy: 'diy_funnel', links: 'link_audit' }),
+  Object.freeze({ campaignKey: 'traffic', diy: 'diy_funnel_traffic', links: 'link_audit_traffic' }),
+]);
 // Verified in the HeyHo Systems Work profile. These are project-production
 // aggregates, including the listed aliases; no host-only filter is assumed.
 // Browser/environment input cannot substitute a project or enumerate the team.
@@ -351,6 +356,7 @@ export function createAnalyticsDiagnosticFetcher({ enabled = false, fetcher = fe
 
 const ALLOWED_KEYS = new Set(('schema_version clicks scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated method manual_update edition_label exported_at imported_at valid_until attribution_setting reporting_basis meta_traffic connection_method last_received emq diagnostics deduplication').split(' '));
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
+for (const key of ['diy_funnel_traffic', 'link_audit_traffic']) ALLOWED_KEYS.add(key);
 function scan(value, depth = 0) {
   if (depth > 15) throw new Error('SNAPSHOT_INVALID');
   if (value === null || typeof value === 'boolean') return;
@@ -406,7 +412,7 @@ export function validateSnapshot(data) {
   validateSearchConsoleSource(data.sources?.search_console);
   if (data.sources?.meta_traffic !== undefined) validateTrafficSource(data.sources.meta_traffic);
   for (const [key, source] of Object.entries(data.sources || {})) {
-    const sourceIds = key === 'meta_traffic' ? TRAFFIC_AD_IDS : AD_IDS;
+    const sourceIds = ['meta_traffic', 'diy_funnel_traffic', 'link_audit_traffic'].includes(key) ? TRAFFIC_AD_IDS : AD_IDS;
     if (!timestamp(source.observed_at) || !timestamp(source.attempted_at)) throw new Error('SNAPSHOT_INVALID_DATE');
     for (const row of [...(source.daily || []), ...(source.ads_daily || [])]) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date || '')) throw new Error('SNAPSHOT_INVALID_DATE');
@@ -416,6 +422,8 @@ export function validateSnapshot(data) {
   }
   if (data.sources.link_audit !== undefined) validateLinkAudit(data.sources.link_audit);
   if (data.sources.diy_funnel !== undefined) validateDiyFunnelSource(data.sources.diy_funnel);
+  if (data.sources.link_audit_traffic !== undefined) validateLinkAudit(data.sources.link_audit_traffic, { campaignKey: 'traffic' });
+  if (data.sources.diy_funnel_traffic !== undefined) validateDiyFunnelSource(data.sources.diy_funnel_traffic, { campaignKey: 'traffic' });
   const sites = data.sources.analytics?.sites || [];
   if (!Array.isArray(sites) || sites.length > 2 || new Set(sites.map(s => s.site)).size !== sites.length) throw new Error('SNAPSHOT_ANALYTICS_SCOPE_MISMATCH');
   for (const site of sites) {
@@ -446,10 +454,12 @@ export function canSkipCollection(previous, options = {}) {
   const { analyticsProjects = ANALYTICS_PROJECTS, metaEnabled = false, datasetEnabled = false, linkAuditEnabled = false, diyFunnelEnabled = false } = options;
   const hasCore = metaEnabled || datasetEnabled || analyticsProjects.length > 0;
   const traffic = previous.sources.meta_traffic;
-  const trafficDone = !metaEnabled || csvMetaIsProtected(traffic, options.now) || traffic?.status === 'connected' && traffic.observed_at === previous.sources.meta.observed_at;
+  const slotStart = Date.parse(options.slot), observed = Date.parse(traffic?.observed_at), current = (options.now || new Date()).getTime();
+  const trafficDone = !metaEnabled || csvMetaIsProtected(traffic, options.now) || traffic?.status === 'connected' &&
+    Number.isFinite(slotStart) && Number.isFinite(observed) && observed >= slotStart && observed < slotStart + 1800000 && observed <= current;
   return trafficDone && (hasCore || linkAuditEnabled || diyFunnelEnabled) && (!hasCore || canSkipCoreCollection(previous, options)) &&
-    (!linkAuditEnabled || linkAuditAttemptedInSlot(previous.sources.link_audit, options)) &&
-    (!diyFunnelEnabled || diyFunnelAttemptedInSlot(previous.sources.diy_funnel, options));
+    (!linkAuditEnabled || TRACKING_SOURCES.every(source => linkAuditAttemptedInSlot(previous.sources[source.links], options))) &&
+    (!diyFunnelEnabled || TRACKING_SOURCES.every(source => diyFunnelAttemptedInSlot(previous.sources[source.diy], options)));
 }
 export function diyFunnelAttemptedInSlot(source, { slot, now = new Date() } = {}) {
   const start = Date.parse(slot), attempted = Date.parse(source?.attempted_at), current = now.getTime();
@@ -655,28 +665,28 @@ export async function refreshSources(previous, { now = new Date(), slot = null, 
       success = false;
     }
   }
-  if (diyFunnelEnabled && !diyFunnelAttemptedInSlot(previous.sources.diy_funnel, { slot, now })) {
+  for (const source of TRACKING_SOURCES) if (diyFunnelEnabled && !diyFunnelAttemptedInSlot(previous.sources[source.diy], { slot, now })) {
     try {
-      const result = await collectDiyFunnel({ token: analyticsOptions.tokens?.['start.chatline.app'], fetcher: analyticsOptions.fetcher, now });
-      next.sources.diy_funnel = mergeDiyFunnel(previous.sources.diy_funnel, result, { now });
+      const result = await collectDiyFunnel({ token: analyticsOptions.tokens?.['start.chatline.app'], fetcher: analyticsOptions.fetcher, now, campaignKey: source.campaignKey });
+      next.sources[source.diy] = mergeDiyFunnel(previous.sources[source.diy], result, { now, campaignKey: source.campaignKey });
       next.collected_at = now.toISOString();
     } catch (error) {
-      next.sources.diy_funnel = mergeDiyFunnel(previous.sources.diy_funnel, null, { now, error: error?.code || error?.message || 'DIY_FUNNEL_READ_FAILED' });
+      next.sources[source.diy] = mergeDiyFunnel(previous.sources[source.diy], null, { now, campaignKey: source.campaignKey, error: error?.code || error?.message || 'DIY_FUNNEL_READ_FAILED' });
       warnings.push('DIY_FUNNEL_READ_FAILED');
     }
     if (slot) next.snapshot_id = slot;
   }
-  if (linkAuditEnabled && !linkAuditAttemptedInSlot(previous.sources.link_audit, { slot, now })) {
+  for (const source of TRACKING_SOURCES) if (linkAuditEnabled && !linkAuditAttemptedInSlot(previous.sources[source.links], { slot, now })) {
     let audit;
-    try { audit = await collectLinkAudit({ ...linkAuditOptions, enabled: true, token: metaOptions.token, version: metaOptions.version, fetcher: metaOptions.fetcher, now }); }
-    catch { audit = await collectLinkAudit({ enabled: true, now }); }
-    next.sources.link_audit = mergeLinkAudit(previous.sources.link_audit, audit);
+    try { audit = await collectLinkAudit({ ...linkAuditOptions, enabled: true, token: metaOptions.token, version: metaOptions.version, fetcher: metaOptions.fetcher, now, campaignKey: source.campaignKey }); }
+    catch { audit = await collectLinkAudit({ enabled: true, now, campaignKey: source.campaignKey }); }
+    next.sources[source.links] = mergeLinkAudit(previous.sources[source.links], audit, { campaignKey: source.campaignKey });
     if (slot) next.snapshot_id = slot;
-    if (next.sources.link_audit.checked_count) next.collected_at = now.toISOString();
-    if (!next.sources.link_audit.complete) warnings.push('LINK_AUDIT_READ_FAILED');
+    if (next.sources[source.links].checked_count) next.collected_at = now.toISOString();
+    if (!next.sources[source.links].complete) warnings.push('LINK_AUDIT_READ_FAILED');
     // An optional audit failure must not turn fresh performance/analytics into failure.
   }
-  return { snapshot: validateSnapshot(next), success, warnings };
+  return { snapshot: validateSnapshot(next), success, warnings: [...new Set(warnings)] };
 }
 
 import { readFile } from 'node:fs/promises';

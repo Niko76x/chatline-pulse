@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-28T17:00:00.000Z",
-  "collected_at": "2026-10-28T17:07:34.508Z",
+  "snapshot_id": "2026-10-28T17:14:23.219Z",
+  "collected_at": "2026-10-28T17:14:23.219Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-28T17:07:34.508Z",
@@ -561,68 +561,70 @@
     },
     "website_events": {
       "status": "connected",
-      "observed_at": "2026-10-28T09:25:58.060Z",
-      "attempted_at": "2026-10-28T09:25:58.060Z",
+      "observed_at": "2026-10-28T17:11:44.175Z",
+      "attempted_at": "2026-10-28T17:11:44.175Z",
       "error": null,
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
       "period": {
-        "from": "2026-10-28",
+        "from": "2026-10-22",
         "to": "2026-10-28"
       },
-      "note": "Nur heute, 28.10.2026 (Europe/Berlin), unvollständiger Tag. Frischer UI-Read im korrekten Dataset; Eingänge vor Verarbeitung. Lead: 1 Server-Eingang, EMQ 5,4/10. Kein Nachweis eines qualifizierten Studios oder einer Kampagnenzuordnung. Andere Ereigniszeilen heute nicht angezeigt: unbekannt. Historisches Fenster 22.–27.10. hier nicht erneut gelesen; dessen frühere Summen werden nicht auf heute umdatiert. Relative Empfangszeiten wie beim Abruf angezeigt.",
-      "diagnostics": "Diagnostik separat am 2026-10-28T09:26:25.103Z gelesen: keine aktiven Fehler. Die UI zeigt hier in den letzten drei Tagen erkannte Fehler.",
-      "deduplication": "Heute nicht separat bestätigt; keine vollständige Deduplizierung belegt.",
+      "note": "Frischer UI-Read 22.–28.10.2026, Europe/Berlin; heute unvollständig. Eingänge vor Verarbeitung, keine eindeutigen Kunden und keine Kampagnenzuordnung. Separater heutiger Read um 18:06 Berlin: 1 PageView Browser und 1 Lead Server, Lead-EMQ 5,4/10; übrige heutige Zeilen nicht angezeigt und unbekannt. Relative letzte Empfangszeiten sind Meta-Anzeigen beim jeweiligen Abruf. Lead-Tabelle und Detailansicht nennen unterschiedliche relative Zeiten; daraus keine neue Zustellung ableiten.",
+      "diagnostics": "Separat am 2026-10-28T17:07:21.444Z gelesen: keine aktiven Fehler; die UI bezieht sich auf in den letzten drei Tagen erkannte Fehler.",
+      "deduplication": "Lead-Detail am 2026-10-28T17:11:44.175Z: Still Parsing Your Data. Vollständige Deduplizierung weiterhin nicht bestätigt.",
       "events": [
         {
           "key": "PageView",
           "label": "Seitenereignis",
-          "count": 1,
+          "count": 108,
           "connection_method": "Browser",
-          "last_received": "9 Stunden vor Abruf"
+          "last_received": "17 Stunden vor Abruf"
         },
         {
           "key": "Lead",
           "label": "Lead-Signale",
-          "count": 1,
-          "connection_method": "Server",
-          "last_received": "1 Stunde vor Abruf",
+          "count": 18,
+          "connection_method": "Browser • Server",
+          "last_received": "Tabellenzeile: 1 Tag; Detailansicht: 9 Stunden vor Abruf",
           "emq": 5.4
         },
         {
           "key": "CompleteRegistration",
           "label": "Testanruf angefordert",
-          "count": null,
-          "connection_method": "Unbekannt",
-          "last_received": "heute nicht als Zeile angezeigt"
+          "count": 6,
+          "connection_method": "Browser • Server",
+          "last_received": "6 Tage vor Abruf",
+          "emq": 0
         },
         {
           "key": "InitiateCheckout",
           "label": "Checkout angelegt",
-          "count": null,
-          "connection_method": "Unbekannt",
-          "last_received": "heute nicht als Zeile angezeigt"
+          "count": 3,
+          "connection_method": "Browser • Server",
+          "last_received": "6 Tage vor Abruf",
+          "emq": 0
         },
         {
           "key": "StartTrial",
           "label": "Kostenlose Testphase",
           "count": null,
           "connection_method": "Unbekannt",
-          "last_received": "heute nicht als Zeile angezeigt"
+          "last_received": "im gewählten Zeitraum nicht als Zeile angezeigt"
         },
         {
           "key": "SelfTestClick",
           "label": "Selbsttest-Klick",
-          "count": null,
-          "connection_method": "Unbekannt",
-          "last_received": "heute nicht als Zeile angezeigt"
+          "count": 4,
+          "connection_method": "Browser",
+          "last_received": "1 Tag vor Abruf"
         },
         {
           "key": "CtaClick",
           "label": "CTA-Klick",
-          "count": null,
-          "connection_method": "Unbekannt",
-          "last_received": "heute nicht als Zeile angezeigt"
+          "count": 1,
+          "connection_method": "Browser",
+          "last_received": "2 Tage vor Abruf"
         }
       ]
     },
@@ -742,8 +744,8 @@
       "site": "chatline.app",
       "label": "chatline.app + start.chatline.app",
       "status": "connected",
-      "observed_at": "2026-10-28T09:31:34.991Z",
-      "attempted_at": "2026-10-28T09:31:34.991Z",
+      "observed_at": "2026-10-28T17:10:09.000Z",
+      "attempted_at": "2026-10-28T17:10:09.000Z",
       "error": null,
       "timezone": "America/Los_Angeles",
       "period": {
@@ -779,10 +781,10 @@
         {
           "date": "2026-10-27",
           "clicks": 1,
-          "impressions": 7
+          "impressions": 9
         }
       ],
-      "note": "Frischer manueller CSV-Export im angemeldeten Arbeitsprofil. Domain-Property chatline.app, Web (text-based), URL-Regex nur https://chatline.app/ und https://start.chatline.app/. Messwerte 22.–27.10. Pacific Time. 27.10. vorläufig: 1 Suchklick und 7 Impressionen; vollständiger aktueller Tag nicht bestätigt. 28.10. noch nicht auswählbar, kein Nulltag ergänzt. Google-Anzeige beim Abruf: zuletzt vor 3,5 Stunden aktualisiert. Gefilterte Summen können unvollständig sein; keine Suchbegriffe oder einzelnen URLs veröffentlicht."
+      "note": "Frischer manueller UI-CSV-Export, Domain-Property chatline.app, Web (text-based), URL-Regex nur chatline.app und start.chatline.app. Gewählt 22.–28.10.; verwertbare Messwerte 22.–27.10. Pacific Time. 27.10. vorläufig: 1 Suchklick und 9 Impressionen. 28.10. enthält im Export 0/0 bei leeren CTR-/Positionsfeldern und wird nicht als abgeschlossener Nulltag übernommen. Google beim Abruf: zuletzt vor 4 Stunden aktualisiert. Gefilterte Summen können unvollständig sein. Keine Suchbegriffe oder einzelnen URLs veröffentlicht."
     },
     "diy_funnel": {
       "source_code": "vercel_diy_events_production",

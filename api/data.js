@@ -1,4 +1,4 @@
-import { TRAFFIC, TRAFFIC_AD_IDS } from '../public/assets/campaigns.js';
+import { TRAFFIC, TRAFFIC_AD_IDS, CRM, CRM_AD_IDS, LOOKALIKE, LOOKALIKE_AD_IDS } from '../public/assets/campaigns.js';
 import { ADS as DIY_AD_IDS } from '../scripts/diy-funnel-preflight.mjs';
 import { collectDiyFunnel, validateDiyFunnelSource, mergeDiyFunnel } from '../lib/diy-funnel.mjs';
 import { assertLinkAuditScope, validateLinkAudit, collectLinkAudit, mergeLinkAudit, linkAuditAttemptedInSlot } from '../lib/link-audit.js';
@@ -26,9 +26,13 @@ export const AD_IDS = Object.freeze({
 assertLinkAuditScope(SCOPE, AD_IDS);
 assertLinkAuditScope(SCOPE, DIY_AD_IDS);
 assertLinkAuditScope(TRAFFIC, TRAFFIC_AD_IDS, { campaignKey: 'traffic' });
+assertLinkAuditScope(CRM, CRM_AD_IDS, { campaignKey: 'crm' });
+assertLinkAuditScope(LOOKALIKE, LOOKALIKE_AD_IDS, { campaignKey: 'lookalike' });
 const TRACKING_SOURCES = Object.freeze([
   Object.freeze({ campaignKey: 'original', diy: 'diy_funnel', links: 'link_audit' }),
   Object.freeze({ campaignKey: 'traffic', diy: 'diy_funnel_traffic', links: 'link_audit_traffic' }),
+  Object.freeze({ campaignKey: 'crm', diy: 'diy_funnel_crm', links: 'link_audit_crm' }),
+  Object.freeze({ campaignKey: 'lookalike', diy: 'diy_funnel_lookalike', links: 'link_audit_lookalike' }),
 ]);
 // Verified in the HeyHo Systems Work profile. These are project-production
 // aggregates, including the listed aliases; no host-only filter is assumed.
@@ -356,7 +360,7 @@ export function createAnalyticsDiagnosticFetcher({ enabled = false, fetcher = fe
 
 const ALLOWED_KEYS = new Set(('schema_version clicks scope account dataset campaign adset snapshot_id collected_at sources meta website_events analytics search_console observed_at attempted_at status error period from to date timezone daily ads_daily statuses code delivery budget_daily attribution spend impressions reach link_clicks landing_page_views studio_tests call_requests checkouts trials complete_test_window verification checked_at capi consent attribution_checked_at live_trial_verified ads name angle stage format metrics events key label count meaning goals id target unit note review enabled cpc_review_start cpc_review_strong cpc_review_above funnel_review_clicks test_budget total_test_budget rule_version state message source_code technical_only budget sites site visitors pageviews link_audit ad_id checks tag_checks extra_keys category unrecognized_extra_key_count complete checked_count request_count scope_validated destination_present format_supported landing_keys_in_url_tags_absent https_domain root_path skin ref no_fragment unique_query_keys effective_utm_contract utm_source utm_medium utm_campaign utm_content campaign_id adset_id diy_funnel collection_started_at studio_started call_requested checkout_started dashboard_activated method manual_update edition_label exported_at imported_at valid_until attribution_setting reporting_basis meta_traffic connection_method last_received emq diagnostics deduplication').split(' '));
 const FORBIDDEN = /(?:EAA[A-Za-z0-9]{25,}|gh[pousr]_[A-Za-z0-9]{15,}|github_pat_[A-Za-z0-9_]+|Bearer\s|access_token=|@(?:gmail|heyho)[\w.]*\.)/i;
-for (const key of ['diy_funnel_traffic', 'link_audit_traffic']) ALLOWED_KEYS.add(key);
+for (const source of TRACKING_SOURCES) { ALLOWED_KEYS.add(source.diy); ALLOWED_KEYS.add(source.links); }
 function scan(value, depth = 0) {
   if (depth > 15) throw new Error('SNAPSHOT_INVALID');
   if (value === null || typeof value === 'boolean') return;
@@ -412,7 +416,9 @@ export function validateSnapshot(data) {
   validateSearchConsoleSource(data.sources?.search_console);
   if (data.sources?.meta_traffic !== undefined) validateTrafficSource(data.sources.meta_traffic);
   for (const [key, source] of Object.entries(data.sources || {})) {
-    const sourceIds = ['meta_traffic', 'diy_funnel_traffic', 'link_audit_traffic'].includes(key) ? TRAFFIC_AD_IDS : AD_IDS;
+    const sourceIds = key === 'meta_traffic' || key === 'diy_funnel_traffic' || key === 'link_audit_traffic' ? TRAFFIC_AD_IDS
+      : key === 'diy_funnel_crm' || key === 'link_audit_crm' ? CRM_AD_IDS
+      : key === 'diy_funnel_lookalike' || key === 'link_audit_lookalike' ? LOOKALIKE_AD_IDS : AD_IDS;
     if (!timestamp(source.observed_at) || !timestamp(source.attempted_at)) throw new Error('SNAPSHOT_INVALID_DATE');
     for (const row of [...(source.daily || []), ...(source.ads_daily || [])]) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date || '')) throw new Error('SNAPSHOT_INVALID_DATE');
@@ -422,8 +428,10 @@ export function validateSnapshot(data) {
   }
   if (data.sources.link_audit !== undefined) validateLinkAudit(data.sources.link_audit);
   if (data.sources.diy_funnel !== undefined) validateDiyFunnelSource(data.sources.diy_funnel);
-  if (data.sources.link_audit_traffic !== undefined) validateLinkAudit(data.sources.link_audit_traffic, { campaignKey: 'traffic' });
-  if (data.sources.diy_funnel_traffic !== undefined) validateDiyFunnelSource(data.sources.diy_funnel_traffic, { campaignKey: 'traffic' });
+  for (const source of TRACKING_SOURCES.slice(1)) {
+    if (data.sources[source.links] !== undefined) validateLinkAudit(data.sources[source.links], { campaignKey: source.campaignKey });
+    if (data.sources[source.diy] !== undefined) validateDiyFunnelSource(data.sources[source.diy], { campaignKey: source.campaignKey });
+  }
   const sites = data.sources.analytics?.sites || [];
   if (!Array.isArray(sites) || sites.length > 2 || new Set(sites.map(s => s.site)).size !== sites.length) throw new Error('SNAPSHOT_ANALYTICS_SCOPE_MISMATCH');
   for (const site of sites) {

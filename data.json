@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-28T08:00:00.000Z",
-  "collected_at": "2026-10-28T08:20:02.361Z",
+  "snapshot_id": "2026-10-28T08:20:45.402Z",
+  "collected_at": "2026-10-28T08:20:45.402Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-28T08:20:02.361Z",
@@ -557,7 +557,8 @@
       "status": "connected",
       "attempted_at": "2026-10-28T08:20:02.361Z",
       "error": null,
-      "complete_test_window": true
+      "complete_test_window": true,
+      "note": "Bestehender lesender Meta-API-Abruf am 28.10.2026 um 09:20:02 Berlin. Der zusätzliche Ads-Manager-/CSV-/Konfigurationsabgleich im Browser scheiterte am fehlenden Facebook-Login. Keine aktuellen UI-Diagnosen oder heute neu gelesenen Traffic-UTMs belegt. Fehlende API-Zeilen bleiben unbekannt; keine Studio-Qualifizierung aus Meta-Signalen ableiten."
     },
     "website_events": {
       "status": "error",
@@ -1631,7 +1632,8 @@
       "status": "connected",
       "attempted_at": "2026-10-28T08:20:02.361Z",
       "error": null,
-      "complete_test_window": false
+      "complete_test_window": false,
+      "note": "Bestehender lesender Meta-API-Abruf am 28.10.2026 um 09:20:02 Berlin. Der zusätzliche Ads-Manager-/CSV-/Konfigurationsabgleich im Browser scheiterte am fehlenden Facebook-Login. Keine aktuellen UI-Diagnosen oder heute neu gelesenen Traffic-UTMs belegt. Fehlende API-Zeilen bleiben unbekannt; keine Studio-Qualifizierung aus Meta-Signalen ableiten. Das Durchschnittsbudget 20 EUR/Tag stammt aus demselben API-Abruf des zugeordneten Adsets. Kein harter Tagesdeckel. Die Traffic-Zuordnung im eigenen DIY-Funnel bleibt unbestätigt; CRM-/LAL-Entwürfe sind ausgeschlossen."
     }
   },
   "verification": {

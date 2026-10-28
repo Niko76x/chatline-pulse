@@ -154,10 +154,10 @@ test('enabling audit in a completed core slot reads only missing audit; failure 
   assert.equal(canSkipCollection(previous, { slot, now: at, linkAuditEnabled: true }), false);
   const result = await refreshSources(previous, sourceOptions);
   assert.equal(result.success, true); assert.deepEqual(result.warnings, ['LINK_AUDIT_READ_FAILED']);
-  assert.equal(auditReads, 18); assert.equal(analyticsReads, 0);
+  assert.equal(auditReads, 24); assert.equal(analyticsReads, 0);
   for (const key of ['meta', 'analytics', 'website_events']) assert.deepEqual(result.snapshot.sources[key], previous.sources[key]);
   assert.equal(canSkipCollection(result.snapshot, { slot, now: at, linkAuditEnabled: true }), true);
-  const again = await refreshSources(result.snapshot, sourceOptions); assert.equal(auditReads, 18); assert.equal(analyticsReads, 0);
+  const again = await refreshSources(result.snapshot, sourceOptions); assert.equal(auditReads, 24); assert.equal(analyticsReads, 0);
   assert.deepEqual(again.snapshot, result.snapshot);
   assert.equal(canSkipCollection(result.snapshot, { slot: nextSlot, now: nextAt, linkAuditEnabled: true }), false);
 });
@@ -175,7 +175,7 @@ test('a failing optional audit cannot roll back fresh core Analytics or fail a s
       analyticReads++; return response({ version: 1, query: { since: '2026-10-22', until: '2026-10-26', groupBy: ['day'], filter: "environment eq 'production'" },
         data: [{ timestamp: '2026-10-26T00:00:00Z', visitors: 2, pageviews: 4 }] });
     } } });
-  assert.equal(result.success, true); assert.equal(analyticReads, 2); assert.equal(metaReads, 18);
+  assert.equal(result.success, true); assert.equal(analyticReads, 2); assert.equal(metaReads, 24);
   assert.equal(result.snapshot.sources.analytics.status, 'connected');
   assert.equal(result.snapshot.sources.analytics.observed_at, at.toISOString());
   assert.equal(result.snapshot.sources.link_audit.status, 'error');

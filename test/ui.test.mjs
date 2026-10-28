@@ -1,4 +1,4 @@
-import { TRAFFIC, TRAFFIC_ADS } from '../public/assets/campaigns.js';
+import { TRAFFIC, TRAFFIC_ADS, CRM, CRM_ADS, LOOKALIKE, LOOKALIKE_ADS } from '../public/assets/campaigns.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -25,7 +25,7 @@ async function renderFixture(snapshot = structuredClone(original), hash = '#/ove
   let incoming = snapshot, transport = { status: 'snapshot' }, fail = false;
   const context = { document: { querySelector: node, querySelectorAll: () => nav, addEventListener: (k,v) => { events[k] = v; } },
     window: { addEventListener: (k,v) => { win[k] = v; } }, location, setInterval: () => {}, Intl, Date,
-    TRAFFIC, TRAFFIC_ADS, freshness, summarize, reviewAd, analyticsView, CREATIVE_CATALOG: catalog, reportedCount, navigator: { clipboard: { writeText: async text => clipboard.push(text) } },
+    TRAFFIC, TRAFFIC_ADS, CRM, CRM_ADS, LOOKALIKE, LOOKALIKE_ADS, freshness, summarize, reviewAd, analyticsView, CREATIVE_CATALOG: catalog, reportedCount, navigator: { clipboard: { writeText: async text => clipboard.push(text) } },
     fetch: async (url, options) => { requests.push([url,options]); assert.equal(url, '/api/data'); if (fail) throw Error('test failure'); return { ok:true, json:async () => ({snapshot:incoming,transport}) }; } };
   await vm.runInNewContext(`(async () => { ${client}\n })()`, context, { timeout:1500 });
   return { node, nav, clipboard, requests, get view() { return node('#view').innerHTML; },
@@ -34,6 +34,7 @@ async function renderFixture(snapshot = structuredClone(original), hash = '#/ove
     period(value) { node('#period').listeners.change({target:{value}}); },
     clickSite(site) { return events.click({target:{closest:s => s === '[data-site]' ? {dataset:{site}} : null}}); },
     copy(code) { return events.click({target:{closest:s => s === '[data-copy]' ? {dataset:{copy:code}} : null}}); },
+    clickCampaign(campaign) { return events.click({target:{closest:s => s === '[data-campaign]' ? {dataset:{campaign}} : null}}); },
     async reload(next = snapshot, nextTransport = {status:'snapshot'}, shouldFail = false) { incoming = next; transport = nextTransport; fail = shouldFail; await node('#reload').listeners.click(); } };
 }
 function withMetrics() {
@@ -315,6 +316,78 @@ test('historical login errors describe the failed attempt without asserting a cu
  assert.match(app.view,/aktuelle Zugriff ist damit nicht neu geprüft/);
  assert.match(app.view,/Letzter bestätigter Events-Manager-Stand; neuer Abruf fehlgeschlagen/);
  assert.doesNotMatch(app.view,/Search Console muss erneut angemeldet werden|Der lesende Meta-Zugang muss erneuert werden|Aus Events Manager gelesen · Eingänge/);
+});
+
+test('all four finite campaign selectors are visible and registry presence never claims CRM/LAL publication',async()=>{
+ assert.match(html,/option value="crm"/); assert.match(html,/option value="lookalike"/);
+ const app=await renderFixture(withMetrics(),'#/funnel/diy');
+ for(const key of ['crm','lookalike']){
+  await app.clickCampaign(key); assert.match(app.view,/Registry allein bestätigt keine Veröffentlichung oder Auslieferung/);
+  assert.match(app.view,/Eigener DIY-Ablauf noch nicht verbunden/); assert.doesNotMatch(app.view,/data-diy-count=/);
+  app.navigate('#/facebook'); assert.equal((app.view.match(/<tr><td><a class="table-name"/g)||[]).length,3); app.navigate('#/funnel/diy');
+ }
+ await app.clickCampaign('120275503974760555'); app.navigate('#/facebook'); assert.equal((app.view.match(/<tr><td><a class="table-name"/g)||[]).length,13);
+});
+
+test('new-cohort Meta fields remain unknown and do not reuse original spend, delivery, media or lead signals',async()=>{
+ const snapshot=withMetrics(),app=await renderFixture(snapshot,'#/facebook/ad/VID-01');
+ for(const key of ['crm','lookalike']){
+  app.navigate('#/facebook/ad/VID-01');
+  app.select('campaign',key);
+  assert.match(app.view,/Meta-Leistungsdaten und Auslieferungsstatus sind hier nicht angeschlossen/);
+  assert.match(app.view,/class="metric-label">Ausgaben<\/span><strong class="metric-value">—/);
+  assert.match(app.view,/data-signal="studio_tests"><b>—<\/b>/); assert.doesNotMatch(app.view,/data-signal="studio_tests"><b>2<\/b>|8 €|PIL-VID-01\.mp4/);
+  assert.match(app.view,/Geprüfter Trackingvertrag · keine Live-Fassung/);
+  assert.match(app.view,/Medien und Texte sind hier nicht hinterlegt/);
+  app.navigate('#/facebook/creatives'); assert.equal((app.view.match(/Trackingvertrag · Medien nicht hinterlegt/g)||[]).length,3); assert.doesNotMatch(app.view,/Freigegebene Fassung 22\.10\.|Freigegeben am 22\.10\./);
+ }
+});
+
+test('CRM and LAL VID-01 DIY views keep their own aggregate count, unknown steps and independent UTC clock',async()=>{
+ const fixture=withMetrics(),row={date:'2026-10-26',code:'VID-01',studio_started:2,call_requested:null,checkout_started:0,dashboard_activated:null};
+ fixture.sources.diy_funnel=diySource({status:'connected',daily:[{...row,code:'PIL-PA-01',studio_started:99}]});
+ fixture.sources.diy_funnel_crm=diySource({campaign:CRM.campaign,status:'connected',observed_at:'2026-10-28T09:01:00.000Z',daily:[row]});
+ fixture.sources.diy_funnel_lookalike=diySource({campaign:LOOKALIKE.campaign,status:'connected',observed_at:'2026-10-28T09:02:00.000Z',daily:[{...row,studio_started:11}]});
+ const before=structuredClone(fixture),app=await renderFixture(fixture,'#/funnel/diy');
+ app.select('campaign','crm'); assert.match(app.view,/data-diy-count="studio_started">2/); assert.match(app.view,/09:01 UTC/); assert.match(app.view,/data-diy-count="call_requested">—/); assert.match(app.view,/data-diy-count="checkout_started">0/);
+ app.select('campaign','lookalike'); assert.match(app.view,/data-diy-count="studio_started">11/); assert.match(app.view,/09:02 UTC/); assert.doesNotMatch(app.view,/data-diy-count="studio_started">2/);
+ app.navigate('#/facebook/ad/VID-01'); assert.match(app.view,/data-diy-signal="studio_started"><b>11<\/b>/);
+ app.select('campaign','crm'); assert.match(app.view,/data-diy-signal="studio_started"><b>2<\/b>/); assert.deepEqual(fixture,before);
+});
+
+test('all six cohort copy links use unique skin/ref/IDs, literal content prefixes and the selected fixed adset',async()=>{
+ const app=await renderFixture(withMetrics(),'#/tracking/links');
+ for(const [key,scope,ads,prefix,utm] of [['crm',CRM,CRM_ADS,'crm-direct','chatline_crm_direct_20261027'],['lookalike',LOOKALIKE,LOOKALIKE_ADS,'crm-lookalike','chatline_crm_lookalike_20261027']]){
+  app.select('campaign',key); assert.equal((app.view.match(/data-copy=/g)||[]).length,3); assert.match(app.view,/Noch kein aktueller Link-Abruf für diese Cohort/);
+  for(const ad of ads){
+   await app.copy(ad.code);const url=new URL(app.clipboard.at(-1));
+   for(const param of ['skin','ref','campaign_id','adset_id','ad_id','utm_source','utm_medium','utm_campaign','utm_content'])assert.equal(url.searchParams.getAll(param).length,1);
+   assert.equal(url.searchParams.get('skin'),'pilates'); assert.equal(url.searchParams.get('ref'),`meta-${prefix}-${scope.adset}-${ad.code.toLowerCase()}`);
+   assert.equal(url.searchParams.get('campaign_id'),'{{campaign.id}}'); assert.equal(url.searchParams.get('adset_id'),'{{adset.id}}'); assert.equal(url.searchParams.get('ad_id'),'{{ad.id}}');
+   assert.equal(url.searchParams.get('utm_source'),'{{site_source_name}}');assert.equal(url.searchParams.get('utm_medium'),'paid_social');assert.equal(url.searchParams.get('utm_campaign'),utm);
+   assert.equal(url.searchParams.get('utm_content'),`${prefix}-${ad.code.toLowerCase()}`);assert(!app.clipboard.at(-1).includes('120275503974780555'));
+  }
+  const count=app.clipboard.length; await app.copy('PIL-VID-01');assert.equal(app.clipboard.length,count);
+ }
+});
+
+test('three-ad link completeness and failed check clocks stay separate from the other cohort and original thirteen',async()=>{
+ const fixture=withMetrics(), at=new Date().toISOString(), old='2026-10-25T08:00:00.000Z';
+ fixture.sources.link_audit=auditSource();
+ for(const [key,ads] of [['crm',CRM_ADS],['lookalike',LOOKALIKE_ADS]])fixture.sources[`link_audit_${key}`]=auditSource({checked_count:3,request_count:3,ads:ads.map(ad=>({...auditSource().ads[0],ad_id:ad.ad_id,code:ad.code,checked_at:at,attempted_at:at}))});
+ const failed=fixture.sources.link_audit_crm;failed.status='partial';failed.complete=false;failed.checked_count=2;failed.error='LINK_AUDIT_PARTIAL_FAILURE';failed.ads[0].status='read_error';failed.ads[0].checked_at=old;failed.ads[0].error='META_PERMISSION_REQUIRED';
+ const app=await renderFixture(fixture,'#/tracking/links');app.select('campaign','crm');assert.match(app.view,/2 von 3 Anzeigen/);assert.match(app.view,/25\. Okt\., 09:00/);
+ const first=app.view.match(/<tbody>(<tr>[\s\S]*?<\/tr>)/)[1];assert.match(first,/Abruf fehlgeschlagen/);assert.doesNotMatch(first,/Kernlink &amp; UTM geprüft/);
+ app.select('campaign','lookalike');assert.match(app.view,/3 von 3 Anzeigen/);assert.equal((app.view.match(/Kernlink &amp; UTM geprüft/g)||[]).length,3);assert.doesNotMatch(app.view,/25\. Okt\., 09:00/);
+ app.select('campaign','original');assert.match(app.view,/13 von 13 Anzeigen/);
+});
+
+test('new-cohort awaiting/error sources render unknowns and retained observations without zero conversions or a fresh success',async()=>{
+ const fixture=withMetrics();fixture.sources.diy_funnel_crm=diySource({campaign:CRM.campaign});
+ fixture.sources.diy_funnel_lookalike=diySource({campaign:LOOKALIKE.campaign,status:'error',error:'DIY_PERMISSION_REQUIRED',observed_at:'2026-10-27T08:00:00.000Z',daily:[{date:'2026-10-26',code:'VID-01',studio_started:3,call_requested:null,checkout_started:null,dashboard_activated:null}]});
+ const app=await renderFixture(fixture,'#/funnel/diy');app.select('campaign','crm');assert.equal((app.view.match(/data-diy-count="[^"]+">—<\/td>/g)||[]).length,4);assert.doesNotMatch(app.view,/data-diy-count="[^"]+">0/);
+ app.select('campaign','lookalike');assert.match(app.view,/Abruf fehlgeschlagen/);assert.match(app.view,/27\. Okt\., 08:00 UTC/);assert.match(app.view,/data-diy-count="studio_started">3/);assert.doesNotMatch(app.view,/Aktuell abgerufen/);
+ app.navigate('#/tracking');assert.match(app.view,/Eigener DIY-Ablauf · CRM/);assert.match(app.view,/Eigener DIY-Ablauf · Lookalike/);assert.match(app.view,/Anzeigenlinks · CRM/);assert.match(app.view,/Anzeigenlinks · Lookalike/);
 });
 
 import {validateSnapshot, mergeAnalytics, ANALYTICS_PROJECTS} from '../api/data.js';

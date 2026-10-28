@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { refreshSources, mergeAnalytics, ANALYTICS_PROJECTS, canSkipCollection, validateSnapshot } from '../api/data.js';
 import { ADS, EVENTS } from '../scripts/diy-funnel-preflight.mjs';
+import { trackingContract } from '../lib/tracking-contracts.mjs';
 const now = new Date('2026-10-26T04:07:00.000Z'), slot = '2026-10-26T04:00:00.000Z';
 const original = JSON.parse(await readFile(new URL('../public/data/fallback.json', import.meta.url), 'utf8'));
 const id = Object.keys(ADS)[0];
@@ -14,10 +15,11 @@ function core() {
 function eventReply(url, withSignal = false) {
   const event = EVENTS.find(value => url.searchParams.get('filter').includes(`'${value}'`));
   assert.ok(event);
+  const contract=['original','traffic','crm','lookalike'].map(trackingContract).find(value=>url.searchParams.get('filter').includes(value.campaign));
   return { ok: true, status: 200, json: async () => ({ version: 1, query: {
     since: Number(url.searchParams.get('since')), until: Number(url.searchParams.get('until')),
     filter: url.searchParams.get('filter'), groupBy: ['eventData/ad_id'], limit: 32 },
-    data: withSignal && event === EVENTS[0] ? [{ eventData: id, count: 2, visitors: 1 }] : [] }) };
+    data: withSignal && event === EVENTS[0] ? [{ eventData: Object.keys(contract.ads)[0], count: 2, visitors: 1 }] : [] }) };
 }
 test('new DIY gate in completed core slot performs four event GETs per campaign only, empty reads are awaiting_events', async () => {
   const previous = core(), requests = [];
@@ -28,13 +30,13 @@ test('new DIY gate in completed core slot performs four event GETs per campaign 
       assert.equal(init.method, 'GET'); assert.equal(init.headers.Authorization, 'Bearer fixture-diy-token');
       return eventReply(url);
     } } });
-  assert.equal(requests.length, 8); assert.equal(result.success, true);
+  assert.equal(requests.length, 16); assert.equal(result.success, true);
   assert.equal(result.snapshot.sources.diy_funnel.status, 'awaiting_events');
   assert.deepEqual(result.snapshot.sources.diy_funnel.daily, []);
   for (const key of ['meta', 'analytics', 'website_events']) assert.deepEqual(result.snapshot.sources[key], previous.sources[key]);
   assert.equal(canSkipCollection(result.snapshot, { slot, now, diyFunnelEnabled: true }), true);
   await refreshSources(result.snapshot, { slot, now, diyFunnelEnabled: true, analyticsOptions: { tokens, fetcher: async () => { throw Error('same-slot read forbidden'); } } });
-  assert.equal(requests.length, 8); validateSnapshot(result.snapshot);
+  assert.equal(requests.length, 16); validateSnapshot(result.snapshot);
 });
 test('DIY-positive aggregate remains ad/date-specific product events, never attributed Meta leads or payments', async () => {
   const previous = core();
@@ -68,4 +70,5 @@ test('optional gates default off; normal core analytics read cannot accidentally
   assert.equal(result.success, true);
   assert.equal(Object.hasOwn(result.snapshot.sources, 'diy_funnel'), false); assert.equal(Object.hasOwn(result.snapshot.sources, 'link_audit'), false);
   assert.equal(Object.hasOwn(result.snapshot.sources, 'diy_funnel_traffic'), false); assert.equal(Object.hasOwn(result.snapshot.sources, 'link_audit_traffic'), false);
+  for(const key of ['diy_funnel_crm','link_audit_crm','diy_funnel_lookalike','link_audit_lookalike']) assert.equal(Object.hasOwn(result.snapshot.sources,key),false);
 });

@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'node:url';
+import { trackingContract } from '../lib/tracking-contracts.mjs';
 
 export const VERSION = 'v26.0';
 export const ACCOUNT = '2128240694419507';
@@ -33,16 +34,17 @@ const URL_FIELDS = Object.freeze([
   ['object_story_spec.link_data.call_to_action.value.link', value => value?.link_data?.call_to_action?.value?.link],
   ['object_story_spec.video_data.call_to_action.value.link', value => value?.video_data?.call_to_action?.value?.link],
 ]);
-export function expectedTags(id) {
-  if (!Object.hasOwn(ADS, id)) return null;
+export function expectedTags(id, { campaignKey = 'original' } = {}) {
+  const contract = trackingContract(campaignKey);
+  if (!Object.hasOwn(contract.ads, id)) return null;
   return {
     utm_source: ['{{site_source_name}}'], utm_medium: ['paid_social'],
-    utm_campaign: ['pilates_dach_selftest_20261022'], utm_content: [ADS[id].toLowerCase()],
-    campaign_id: ['{{campaign.id}}', CAMPAIGN], adset_id: ['{{adset.id}}', ADSET], ad_id: ['{{ad.id}}', id],
+    utm_campaign: [contract.utmCampaign], utm_content: [contract.ads[id].toLowerCase()],
+    campaign_id: ['{{campaign.id}}', contract.campaign], adset_id: ['{{adset.id}}', contract.adset], ad_id: ['{{ad.id}}', id],
   };
 }
-function inspectTagParams(params, id) {
-  const expected = expectedTags(id);
+function inspectTagParams(params, id, campaignKey = 'original') {
+  const expected = expectedTags(id, { campaignKey });
   const extraNames = [...new Set(params.keys())].filter(key => !QUERY_KEYS.has(key));
   const checks = Object.fromEntries(TAG_KEYS.map(key => [key, params.getAll(key).length === 1 && expected[key].includes(params.get(key))]));
   // Only known key names and accepted static/macro values can be reported.
@@ -56,10 +58,11 @@ function inspectTagParams(params, id) {
 }
 
 /** Inspect stored configuration only. Do not fetch or follow a destination. */
-export function inspectAdDestination(body, id) {
-  if (!Object.hasOwn(ADS, id)) throw new Error('DESTINATION_SCOPE_CHANGED');
-  const result = { ad_id: id, code: ADS[id], status: 'needs_review', scope_validated: false, failures: [], destinations: [], url_tags: null };
-  if (!body || body.id !== id || body.account_id !== ACCOUNT || body.campaign_id !== CAMPAIGN || body.adset_id !== ADSET) {
+export function inspectAdDestination(body, id, { campaignKey = 'original' } = {}) {
+  const contract = trackingContract(campaignKey);
+  if (!Object.hasOwn(contract.ads, id)) throw new Error('DESTINATION_SCOPE_CHANGED');
+  const result = { ad_id: id, code: contract.ads[id], status: 'needs_review', scope_validated: false, failures: [], destinations: [], url_tags: null };
+  if (!body || body.id !== id || body.account_id !== contract.account || body.campaign_id !== contract.campaign || body.adset_id !== contract.adset) {
     result.failures.push('SCOPE_MISMATCH'); return result;
   }
   result.scope_validated = true;
@@ -88,7 +91,7 @@ export function inspectAdDestination(body, id) {
     result.failures.push('URL_TAGS_INVALID_FORMAT'); return result;
   }
   const tags = new URLSearchParams(rawTags || '');
-  const tagReport = inspectTagParams(tags, id);
+  const tagReport = inspectTagParams(tags, id, campaignKey);
   result.url_tags = { field_present: typeof rawTags === 'string', ...tagReport };
   if (tags.has('skin') || tags.has('ref')) result.failures.push('LANDING_KEYS_IN_URL_TAGS');
   if (tagReport.unknown_key_count) result.failures.push('UNEXPECTED_URL_TAG_KEYS');
@@ -101,12 +104,12 @@ export function inspectAdDestination(body, id) {
     catch { result.destinations.push({ field, valid: false, error: 'DESTINATION_INVALID_URL' }); continue; }
     const combined = new URLSearchParams(url.search);
     for (const [key, value] of tags) combined.append(key, value);
-    const effective = inspectTagParams(combined, id);
+    const effective = inspectTagParams(combined, id, campaignKey);
     const checks = {
       https_domain: url.origin === ORIGIN && !url.username && !url.password,
       root_path: url.pathname === '/',
       skin: url.searchParams.getAll('skin').length === 1 && url.searchParams.get('skin') === 'pilates',
-      ref: url.searchParams.getAll('ref').length === 1 && url.searchParams.get('ref') === `meta-pilates-de-${ADSET}-${ADS[id].toLowerCase()}`,
+      ref: url.searchParams.getAll('ref').length === 1 && url.searchParams.get('ref') === `${contract.refPrefix}${contract.ads[id].toLowerCase()}`,
       no_fragment: !url.hash,
       known_query_keys: effective.unknown_key_count === 0,
       unique_query_keys: effective.unique,

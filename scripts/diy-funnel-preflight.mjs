@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'node:url';
+import { trackingContract } from '../lib/tracking-contracts.mjs';
 
 // A manual, four-request diagnostic. No publisher, event sender or dynamic
 // asset/project selection is imported. These are public reviewed identifiers.
@@ -21,7 +22,7 @@ const knownFields = value => value && typeof value === 'object' && !Array.isArra
   ? Object.keys(value).filter(key => FIELDS.has(key)).sort() : [];
 const kind = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
 const safeCount = value => Number.isSafeInteger(value) && value >= 0;
-const filterFor = event => `environment eq 'production' and eventName eq '${event}' and eventData/campaign_id eq '${CAMPAIGN}'`;
+const filterFor = (event, campaignKey = 'original') => `environment eq 'production' and eventName eq '${event}' and eventData/campaign_id eq '${trackingContract(campaignKey).campaign}'`;
 const httpError = status => status === 401 ? 'ANALYTICS_LOGIN_REQUIRED' : status === 403 ? 'ANALYTICS_PERMISSION_REQUIRED' : status === 402 ? 'ANALYTICS_PLAN_REQUIRED' : status === 429 ? 'ANALYTICS_RATE_LIMITED' : status >= 500 ? 'ANALYTICS_UNAVAILABLE' : 'ANALYTICS_READ_FAILED';
 
 /** Public date diagnostics only; no permissive Date.parse fallback for text. */
@@ -83,9 +84,10 @@ function queryChecks(query, window, filter) {
 }
 
 /** Sanitize first; never return the response, arbitrary keys, or error text. */
-export function inspectAggregate(body, { window, event }) {
+export function inspectAggregate(body, { window, event, campaignKey = 'original' }) {
+  const contract = trackingContract(campaignKey), ads = contract.ads;
   const day = window.day;
-  const checks = queryChecks(body?.query, window, filterFor(event));
+  const checks = queryChecks(body?.query, window, filterFor(event, campaignKey));
   const rows = Array.isArray(body?.data) ? body.data : null;
   const summary = {
     api_version: Number.isSafeInteger(body?.version) && body.version >= 0 && body.version <= 10000 ? body.version : null,
@@ -107,18 +109,18 @@ export function inspectAggregate(body, { window, event }) {
     // Both representations are safe to diagnose. The preflight reports their
     // kinds above; a future source normalizer still needs a real read review.
     const id = typeof row?.eventData === 'string' ? row.eventData : row?.eventData?.ad_id;
-    if (typeof id !== 'string' || !Object.hasOwn(ADS, id) || seen.has(id) ||
+    if (typeof id !== 'string' || !Object.hasOwn(ads, id) || seen.has(id) ||
         (row.projectId !== undefined && row.projectId !== PROJECT) ||
         (row.environment !== undefined && row.environment !== 'production') ||
         (row.eventName !== undefined && row.eventName !== event) ||
-        (row.eventData && typeof row.eventData === 'object' && row.eventData.campaign_id !== undefined && row.eventData.campaign_id !== CAMPAIGN))
+        (row.eventData && typeof row.eventData === 'object' && row.eventData.campaign_id !== undefined && row.eventData.campaign_id !== contract.campaign))
       return invalid('PREFLIGHT_SCOPE_MISMATCH');
     if (row.timestamp !== undefined && (typeof row.timestamp !== 'string' || !Number.isFinite(Date.parse(row.timestamp)) || new Date(row.timestamp).toISOString().slice(0, 10) !== day))
       return invalid('PREFLIGHT_PERIOD_MISMATCH');
     if (!safeCount(row.count) || !safeCount(row.visitors) || row.visitors > row.count)
       return invalid('PREFLIGHT_METRIC_SHAPE_UNVALIDATED');
     seen.add(id);
-    safeRows.push({ ad_id: id, code: ADS[id], count: row.count, visitors: row.visitors });
+    safeRows.push({ ad_id: id, code: ads[id], count: row.count, visitors: row.visitors });
   }
   return { ...summary, status: safeRows.length ? 'aggregate_read_validated' : 'awaiting_events', error: null,
     rows: safeRows, event_reception_proven: safeRows.some(row => row.count > 0) };

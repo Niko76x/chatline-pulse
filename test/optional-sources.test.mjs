@@ -19,7 +19,7 @@ function eventReply(url, withSignal = false) {
     filter: url.searchParams.get('filter'), groupBy: ['eventData/ad_id'], limit: 32 },
     data: withSignal && event === EVENTS[0] ? [{ eventData: id, count: 2, visitors: 1 }] : [] }) };
 }
-test('new DIY gate in completed core slot performs four event GETs only, empty reads are awaiting_events', async () => {
+test('new DIY gate in completed core slot performs four event GETs per campaign only, empty reads are awaiting_events', async () => {
   const previous = core(), requests = [];
   assert.equal(canSkipCollection(previous, { slot, now, diyFunnelEnabled: true }), false);
   const result = await refreshSources(previous, { slot, now, diyFunnelEnabled: true,
@@ -28,13 +28,13 @@ test('new DIY gate in completed core slot performs four event GETs only, empty r
       assert.equal(init.method, 'GET'); assert.equal(init.headers.Authorization, 'Bearer fixture-diy-token');
       return eventReply(url);
     } } });
-  assert.equal(requests.length, 4); assert.equal(result.success, true);
+  assert.equal(requests.length, 8); assert.equal(result.success, true);
   assert.equal(result.snapshot.sources.diy_funnel.status, 'awaiting_events');
   assert.deepEqual(result.snapshot.sources.diy_funnel.daily, []);
   for (const key of ['meta', 'analytics', 'website_events']) assert.deepEqual(result.snapshot.sources[key], previous.sources[key]);
   assert.equal(canSkipCollection(result.snapshot, { slot, now, diyFunnelEnabled: true }), true);
   await refreshSources(result.snapshot, { slot, now, diyFunnelEnabled: true, analyticsOptions: { tokens, fetcher: async () => { throw Error('same-slot read forbidden'); } } });
-  assert.equal(requests.length, 4); validateSnapshot(result.snapshot);
+  assert.equal(requests.length, 8); validateSnapshot(result.snapshot);
 });
 test('DIY-positive aggregate remains ad/date-specific product events, never attributed Meta leads or payments', async () => {
   const previous = core();
@@ -67,4 +67,5 @@ test('optional gates default off; normal core analytics read cannot accidentally
   } } });
   assert.equal(result.success, true);
   assert.equal(Object.hasOwn(result.snapshot.sources, 'diy_funnel'), false); assert.equal(Object.hasOwn(result.snapshot.sources, 'link_audit'), false);
+  assert.equal(Object.hasOwn(result.snapshot.sources, 'diy_funnel_traffic'), false); assert.equal(Object.hasOwn(result.snapshot.sources, 'link_audit_traffic'), false);
 });

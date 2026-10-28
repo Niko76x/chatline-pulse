@@ -6,11 +6,11 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-28T08:16:35.663Z",
-  "collected_at": "2026-10-28T08:16:35.663Z",
+  "snapshot_id": "2026-10-28T08:00:00.000Z",
+  "collected_at": "2026-10-28T08:20:02.361Z",
   "sources": {
     "meta": {
-      "observed_at": "2026-10-28T08:07:25.783Z",
+      "observed_at": "2026-10-28T08:20:02.361Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -555,10 +555,9 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-10-28T08:07:25.783Z",
+      "attempted_at": "2026-10-28T08:20:02.361Z",
       "error": null,
-      "complete_test_window": true,
-      "note": "Bestehender lesender Meta-API-Abruf am 28.10.2026 um 09:07:25 Berlin. Der zusätzliche Ads-Manager-/CSV-/Konfigurationsabgleich im Browser scheiterte am fehlenden Facebook-Login. Keine aktuellen UI-Diagnosen oder heute neu gelesenen Traffic-UTMs belegt. Fehlende API-Zeilen bleiben unbekannt; keine Studio-Qualifizierung aus Meta-Signalen ableiten."
+      "complete_test_window": true
     },
     "website_events": {
       "status": "error",
@@ -628,8 +627,8 @@
     },
     "analytics": {
       "status": "connected",
-      "observed_at": "2026-10-28T08:07:25.783Z",
-      "attempted_at": "2026-10-28T08:07:25.783Z",
+      "observed_at": "2026-10-28T08:20:02.361Z",
+      "attempted_at": "2026-10-28T08:20:02.361Z",
       "error": null,
       "sites": [
         {
@@ -637,8 +636,8 @@
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "observed_at": "2026-10-28T08:20:02.361Z",
+          "attempted_at": "2026-10-28T08:20:02.361Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -688,8 +687,8 @@
           "label": "Projekt limitless · start.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "observed_at": "2026-10-28T08:20:02.361Z",
+          "attempted_at": "2026-10-28T08:20:02.361Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -1358,7 +1357,7 @@
     "meta_traffic": {
       "campaign": "120275454337270555",
       "adset": "120275454337280555",
-      "observed_at": "2026-10-28T08:07:25.783Z",
+      "observed_at": "2026-10-28T08:20:02.361Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -1383,7 +1382,7 @@
         {
           "date": "2026-10-27",
           "spend": 25.55,
-          "impressions": 10433,
+          "impressions": 10434,
           "reach": 3307,
           "link_clicks": 129,
           "landing_page_views": 79,
@@ -1394,9 +1393,9 @@
         },
         {
           "date": "2026-10-28",
-          "spend": 5.88,
-          "impressions": 1238,
-          "reach": 1019,
+          "spend": 6.03,
+          "impressions": 1284,
+          "reach": 1058,
           "link_clicks": 27,
           "landing_page_views": 22,
           "studio_tests": null,
@@ -1527,8 +1526,8 @@
           "date": "2026-10-27",
           "code": "PIL-VID-01",
           "spend": 2.12,
-          "impressions": 406,
-          "reach": 317,
+          "impressions": 407,
+          "reach": 319,
           "link_clicks": 13,
           "landing_page_views": 9,
           "studio_tests": null,
@@ -1539,9 +1538,9 @@
         {
           "date": "2026-10-28",
           "code": "PIL-PA-01",
-          "spend": 3.49,
-          "impressions": 811,
-          "reach": 685,
+          "spend": 3.53,
+          "impressions": 831,
+          "reach": 709,
           "link_clicks": 13,
           "landing_page_views": 11,
           "studio_tests": null,
@@ -1565,9 +1564,9 @@
         {
           "date": "2026-10-28",
           "code": "PIL-LM-01",
-          "spend": 0.89,
-          "impressions": 198,
-          "reach": 169,
+          "spend": 0.96,
+          "impressions": 216,
+          "reach": 183,
           "link_clicks": 7,
           "landing_page_views": 6,
           "studio_tests": null,
@@ -1591,9 +1590,9 @@
         {
           "date": "2026-10-28",
           "code": "PIL-VID-01",
-          "spend": 1.13,
-          "impressions": 130,
-          "reach": 122,
+          "spend": 1.17,
+          "impressions": 138,
+          "reach": 125,
           "link_clicks": 5,
           "landing_page_views": 3,
           "studio_tests": null,
@@ -1630,10 +1629,9 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-10-28T08:07:25.783Z",
+      "attempted_at": "2026-10-28T08:20:02.361Z",
       "error": null,
-      "complete_test_window": false,
-      "note": "Bestehender lesender Meta-API-Abruf am 28.10.2026 um 09:07:25 Berlin. Der zusätzliche Ads-Manager-/CSV-/Konfigurationsabgleich im Browser scheiterte am fehlenden Facebook-Login. Keine aktuellen UI-Diagnosen oder heute neu gelesenen Traffic-UTMs belegt. Fehlende API-Zeilen bleiben unbekannt; keine Studio-Qualifizierung aus Meta-Signalen ableiten. Budget: letzter separat bestätigter Konfigurationsstand vom 27.10.2026, 19:08:43 Berlin (2026-10-27T18:08:43.362Z): 20 EUR/Tag im Durchschnitt. Kein harter Tagesdeckel und kein neuer Budget-Read am 28.10. Die Traffic-Zuordnung im eigenen DIY-Funnel bleibt unbestätigt; CRM-/LAL-Entwürfe sind ausgeschlossen."
+      "complete_test_window": false
     }
   },
   "verification": {

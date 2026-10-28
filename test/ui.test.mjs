@@ -334,7 +334,7 @@ test('new-cohort Meta fields remain unknown and do not reuse original spend, del
  for(const key of ['crm','lookalike']){
   app.navigate('#/facebook/ad/VID-01');
   app.select('campaign',key);
-  assert.match(app.view,/Meta-Leistungsdaten und Auslieferungsstatus sind hier nicht angeschlossen/);
+  assert.match(app.view,/Meta-Leistungsdaten und Auslieferungsstatus sind noch nicht bestätigt/);
   assert.match(app.view,/class="metric-label">Ausgaben<\/span><strong class="metric-value">—/);
   assert.match(app.view,/data-signal="studio_tests"><b>—<\/b>/); assert.doesNotMatch(app.view,/data-signal="studio_tests"><b>2<\/b>|8 €|PIL-VID-01\.mp4/);
   assert.match(app.view,/Geprüfter Trackingvertrag · keine Live-Fassung/);
@@ -388,6 +388,26 @@ test('new-cohort awaiting/error sources render unknowns and retained observation
  const app=await renderFixture(fixture,'#/funnel/diy');app.select('campaign','crm');assert.equal((app.view.match(/data-diy-count="[^"]+">—<\/td>/g)||[]).length,4);assert.doesNotMatch(app.view,/data-diy-count="[^"]+">0/);
  app.select('campaign','lookalike');assert.match(app.view,/Abruf fehlgeschlagen/);assert.match(app.view,/27\. Okt\., 08:00 UTC/);assert.match(app.view,/data-diy-count="studio_started">3/);assert.doesNotMatch(app.view,/Aktuell abgerufen/);
  app.navigate('#/tracking');assert.match(app.view,/Eigener DIY-Ablauf · CRM/);assert.match(app.view,/Eigener DIY-Ablauf · Lookalike/);assert.match(app.view,/Anzeigenlinks · CRM/);assert.match(app.view,/Anzeigenlinks · Lookalike/);
+});
+
+function performanceSource(scope,ads,spend,budget){
+ const at=new Date().toISOString(),row={date:'2026-10-28',spend,impressions:100,reach:80,link_clicks:4,landing_page_views:null,studio_tests:null,call_requests:null,checkouts:null,trials:null};
+ return {campaign:scope.campaign,adset:scope.adset,status:'connected',error:null,observed_at:at,attempted_at:at,timezone:'Europe/Berlin',period:{from:'2026-10-28',to:'2026-10-28'},complete_test_window:false,budget_daily:budget,delivery:'ACTIVE',attribution:'Meta · conversion date',daily:[row],ads_daily:[{...row,code:'VID-01'}],statuses:ads.map(ad=>({code:ad.code,status:'ACTIVE',delivery:'IN_PROCESS'}))};
+}
+test('CRM and LAL show separate measured performance, source times and selected budgets without adding legacy configuration budgets',async()=>{
+ const snapshot=withMetrics();snapshot.sources.meta.delivery='PAUSED';snapshot.sources.meta.budget_daily=200;
+ snapshot.sources.meta_crm=performanceSource(CRM,CRM_ADS,0.8,2);snapshot.sources.meta_lookalike=performanceSource(LOOKALIKE,LOOKALIKE_ADS,1.1,13);
+ const app=await renderFixture(snapshot,'#/overview');app.select('campaign','crm');
+ assert.match(app.view,/class="metric-label">Ausgaben<\/span><strong class="metric-value">0,8 €/);assert.match(app.view,/<strong>2 €<\/strong><span>gemeldetes Ø-Tagesbudget/);assert.doesNotMatch(app.view,/<strong>200 €<\/strong>|Gesamtbudget.*220|Meta-Leistungsdaten und Auslieferungsstatus sind noch nicht bestätigt/);
+ assert.match(app.view,/Quellenstand/);app.navigate('#/facebook/ad/VID-01');assert.match(app.view,/class="metric-label">Ausgaben<\/span><strong class="metric-value">0,8 €/);assert.match(app.view,/selected_ad_ids=120275505908750555/);
+ app.select('campaign','lookalike');assert.match(app.view,/class="metric-label">Ausgaben<\/span><strong class="metric-value">1,1 €/);assert.match(app.view,/selected_ad_ids=120275504052480555/);
+ app.navigate('#/overview');assert.match(app.view,/<strong>13 €<\/strong><span>gemeldetes Ø-Tagesbudget/);app.navigate('#/tracking');assert.match(app.view,/Facebook · CRM/);assert.match(app.view,/Facebook · Lookalike/);
+});
+test('empty and failed new Meta sources render unknown days or retained old observations, without false zeros or publication inference',async()=>{
+ const snapshot=withMetrics(),source=performanceSource(CRM,CRM_ADS,0.8,2);source.daily=[];source.ads_daily=[];snapshot.sources.meta_crm=source;
+ const app=await renderFixture(snapshot,'#/overview');app.select('campaign','crm');assert.match(app.view,/class="metric-label">Ausgaben<\/span><strong class="metric-value">—/);assert.match(app.view,/Fehlende Tageszeilen bleiben unbekannt, nicht 0/);assert.equal(app.node('#period option[value="all"]').disabled,true);
+ const old='2026-10-28T08:00:00.000Z';source.status='error';source.error='META_LOGIN_REQUIRED';source.observed_at=old;source.daily=performanceSource(CRM,CRM_ADS,0.8,2).daily;await app.reload(snapshot);
+ assert.match(app.view,/letzte Meta-Abruf ist fehlgeschlagen/);assert.match(app.view,/frühere Werte und Zeitpunkte bleiben erhalten/);assert.match(app.view,/class="metric-label">Ausgaben<\/span><strong class="metric-value">0,8 €/);assert.match(app.view,/28\. Okt\., 09:00/);assert.doesNotMatch(app.view,/Aktuell abgerufen/);
 });
 
 import {validateSnapshot, mergeAnalytics, ANALYTICS_PROJECTS} from '../api/data.js';

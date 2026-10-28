@@ -115,6 +115,8 @@ test('refresh gates isolate all four campaign slots and never re-read original13
 test('core slot freshness uses the Traffic observation time, not equality with the original observation', () => {
   const snapshot=completedCore(); snapshot.sources.meta={...snapshot.sources.meta,status:'connected',observed_at:'2026-10-28T09:01:00.000Z'};
   snapshot.sources.meta_traffic={status:'connected',observed_at:'2026-10-28T09:02:00.000Z'};
+  snapshot.sources.meta_crm={status:'connected',observed_at:'2026-10-28T09:03:00.000Z'};
+  snapshot.sources.meta_lookalike={status:'connected',observed_at:'2026-10-28T09:04:00.000Z'};
   assert.equal(canSkipCollection(snapshot,{slot,now,metaEnabled:true,analyticsProjects:[]}),true);
   snapshot.sources.meta_traffic.observed_at='2026-10-28T08:59:59.000Z';
   assert.equal(canSkipCollection(snapshot,{slot,now,metaEnabled:true,analyticsProjects:[]}),false);

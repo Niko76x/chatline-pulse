@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-28T09:26:55.071Z",
-  "collected_at": "2026-10-28T09:26:55.071Z",
+  "snapshot_id": "2026-10-28T09:32:24.206Z",
+  "collected_at": "2026-10-28T09:32:24.206Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-28T08:55:53.523Z",
@@ -741,14 +741,14 @@
       "method": "csv",
       "site": "chatline.app",
       "label": "chatline.app + start.chatline.app",
-      "status": "error",
-      "observed_at": "2026-10-27T17:46:00.599Z",
-      "attempted_at": "2026-10-28T08:10:48.089Z",
-      "error": "GSC_LOGIN_REQUIRED",
+      "status": "connected",
+      "observed_at": "2026-10-28T09:31:34.991Z",
+      "attempted_at": "2026-10-28T09:31:34.991Z",
+      "error": null,
       "timezone": "America/Los_Angeles",
       "period": {
         "from": "2026-10-22",
-        "to": "2026-10-26"
+        "to": "2026-10-27"
       },
       "daily": [
         {
@@ -775,9 +775,14 @@
           "date": "2026-10-26",
           "clicks": 0,
           "impressions": 5
+        },
+        {
+          "date": "2026-10-27",
+          "clicks": 1,
+          "impressions": 7
         }
       ],
-      "note": "Domain-Property chatline.app, Web (text-based), URL-Regex begrenzt auf https://chatline.app/ und https://start.chatline.app/. Ausgewählt 22.–27.10.; übernommene Messwerte 22.–26.10. Pacific Time. 26.10. vorläufig. 27.10. zeigte 0/0 bei leeren CTR-/Positionswerten und wird nicht als abgeschlossener Nulltag übernommen. Google-Anzeige beim Abruf: zuletzt vor vier Stunden aktualisiert. Gefilterte Summen können unvollständig sein; keine Suchbegriffe oder einzelnen URLs veröffentlicht."
+      "note": "Frischer manueller CSV-Export im angemeldeten Arbeitsprofil. Domain-Property chatline.app, Web (text-based), URL-Regex nur https://chatline.app/ und https://start.chatline.app/. Messwerte 22.–27.10. Pacific Time. 27.10. vorläufig: 1 Suchklick und 7 Impressionen; vollständiger aktueller Tag nicht bestätigt. 28.10. noch nicht auswählbar, kein Nulltag ergänzt. Google-Anzeige beim Abruf: zuletzt vor 3,5 Stunden aktualisiert. Gefilterte Summen können unvollständig sein; keine Suchbegriffe oder einzelnen URLs veröffentlicht."
     },
     "diy_funnel": {
       "source_code": "vercel_diy_events_production",

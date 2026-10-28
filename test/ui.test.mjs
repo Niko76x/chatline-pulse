@@ -50,8 +50,9 @@ function auditSource(overrides={}) {
 }
 test('optional sources absent keeps the Meta funnel usable and the link template historical', async () => {
   const app=await renderFixture(withMetrics(),'#/funnel/diy');
-  assert.match(app.view,/Meta-Zuordnung/); assert.match(app.view,/eigene DIY-Ablauf ist noch nicht verbunden/);
-  assert.equal(app.node('#period-wrap').hidden,false); assert.doesNotMatch(app.view,/data-diy-count=/);
+  assert.match(app.view,/Meta-Zuordnung/); assert.match(app.view,/Eigener DIY-Ablauf noch nicht verbunden/);
+  assert.equal(app.node('#period-wrap').hidden,true); assert.doesNotMatch(app.view,/data-diy-count=/);
+  app.navigate('#/funnel/meta'); assert.match(app.view,/Meta-Zuordnung/); assert.equal(app.node('#period-wrap').hidden,false);
   app.navigate('#/tracking/links'); assert.match(app.view,/Stand 23.10.2026/); assert.match(app.view,/aktueller Link-Audit ist noch nicht verbunden/);
   assert.match(app.view,/Anzeigen-\/UTM-Vorlage kopieren/); assert.match(app.view,/Meta ersetzt \{\{…\}\} beim Ausspielen/);
 });
@@ -258,17 +259,62 @@ test('external assets retain strict self-only CSP and the tested helper is exact
   assert.equal((await readFile(new URL('../public/assets/model.js',import.meta.url),'utf8')).replace(/\r\n/g,'\n'),(await readFile(new URL('./model.mjs',import.meta.url),'utf8')).replace(/\r\n/g,'\n'));
 });
 
-test('campaign selector separates five traffic ads, metrics, exact IDs and the unconfirmed DIY attribution', async()=>{
+test('campaign selector separates five traffic ads, metrics, exact IDs and their own tracking sources', async()=>{
  const snapshot=structuredClone(original), at=new Date().toISOString();
  snapshot.sources.meta_traffic={campaign:TRAFFIC.campaign,adset:TRAFFIC.adset,status:'connected',observed_at:at,attempted_at:at,timezone:'Europe/Berlin',period:{from:'2026-10-22',to:'2026-10-27'},complete_test_window:true,daily:[{date:'2026-10-27',spend:35,impressions:1000,link_clicks:200,landing_page_views:100,studio_tests:null}],ads_daily:TRAFFIC_ADS.map(ad=>({date:'2026-10-27',code:ad.code,spend:7,link_clicks:40,impressions:200})),statuses:TRAFFIC_ADS.map(ad=>({code:ad.code,status:'ACTIVE',delivery:'ACTIVE'}))};
  const app=await renderFixture(snapshot,'#/overview');
  assert.match(app.view,/Ursprünglicher Pilates-Test/);assert.match(app.view,/Traffic · Deutschland/);
- app.select('campaign','traffic');assert.match(app.view,/DIY-Zuordnung unbestätigt/);assert.match(app.view,/35 €/);
+ app.select('campaign','traffic');assert.match(app.view,/Traffic getrennt prüfen/);assert.match(app.view,/35 €/);
  app.navigate('#/facebook');assert.equal((app.view.match(/<tr><td><a class="table-name"/g)||[]).length,5);assert.match(app.view,/PIL-LM-01/);
  app.navigate('#/facebook/ad/PIL-PA-01');assert.match(app.view,/120275454337290555/);assert.doesNotMatch(app.view,/selected_ad_ids=120275421779180555/);
- app.navigate('#/funnel/diy');assert.match(app.view,/DIY-Zuordnung unbestätigt/);assert.doesNotMatch(app.view,/data-diy-count=/);
- app.navigate('#/tracking/links');assert.doesNotMatch(app.view,/data-copy=/);
+ app.navigate('#/funnel/diy');assert.match(app.view,/noch nicht verbunden/);assert.doesNotMatch(app.view,/data-diy-count=/);
+ app.navigate('#/tracking/links');assert.equal((app.view.match(/data-copy=/g)||[]).length,5);await app.copy('PIL-PA-01');assert.match(app.clipboard.at(-1),/120275454337280555-pil-pa-01/);assert.match(app.clipboard.at(-1),/pilates_de_inhaber_linkklicks_20261024/);assert.doesNotMatch(app.clipboard.at(-1),/120275421779190555/);
  app.select('campaign','original');app.navigate('#/facebook');assert.equal((app.view.match(/<tr><td><a class="table-name"/g)||[]).length,13);
+});
+
+test('Traffic DIY and PA-01 details use separate aggregates even when both campaigns share a creative code', async()=>{
+ const fixture=withMetrics(), row={date:'2026-10-26',code:'PIL-PA-01',studio_started:99,call_requested:99,checkout_started:99,dashboard_activated:99};
+ fixture.sources.diy_funnel=diySource({status:'connected',daily:[row]});
+ fixture.sources.diy_funnel_traffic=diySource({campaign:TRAFFIC.campaign,status:'connected',daily:[{...row,studio_started:2,call_requested:null,checkout_started:null,dashboard_activated:null}]});
+ const before=structuredClone(fixture), app=await renderFixture(fixture,'#/funnel/diy');
+ assert.match(app.view,/data-diy-count="studio_started">99/);
+ app.select('campaign','traffic');
+ assert.match(app.view,/data-diy-count="studio_started">2/); assert.doesNotMatch(app.view,/data-diy-count="[^"]+">99/);
+ assert.match(app.view,/data-diy-count="call_requested">—/); assert.match(app.view,/Technische Projektgrenze/);
+ assert.match(app.view,/kein Nachweis, dass diese Kampagne seitdem vollständig instrumentiert war/);
+ app.navigate('#/facebook/ad/PIL-PA-01'); assert.match(app.view,/data-diy-signal="studio_started"><b>2<\/b>/); assert.doesNotMatch(app.view,/data-diy-signal="[^"]+"><b>99/);
+ app.select('campaign','original'); assert.match(app.view,/data-diy-signal="studio_started"><b>99<\/b>/);
+ assert.deepEqual(fixture,before);
+});
+
+test('Traffic link view uses only its five exact identities and preserves its own failed check time', async()=>{
+ const fixture=withMetrics(), at=new Date().toISOString(), old='2026-10-25T08:00:00.000Z';
+ fixture.sources.link_audit=auditSource();
+ fixture.sources.link_audit_traffic=auditSource({checked_count:5,request_count:5,ads:TRAFFIC_ADS.map(ad=>({...auditSource().ads[0],ad_id:ad.ad_id,code:ad.code,checked_at:at,attempted_at:at}))});
+ const app=await renderFixture(fixture,'#/tracking/links'); app.select('campaign','traffic');
+ assert.match(app.view,/5 von 5 Anzeigen/); assert.equal((app.view.match(/Kernlink &amp; UTM geprüft/g)||[]).length,5);
+ await app.copy('PIL-PA-01'); const url=new URL(app.clipboard.at(-1));
+ assert.equal(url.searchParams.get('ref'),`meta-pilates-de-${TRAFFIC.adset}-pil-pa-01`);
+ assert.equal(url.searchParams.getAll('ref').length,1); assert.equal(url.searchParams.get('skin'),'pilates');
+ assert.equal(url.searchParams.get('utm_campaign'),'pilates_de_inhaber_linkklicks_20261024');
+ assert.equal(url.searchParams.get('ad_id'),'{{ad.id}}');
+ const count=app.clipboard.length; await app.copy('PIL-PR-01'); assert.equal(app.clipboard.length,count);
+ const source=fixture.sources.link_audit_traffic; source.status='partial'; source.complete=false; source.checked_count=4; source.error='LINK_AUDIT_PARTIAL_FAILURE';
+ source.ads[0].status='read_error'; source.ads[0].checked_at=old; source.ads[0].error='META_PERMISSION_REQUIRED';
+ await app.reload(fixture); assert.match(app.view,/4 von 5 Anzeigen/); assert.match(app.view,/25\. Okt\., 09:00/);
+ const first=app.view.match(/<tbody>(<tr>[\s\S]*?<\/tr>)/)[1]; assert.match(first,/Abruf fehlgeschlagen/); assert.doesNotMatch(first,/Kernlink &amp; UTM geprüft/);
+ app.select('campaign','original'); assert.match(app.view,/13 von 13 Anzeigen/);
+});
+
+test('historical login errors describe the failed attempt without asserting a current profile lockout', async()=>{
+ const fixture=withMetrics(); fixture.sources.search_console=gscFixture(); fixture.sources.search_console.status='error'; fixture.sources.search_console.error='GSC_LOGIN_REQUIRED';
+ fixture.sources.website_events.status='error'; fixture.sources.website_events.error='META_LOGIN_REQUIRED'; fixture.sources.website_events.source_code='events_manager_ui';
+ const app=await renderFixture(fixture,'#/tracking');
+ assert.match(app.view,/letzte Search-Console-Abruf meldete eine fehlende Anmeldung/);
+ assert.match(app.view,/letzte Meta-Abruf meldete eine fehlende Anmeldung/);
+ assert.match(app.view,/aktuelle Zugriff ist damit nicht neu geprüft/);
+ assert.match(app.view,/Letzter bestätigter Events-Manager-Stand; neuer Abruf fehlgeschlagen/);
+ assert.doesNotMatch(app.view,/Search Console muss erneut angemeldet werden|Der lesende Meta-Zugang muss erneuert werden|Aus Events Manager gelesen · Eingänge/);
 });
 
 import {validateSnapshot, mergeAnalytics, ANALYTICS_PROJECTS} from '../api/data.js';

@@ -6,11 +6,11 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-28T08:20:45.402Z",
-  "collected_at": "2026-10-28T08:20:45.402Z",
+  "snapshot_id": "2026-10-28T08:30:00.000Z",
+  "collected_at": "2026-10-28T08:55:53.523Z",
   "sources": {
     "meta": {
-      "observed_at": "2026-10-28T08:20:02.361Z",
+      "observed_at": "2026-10-28T08:55:53.523Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -555,10 +555,9 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-10-28T08:20:02.361Z",
+      "attempted_at": "2026-10-28T08:55:53.523Z",
       "error": null,
-      "complete_test_window": true,
-      "note": "Bestehender lesender Meta-API-Abruf am 28.10.2026 um 09:20:02 Berlin. Der zusätzliche Ads-Manager-/CSV-/Konfigurationsabgleich im Browser scheiterte am fehlenden Facebook-Login. Keine aktuellen UI-Diagnosen oder heute neu gelesenen Traffic-UTMs belegt. Fehlende API-Zeilen bleiben unbekannt; keine Studio-Qualifizierung aus Meta-Signalen ableiten."
+      "complete_test_window": true
     },
     "website_events": {
       "status": "error",
@@ -628,8 +627,8 @@
     },
     "analytics": {
       "status": "connected",
-      "observed_at": "2026-10-28T08:20:02.361Z",
-      "attempted_at": "2026-10-28T08:20:02.361Z",
+      "observed_at": "2026-10-28T08:55:53.523Z",
+      "attempted_at": "2026-10-28T08:55:53.523Z",
       "error": null,
       "sites": [
         {
@@ -637,8 +636,8 @@
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-28T08:20:02.361Z",
-          "attempted_at": "2026-10-28T08:20:02.361Z",
+          "observed_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -688,8 +687,8 @@
           "label": "Projekt limitless · start.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-10-28T08:20:02.361Z",
-          "attempted_at": "2026-10-28T08:20:02.361Z",
+          "observed_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -786,8 +785,8 @@
       "timezone": "UTC",
       "collection_started_at": "2026-10-26T02:30:39Z",
       "status": "awaiting_events",
-      "observed_at": "2026-10-28T08:07:25.783Z",
-      "attempted_at": "2026-10-28T08:07:25.783Z",
+      "observed_at": "2026-10-28T08:55:53.523Z",
+      "attempted_at": "2026-10-28T08:55:53.523Z",
       "period": {
         "from": "2026-10-26",
         "to": "2026-10-28"
@@ -798,8 +797,8 @@
     "link_audit": {
       "source_code": "meta_ad_destination_checks",
       "status": "connected",
-      "observed_at": "2026-10-28T08:07:25.783Z",
-      "attempted_at": "2026-10-28T08:07:25.783Z",
+      "observed_at": "2026-10-28T08:55:53.523Z",
+      "attempted_at": "2026-10-28T08:55:53.523Z",
       "complete": true,
       "checked_count": 13,
       "request_count": 13,
@@ -809,8 +808,8 @@
           "ad_id": "120275421779180555",
           "code": "PIL-PA-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -874,8 +873,8 @@
           "ad_id": "120275422266100555",
           "code": "PIL-PA-02",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -906,8 +905,8 @@
           "ad_id": "120275421929330555",
           "code": "PIL-PA-03",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -938,8 +937,8 @@
           "ad_id": "120275422266130555",
           "code": "PIL-PA-04",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1003,8 +1002,8 @@
           "ad_id": "120275421929340555",
           "code": "PIL-PR-01",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1035,8 +1034,8 @@
           "ad_id": "120275422266170555",
           "code": "PIL-PR-02",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1067,8 +1066,8 @@
           "ad_id": "120275422266160555",
           "code": "PIL-PR-03",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1099,8 +1098,8 @@
           "ad_id": "120275422266150555",
           "code": "PIL-PR-04",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1131,8 +1130,8 @@
           "ad_id": "120275422266110555",
           "code": "PIL-SA-01",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1163,8 +1162,8 @@
           "ad_id": "120275422266120555",
           "code": "PIL-SA-02",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1228,8 +1227,8 @@
           "ad_id": "120275422266140555",
           "code": "PIL-SA-03",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1260,8 +1259,8 @@
           "ad_id": "120275421929310555",
           "code": "PIL-SA-04",
           "status": "valid",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1292,8 +1291,8 @@
           "ad_id": "120275421929320555",
           "code": "PIL-VID-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-10-28T08:07:25.783Z",
-          "attempted_at": "2026-10-28T08:07:25.783Z",
+          "checked_at": "2026-10-28T08:55:53.523Z",
+          "attempted_at": "2026-10-28T08:55:53.523Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1358,7 +1357,7 @@
     "meta_traffic": {
       "campaign": "120275454337270555",
       "adset": "120275454337280555",
-      "observed_at": "2026-10-28T08:20:02.361Z",
+      "observed_at": "2026-10-28T08:55:53.523Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -1394,9 +1393,9 @@
         },
         {
           "date": "2026-10-28",
-          "spend": 6.03,
-          "impressions": 1284,
-          "reach": 1058,
+          "spend": 6.34,
+          "impressions": 1403,
+          "reach": 1131,
           "link_clicks": 27,
           "landing_page_views": 22,
           "studio_tests": null,
@@ -1539,9 +1538,9 @@
         {
           "date": "2026-10-28",
           "code": "PIL-PA-01",
-          "spend": 3.53,
-          "impressions": 831,
-          "reach": 709,
+          "spend": 3.65,
+          "impressions": 890,
+          "reach": 741,
           "link_clicks": 13,
           "landing_page_views": 11,
           "studio_tests": null,
@@ -1552,9 +1551,9 @@
         {
           "date": "2026-10-28",
           "code": "PIL-PA-04",
-          "spend": 0.31,
-          "impressions": 64,
-          "reach": 59,
+          "spend": 0.33,
+          "impressions": 70,
+          "reach": 64,
           "link_clicks": 1,
           "landing_page_views": 1,
           "studio_tests": null,
@@ -1565,9 +1564,9 @@
         {
           "date": "2026-10-28",
           "code": "PIL-LM-01",
-          "spend": 0.96,
-          "impressions": 216,
-          "reach": 183,
+          "spend": 1.08,
+          "impressions": 250,
+          "reach": 217,
           "link_clicks": 7,
           "landing_page_views": 6,
           "studio_tests": null,
@@ -1579,8 +1578,8 @@
           "date": "2026-10-28",
           "code": "PIL-SA-02",
           "spend": 0.06,
-          "impressions": 35,
-          "reach": 20,
+          "impressions": 40,
+          "reach": 22,
           "link_clicks": 1,
           "landing_page_views": 1,
           "studio_tests": null,
@@ -1591,9 +1590,9 @@
         {
           "date": "2026-10-28",
           "code": "PIL-VID-01",
-          "spend": 1.17,
-          "impressions": 138,
-          "reach": 125,
+          "spend": 1.22,
+          "impressions": 153,
+          "reach": 141,
           "link_clicks": 5,
           "landing_page_views": 3,
           "studio_tests": null,
@@ -1630,10 +1629,9 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-10-28T08:20:02.361Z",
+      "attempted_at": "2026-10-28T08:55:53.523Z",
       "error": null,
-      "complete_test_window": false,
-      "note": "Bestehender lesender Meta-API-Abruf am 28.10.2026 um 09:20:02 Berlin. Der zusätzliche Ads-Manager-/CSV-/Konfigurationsabgleich im Browser scheiterte am fehlenden Facebook-Login. Keine aktuellen UI-Diagnosen oder heute neu gelesenen Traffic-UTMs belegt. Fehlende API-Zeilen bleiben unbekannt; keine Studio-Qualifizierung aus Meta-Signalen ableiten. Das Durchschnittsbudget 20 EUR/Tag stammt aus demselben API-Abruf des zugeordneten Adsets. Kein harter Tagesdeckel. Die Traffic-Zuordnung im eigenen DIY-Funnel bleibt unbestätigt; CRM-/LAL-Entwürfe sind ausgeschlossen."
+      "complete_test_window": false
     }
   },
   "verification": {

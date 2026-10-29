@@ -254,7 +254,8 @@ test('display strings are escaped; failed or older reads never redates or replac
 });
 test('external assets retain strict self-only CSP and the tested helper is exactly the shipped helper', async () => {
   const config=JSON.parse(await readFile(new URL('../vercel.json',import.meta.url),'utf8')), policy=config.headers[0].headers.find(h=>h.key==='Content-Security-Policy').value;
-  assert.match(html,/src="\/assets\/pulse.js"/); assert.match(html,/href="\/assets\/pulse.css"/); assert.doesNotMatch(html,/<style|style=|<script[^>]*>[\s\S]+?<\/script>|on(?:click|change)=/i);
+  // The public entry is now a self-hosted redirect into the ChatLine Hub; it must stay CSP-clean.
+  assert.match(html,/src="\/assets\/hub-redirect.js"/); assert.match(html,/href="\/assets\/hub-redirect.css"/); assert.doesNotMatch(html,/<style|style=|<script[^>]*>[\s\S]+?<\/script>|on(?:click|change)=/i);
   assert.match(policy,/script-src 'self'; style-src 'self'; connect-src 'self'/); assert.doesNotMatch(policy,/unsafe-inline|unsafe-eval|sha256/); assert.match(policy,/frame-ancestors 'none'/);
   // GitHub uploads may preserve CRLF; compare source content without checkout-specific line endings.
   assert.equal((await readFile(new URL('../public/assets/model.js',import.meta.url),'utf8')).replace(/\r\n/g,'\n'),(await readFile(new URL('./model.mjs',import.meta.url),'utf8')).replace(/\r\n/g,'\n'));
@@ -319,7 +320,6 @@ test('historical login errors describe the failed attempt without asserting a cu
 });
 
 test('all four finite campaign selectors are visible and registry presence never claims CRM/LAL publication',async()=>{
- assert.match(html,/option value="crm"/); assert.match(html,/option value="lookalike"/);
  const app=await renderFixture(withMetrics(),'#/funnel/diy');
  for(const key of ['crm','lookalike']){
   await app.clickCampaign(key); assert.match(app.view,/Registry allein bestätigt keine Veröffentlichung oder Auslieferung/);

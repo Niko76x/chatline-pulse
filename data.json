@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-29T17:00:00.000Z",
-  "collected_at": "2026-10-29T17:00:52.533Z",
+  "snapshot_id": "2026-10-29T17:05:37.625Z",
+  "collected_at": "2026-10-29T17:05:37.625Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-29T17:00:52.533Z",
@@ -561,8 +561,8 @@
     },
     "website_events": {
       "status": "connected",
-      "observed_at": "2026-10-29T08:06:56.586Z",
-      "attempted_at": "2026-10-29T08:06:56.586Z",
+      "observed_at": "2026-10-29T17:02:15.336Z",
+      "attempted_at": "2026-10-29T17:02:15.336Z",
       "error": null,
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
@@ -570,9 +570,9 @@
         "from": "2026-10-22",
         "to": "2026-10-29"
       },
-      "note": "Frischer UI-Read 22.–29.10.2026, Europe/Berlin; heute unvollständig. Separater heutiger Read um 09:03 Berlin: keine Aktivität und keine Ereigniszeilen sichtbar. Daraus werden keine abgeschlossenen Nulltage oder Null-Conversions erzeugt. Eingänge vor Verarbeitung, keine eindeutigen Kunden und keine Kampagnenzuordnung. Lead-EMQ 6,2/10. Relative letzte Empfangszeiten wie beim Abruf angezeigt.",
-      "diagnostics": "Separat am 2026-10-29T08:05:30.380Z gelesen: keine aktiven Fehler; die UI bezieht sich auf in den letzten drei Tagen erkannte Fehler.",
-      "deduplication": "Lead-Detail am 2026-10-29T08:06:56.586Z: Still Parsing Your Data. Vollständige Deduplizierung weiterhin nicht bestätigt.",
+      "note": "Frischer UI-Read 22.–29.10.2026, Europe/Berlin; heute unvollständig. Separater heutiger Read um 17:59 Berlin: keine Aktivität und keine Ereigniszeilen sichtbar. Daraus werden keine abgeschlossenen Nulltage oder Null-Conversions erzeugt. Eingänge vor Verarbeitung, keine eindeutigen Kunden und keine Kampagnenzuordnung. Lead-EMQ 6,2/10. Relative letzte Empfangszeiten wie beim Abruf angezeigt.",
+      "diagnostics": "Separat am 2026-10-29T17:00:40.512Z gelesen: keine aktiven Fehler; die UI bezieht sich auf in den letzten drei Tagen erkannte Fehler.",
+      "deduplication": "Lead-Detail am 2026-10-29T17:02:15.336Z: Still Parsing Your Data. Vollständige Deduplizierung weiterhin nicht bestätigt.",
       "events": [
         {
           "key": "PageView",
@@ -586,7 +586,7 @@
           "label": "Lead-Signale",
           "count": 18,
           "connection_method": "Browser • Server",
-          "last_received": "1 Tag vor Abruf",
+          "last_received": "2 Tage vor Abruf",
           "emq": 6.2
         },
         {
@@ -594,7 +594,7 @@
           "label": "Testanruf angefordert",
           "count": 6,
           "connection_method": "Browser • Server",
-          "last_received": "6 Tage vor Abruf",
+          "last_received": "7 Tage vor Abruf",
           "emq": 0
         },
         {
@@ -602,7 +602,7 @@
           "label": "Checkout angelegt",
           "count": 3,
           "connection_method": "Browser • Server",
-          "last_received": "6 Tage vor Abruf",
+          "last_received": "7 Tage vor Abruf",
           "emq": 0
         },
         {
@@ -617,7 +617,7 @@
           "label": "Selbsttest-Klick",
           "count": 4,
           "connection_method": "Browser",
-          "last_received": "1 Tag vor Abruf"
+          "last_received": "2 Tage vor Abruf"
         },
         {
           "key": "CtaClick",
@@ -754,8 +754,8 @@
       "site": "chatline.app",
       "label": "chatline.app + start.chatline.app",
       "status": "connected",
-      "observed_at": "2026-10-29T08:07:49.141Z",
-      "attempted_at": "2026-10-29T08:07:49.141Z",
+      "observed_at": "2026-10-29T17:02:59.972Z",
+      "attempted_at": "2026-10-29T17:02:59.972Z",
       "error": null,
       "timezone": "America/Los_Angeles",
       "period": {
@@ -796,10 +796,10 @@
         {
           "date": "2026-10-28",
           "clicks": 0,
-          "impressions": 2
+          "impressions": 3
         }
       ],
-      "note": "Frischer manueller UI-CSV-Export, Domain-Property chatline.app, Web (text-based), URL-Regex nur chatline.app und start.chatline.app. Verwertbare Messwerte 22.–28.10. Pacific Time. Jüngster Tag 28.10. vorläufig: 0 Suchklicks und 2 Impressionen bei ausgefüllten CTR-/Positionsfeldern. 29.10. im UI noch nicht auswählbar, kein Nulltag ergänzt. Google beim Abruf: zuletzt vor 3,5 Stunden aktualisiert. Gefilterte Summen können unvollständig sein. Keine Suchbegriffe oder einzelnen URLs veröffentlicht."
+      "note": "Frischer manueller UI-CSV-Export, Domain-Property chatline.app, Web (text-based), URL-Regex nur chatline.app und start.chatline.app. Gewählt 22.–29.10.; verwertbare Messwerte 22.–28.10. Pacific Time. Jüngster verwertbarer Tag 28.10. vorläufig: 0 Suchklicks und 3 Impressionen. 29.10. enthält 0/0 bei leeren CTR-/Positionsfeldern und wird nicht als abgeschlossener Nulltag übernommen. Google beim Abruf: zuletzt vor 5 Stunden aktualisiert. Gefilterte Summen können unvollständig sein. Keine Suchbegriffe oder einzelnen URLs veröffentlicht."
     },
     "diy_funnel": {
       "source_code": "vercel_diy_events_production",

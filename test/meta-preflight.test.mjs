@@ -140,6 +140,21 @@ test('optional valid Dataset uses a bounded UTC window with missing event counts
   assert.equal(result.dataset.enable_flag_changed, false);
   assert.equal(result.dataset.deduplication_verified, false);
 });
+test('Dataset failure reasons are fixed categories without private messages or assumptions about object access', () => {
+  const privateDetail = 'PRIVATE_ASSET_DETAIL_DO_NOT_COPY';
+  for (const [message, category] of [
+    [`Unsupported get request. Object ${privateDetail} does not exist or cannot be loaded due to missing permissions`, 'object_unavailable'],
+    [`Tried accessing nonexisting field ${privateDetail}`, 'field_not_supported'],
+    [`This operation requires ads_read permission for ${privateDetail}`, 'permission_required'],
+    [`Invalid parameter ${privateDetail}`, 'parameter_rejected'],
+  ]) {
+    const result = safeDatasetGraphError({ code: 100, type: 'OAuthException', message });
+    assert.equal(result.reason_category, category);
+    assert.equal(JSON.stringify(result).includes(privateDetail), false);
+    assert.deepEqual(safeDatasetGraphError(result), result);
+  }
+  assert.equal(Object.hasOwn(safeDatasetGraphError({ message: privateDetail, reason_category: privateDetail }), 'reason_category'), false);
+});
 test('workflow is manual/read-only and does not invoke the existing publisher or expose token to tests', async () => {
   const yaml = await readFile(new URL('../.github/workflows/meta-preflight.yml', import.meta.url), 'utf8');
   assert.match(yaml, /workflow_dispatch:/);

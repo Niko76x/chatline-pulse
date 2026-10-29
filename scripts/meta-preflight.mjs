@@ -26,15 +26,29 @@ export const safeError = error => SAFE_ERRORS.has(error?.code || error?.message)
   ? error.code || error.message : 'PREFLIGHT_FAILED';
 const GRAPH_TYPES = Object.freeze({ OAuthException: 'oauth', GraphMethodException: 'graph_method', GraphAPIException: 'graph_api', RateLimitException: 'rate_limit' });
 const GRAPH_CATEGORIES = new Set(['oauth', 'graph_method', 'graph_api', 'rate_limit', 'other']);
+const DATASET_REASONS = new Set(['object_unavailable', 'permission_required', 'field_not_supported', 'parameter_rejected']);
+function datasetReason(error) {
+  if (DATASET_REASONS.has(error?.reason_category)) return error.reason_category;
+  const message = typeof error?.message === 'string' ? error.message.slice(0, 4096) : '';
+  // Object-not-found can also mean inaccessible. Never turn this ambiguous
+  // Graph response into a claim that the token needs wider permissions.
+  if (/unsupported get request/i.test(message)) return 'object_unavailable';
+  if (/tried accessing nonexisting field|nonexisting field|unknown field/i.test(message)) return 'field_not_supported';
+  if (/requires? .*permission|must have .*permission|does not have .*permission|permissions? (?:are |is )?required/i.test(message)) return 'permission_required';
+  if (/invalid parameter|aggregation must be|param .* must be|parameter .* is not supported/i.test(message)) return 'parameter_rejected';
+  return null;
+}
 const graphCode = value => Number.isSafeInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
 // Only fixed numeric/type metadata leaves the optional Dataset error path.
 // Never return messages, trace IDs, arbitrary type strings or response bodies.
 export function safeDatasetGraphError(error) {
+  const reason = datasetReason(error);
   return {
     code: graphCode(error?.code),
     subcode: graphCode(error?.error_subcode ?? error?.subcode),
     type_category: Object.hasOwn(GRAPH_TYPES, error?.type) ? GRAPH_TYPES[error.type]
       : GRAPH_CATEGORIES.has(error?.type_category) ? error.type_category : 'other',
+    ...(reason ? { reason_category: reason } : {}),
   };
 }
 const metrics = row => Object.fromEntries(METRICS.map(key => [key, row?.[key] ?? null]));

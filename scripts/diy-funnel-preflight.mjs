@@ -162,10 +162,89 @@ export async function runDiyPreflight({ token, fetcher = fetch, now = new Date()
   return report;
 }
 
+// Manual volume diagnosis only: fixed project/four events, grouped by campaign.
+// The historical date boundary is not a change to runtime collection_started_at.
+const VOLUME_SINCE = Date.parse('2026-10-26T00:00:00.000Z');
+const VOLUME_CAMPAIGNS = Object.freeze(['original','traffic','crm','lookalike'].map(key =>
+  Object.freeze({ key, campaign: trackingContract(key).campaign })));
+const volumeFilter = event => `environment eq 'production' and eventName eq '${event}'`;
+const exact = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) &&
+  Object.keys(value).every(key => keys.includes(key));
+function inspectVolume(body, { window, event }) {
+  const empty = { rows: [], redacted_unmapped_groups: 0, redacted_unmapped_event_count: 0,
+    event_reception_proven: false, approved_campaign_reception_proven: false };
+  const invalid = error => ({ ...empty, status: 'error', error });
+  if (body?.paging || body?.pagination || body?.nextPage) return invalid('PREFLIGHT_INCOMPLETE_RESPONSE');
+  if (!exact(body, ['version','query','data']) || body.version !== 1 || !Array.isArray(body.data) || body.data.length > 32)
+    return invalid('PREFLIGHT_RESPONSE_SHAPE_UNVALIDATED');
+  const query = body.query, until = boundaryMilliseconds(query?.until);
+  if (!exact(query, ['since','until','filter','groupBy','limit']) || boundaryMilliseconds(query.since) !== window.since ||
+      ![window.until, window.rounded_until].includes(until) || query.filter !== volumeFilter(event) ||
+      JSON.stringify(query.groupBy) !== '["eventData/campaign_id"]' || ![32,'32'].includes(query.limit))
+    return invalid('PREFLIGHT_QUERY_MISMATCH');
+  const result = { ...empty, rows: [], status: body.data.length ? 'aggregate_read_validated' : 'awaiting_events', error: null };
+  const seen = new Set();
+  for (const row of body.data) {
+    if (!exact(row, ['eventData','count','visitors','projectId','environment','eventName','timestamp']) ||
+        typeof row.eventData !== 'string' || !row.eventData || row.eventData.length > 255 || seen.has(row.eventData) ||
+        row.projectId !== undefined && row.projectId !== PROJECT || row.environment !== undefined && row.environment !== 'production' ||
+        row.eventName !== undefined && row.eventName !== event) return invalid('PREFLIGHT_SCOPE_MISMATCH');
+    if (!safeCount(row.count) || !safeCount(row.visitors) || row.visitors > row.count)
+      return invalid('PREFLIGHT_METRIC_SHAPE_UNVALIDATED');
+    const timestamp = row.timestamp === undefined ? null : boundaryMilliseconds(row.timestamp);
+    if (row.timestamp !== undefined && (timestamp === null || timestamp < window.since || timestamp > until))
+      return invalid('PREFLIGHT_PERIOD_MISMATCH');
+    seen.add(row.eventData);
+    const approved = VOLUME_CAMPAIGNS.find(entry => entry.campaign === row.eventData);
+    if (approved) result.rows.push({ campaign_key: approved.key, campaign_id: approved.campaign, count: row.count, visitors: row.visitors });
+    else {
+      result.redacted_unmapped_groups++;
+      result.redacted_unmapped_event_count += row.count;
+      if (!safeCount(result.redacted_unmapped_event_count)) return invalid('PREFLIGHT_METRIC_SHAPE_UNVALIDATED');
+    }
+    result.event_reception_proven ||= row.count > 0;
+    result.approved_campaign_reception_proven ||= Boolean(approved && row.count > 0);
+  }
+  return result;
+}
+
+/** Exactly four read-only GETs; never returns unknown campaign IDs or values. */
+export async function runDiyVolumePreflight({ token, fetcher = fetch, now = new Date() } = {}) {
+  const window = { ...requestedWindow(now), since: VOLUME_SINCE };
+  const report = { status: 'not_configured', checked_at: now.toISOString(), timezone: 'UTC',
+    diagnostic: 'fixed_project_four_event_campaign_volume',
+    requested_window: { since_utc: new Date(window.since).toISOString(), until_utc: now.toISOString(),
+      derived_hour_boundary_utc: new Date(window.rounded_until).toISOString() },
+    scope: { site: 'start.chatline.app', project: PROJECT, team: TEAM, approved_campaigns: VOLUME_CAMPAIGNS },
+    snapshot_written: false, published: false, events_generated: false, run_join_performed: false, results: [] };
+  if (now.getTime() < VOLUME_SINCE) return { ...report, status: 'failed', error: 'PREFLIGHT_COLLECTION_NOT_STARTED' };
+  if (typeof token !== 'string' || !token.trim() || token.length > 4096) return { ...report, error: 'ANALYTICS_NOT_CONFIGURED' };
+  for (const event of EVENTS) {
+    const url = new URL(ENDPOINT), filter = volumeFilter(event);
+    for (const [key,value] of Object.entries({ projectId: PROJECT, teamId: TEAM, since: window.since, until: window.until,
+      by: 'eventData/campaign_id', limit: '32', filter })) url.searchParams.set(key,value);
+    const request = { event, since: window.since, until: window.until, by: 'eventData/campaign_id', limit: 32, filter };
+    let response;
+    try { response = await fetcher(url, { method: 'GET', headers: { Authorization: `Bearer ${token.trim()}` }, redirect: 'error', signal: AbortSignal.timeout(12000) }); }
+    catch { report.results.push({ request, status: 'error', error: 'ANALYTICS_UNAVAILABLE', http_status: null }); continue; }
+    const http_status = Number.isInteger(response?.status) && response.status >= 100 && response.status <= 599 ? response.status : null;
+    if (!response.ok) { report.results.push({ request, status: 'error', error: httpError(http_status), http_status }); continue; }
+    let body;
+    try { body = await response.json(); }
+    catch { report.results.push({ request, status: 'error', error: 'ANALYTICS_INVALID_JSON', http_status }); continue; }
+    report.results.push({ request, http_status, ...inspectVolume(body, { window,event }) });
+  }
+  report.status = report.results.some(row => row.status === 'error') ? 'failed'
+    : report.results.some(row => row.rows.length || row.redacted_unmapped_groups) ? 'aggregate_reads_validated' : 'awaiting_events';
+  report.event_reception_proven = report.results.some(row => row.event_reception_proven);
+  report.approved_campaign_reception_proven = report.results.some(row => row.approved_campaign_reception_proven);
+  return report;
+}
+
 async function main() {
   if (process.env.GITHUB_REPOSITORY !== 'Niko76x/chatline-pulse' || process.env.GITHUB_REF !== 'refs/heads/main' || process.env.GITHUB_EVENT_NAME !== 'workflow_dispatch')
     throw new Error('PREFLIGHT_EXECUTION_NOT_ALLOWED');
-  const result = await runDiyPreflight({ token: process.env.VERCEL_ANALYTICS_LIMITLESS_TOKEN });
+  const result = await runDiyVolumePreflight({ token: process.env.VERCEL_ANALYTICS_LIMITLESS_TOKEN });
   process.stdout.write(`${JSON.stringify(result)}\n`);
   if (result.status === 'failed' || result.status === 'not_configured') process.exitCode = 1;
 }

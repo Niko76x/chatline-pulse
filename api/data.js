@@ -168,8 +168,17 @@ export async function collectAds(read, now = new Date(), scope = SCOPE) {
       assertScope(row, { scope, ids });
       if (row.status !== 'PAUSED' || row.effective_status === 'ACTIVE') throw new ReadError('META_RETIRED_AD_ACTIVE');
       retiredExcluded = true;
-    } else { assertScope(row, { ad: true, scope, ids }); finalStatuses.push({ code: ids[row.id], status: row.status, delivery: row.effective_status }); }
+    } else {
+      assertScope(row, { ad: true, scope, ids });
+      if (finalStatuses.some(status => status.code === ids[row.id])) throw new ReadError('META_INVALID_RESPONSE');
+      finalStatuses.push({ code: ids[row.id], status: row.status, delivery: row.effective_status });
+    }
   }
+  // The edge can omit a previously reviewed ad. Absence does not prove that
+  // it is active, paused or deleted, and must not discard valid insight rows.
+  // Only fixed reviewed codes may be completed; unknown returned IDs still fail.
+  for (const code of Object.values(ids)) if (!finalStatuses.some(status => status.code === code))
+    finalStatuses.push({ code, status: 'UNKNOWN', delivery: 'UNKNOWN' });
   if (scope === CRM && ads.some(row => String(row.ad_id) === '120275503974780555')) throw new ReadError('META_RETIRED_AD_INSIGHTS');
   if (retiredExcluded) for (const total of totals) for (const field of ['spend', 'impressions', 'inline_link_clicks']) {
     const reported = number(total[field]); if (reported === null) continue;
@@ -718,7 +727,9 @@ export async function refreshSources(previous, { now = new Date(), slot = null, 
       (contract.scope === TRAFFIC || !cohortMetaDone(previous.sources[contract.key], { slot, now }, contract))) {
     try {
       const result = await collectAds(createMetaReader(metaOptions), now, contract.scope);
-      next.sources[contract.key] = { ...result, status: 'connected', attempted_at: now.toISOString(), error: null, complete_test_window: contract.scope === TRAFFIC ? false : metaWindowCovered(result) };
+      // Validate before replacing the previous observation. A malformed cohort
+      // must be caught here rather than abort publication of independent sources.
+      next.sources[contract.key] = validateTrafficSource({ ...result, status: 'connected', attempted_at: now.toISOString(), error: null, complete_test_window: contract.scope === TRAFFIC ? false : metaWindowCovered(result) }, contract.scope);
       next.collected_at = now.toISOString();
     } catch (error) {
       if (next.sources[contract.key] || contract.scope !== TRAFFIC) next.sources[contract.key] = { ...(next.sources[contract.key] || { campaign: contract.scope.campaign, adset: contract.scope.adset, timezone: 'Europe/Berlin', observed_at: null, period: null, daily: [], ads_daily: [], statuses: [], complete_test_window: false }), status: 'error', attempted_at: now.toISOString(), error: contract.scope === TRAFFIC ? 'META_READ_FAILED' : (['META_LOGIN_REQUIRED','META_PERMISSION_REQUIRED','DATASET_MISMATCH','SCOPE_MISMATCH','ACCOUNT_CONFIG_MISMATCH','META_INVALID_PERIOD','META_RETIRED_AD_ACTIVE','META_RETIRED_AD_INSIGHTS','META_RETIRED_TOTALS_UNVERIFIED'].includes(error?.code || error?.message) ? error.code || error.message : 'META_READ_FAILED') };

@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-10-31T08:00:00.000Z",
-  "collected_at": "2026-10-31T08:00:46.320Z",
+  "snapshot_id": "2026-10-31T08:06:58.468Z",
+  "collected_at": "2026-10-31T08:06:58.468Z",
   "sources": {
     "meta": {
       "observed_at": "2026-10-31T08:00:46.320Z",
@@ -301,32 +301,32 @@
     },
     "website_events": {
       "status": "connected",
-      "observed_at": "2026-10-30T17:05:09.144Z",
-      "attempted_at": "2026-10-30T17:05:09.144Z",
+      "observed_at": "2026-10-31T08:06:38.326Z",
+      "attempted_at": "2026-10-31T08:06:38.326Z",
       "error": null,
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
-        "to": "2026-10-30"
+        "to": "2026-10-31"
       },
-      "note": "Frischer UI-Read 22.–30.10.2026, Europe/Berlin; heute unvollständig. Separater heutiger Read am 2026-10-30T17:03:36.846Z: 13 PageView Browser und 4 Lead-Eingänge Browser/Server mit Lead-EMQ 6,1/10. Andere heute nicht gezeigte Ereigniszeilen bleiben unbekannt. Gesamtfenster: Eingänge vor Verarbeitung, keine eindeutigen Kunden und keine Kampagnenzuordnung. Relative letzte Empfangszeiten wie beim Abruf angezeigt.",
-      "diagnostics": "Separat am 2026-10-30T17:04:31.386Z gelesen: keine aktiven Fehler; die UI bezieht sich auf in den letzten drei Tagen erkannte Fehler.",
-      "deduplication": "Lead-Detail am 2026-10-30T17:05:09.144Z: Still Parsing Your Data. Vollständige Deduplizierung weiterhin nicht bestätigt.",
+      "note": "Frischer UI-Read 22.–31.10.2026, Europe/Berlin; heute unvollständig. Separater heutiger Read am 2026-10-31T08:05:19.302Z: keine Aktivität und keine Ereigniszeilen sichtbar. Daraus werden keine abgeschlossenen Nulltage oder Null-Conversions erzeugt. Eingänge vor Verarbeitung, keine eindeutigen Kunden und keine Kampagnenzuordnung. Lead-EMQ 6,1/10. Relative letzte Empfangszeiten wie beim Abruf angezeigt.",
+      "diagnostics": "Separat am 2026-10-31T08:05:55.358Z gelesen: keine aktiven Fehler; die UI bezieht sich auf in den letzten drei Tagen erkannte Fehler.",
+      "deduplication": "Lead-Detail am 2026-10-31T08:06:38.326Z: Still Parsing Your Data. Vollständige Deduplizierung weiterhin nicht bestätigt.",
       "events": [
         {
           "key": "PageView",
           "label": "Seitenereignis",
           "count": 121,
           "connection_method": "Browser",
-          "last_received": "2 Stunden vor Abruf"
+          "last_received": "17 Stunden vor Abruf"
         },
         {
           "key": "Lead",
           "label": "Lead-Signale",
           "count": 22,
           "connection_method": "Browser • Server",
-          "last_received": "7 Stunden vor Abruf",
+          "last_received": "22 Stunden vor Abruf",
           "emq": 6.1
         },
         {
@@ -364,7 +364,7 @@
           "label": "CTA-Klick",
           "count": 1,
           "connection_method": "Browser",
-          "last_received": "4 Tage vor Abruf"
+          "last_received": "5 Tage vor Abruf"
         }
       ]
     },
@@ -515,7 +515,7 @@
       "label": "chatline.app + start.chatline.app",
       "status": "error",
       "observed_at": "2026-10-30T08:06:35.170Z",
-      "attempted_at": "2026-10-30T17:03:24.414Z",
+      "attempted_at": "2026-10-31T08:05:14.216Z",
       "error": "GSC_LOGIN_REQUIRED",
       "timezone": "America/Los_Angeles",
       "period": {
@@ -564,7 +564,7 @@
           "impressions": 4
         }
       ],
-      "note": "Frischer manueller UI-CSV-Export, Domain-Property chatline.app, Web (text-based), URL-Regex nur chatline.app und start.chatline.app. Gewählt 22.–29.10.; verwertbare Messwerte 22.–29.10. Pacific Time. Jüngster verwertbarer Tag 29.10. vorläufig: 0 Suchklicks und 4 Impressionen. Der laufende 30.10. wurde nicht als Nulltag ergänzt. Google beim Abruf: zuletzt vor 4 Stunden aktualisiert. Gefilterte Summen können unvollständig sein. Keine Suchbegriffe oder einzelnen URLs veröffentlicht. Neuer UI-Abruf am 30.10. abends blockiert: Google verlangt eine erneute Anmeldung im vorhandenen Arbeitsprofil. Letzte erfolgreiche Werte, Datenperiode und Quellenzeit bewahrt."
+      "note": "Letzter erfolgreicher manueller UI-CSV-Export: Domain-Property chatline.app, Web (text-based), URL-Regex nur chatline.app und start.chatline.app. Verwertbare Messwerte 22.–29.10.2026 Pacific Time: 1 Suchklick und 47 Impressionen; jüngster Tag vorläufig 0 Klicks/4 Impressionen. Neuer UI-Abruf am 31.10. morgens weiterhin blockiert: Google verlangt eine erneute Anmeldung im vorhandenen Arbeitsprofil. Letzte erfolgreiche Werte, Datenperiode und Quellenzeit bewahrt. Gefilterte Summen können unvollständig sein; keine Suchbegriffe oder einzelnen URLs veröffentlicht."
     },
     "diy_funnel": {
       "source_code": "vercel_diy_events_production",

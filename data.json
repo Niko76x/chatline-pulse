@@ -6,11 +6,11 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-11-01T08:06:53.334Z",
-  "collected_at": "2026-11-01T08:06:53.334Z",
+  "snapshot_id": "2026-11-01T08:00:00.000Z",
+  "collected_at": "2026-11-01T08:12:30.917Z",
   "sources": {
     "meta": {
-      "observed_at": "2026-11-01T08:00:43.452Z",
+      "observed_at": "2026-11-01T08:12:30.917Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -295,7 +295,7 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-11-01T08:00:43.452Z",
+      "attempted_at": "2026-11-01T08:12:30.917Z",
       "error": null,
       "complete_test_window": true
     },
@@ -370,8 +370,8 @@
     },
     "analytics": {
       "status": "connected",
-      "observed_at": "2026-11-01T08:00:43.452Z",
-      "attempted_at": "2026-11-01T08:00:43.452Z",
+      "observed_at": "2026-11-01T08:12:30.917Z",
+      "attempted_at": "2026-11-01T08:12:30.917Z",
       "error": null,
       "sites": [
         {
@@ -379,8 +379,8 @@
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-11-01T08:00:43.452Z",
-          "attempted_at": "2026-11-01T08:00:43.452Z",
+          "observed_at": "2026-11-01T08:12:30.917Z",
+          "attempted_at": "2026-11-01T08:12:30.917Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -450,8 +450,8 @@
           "label": "Projekt limitless · start.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-11-01T08:00:43.452Z",
-          "attempted_at": "2026-11-01T08:00:43.452Z",
+          "observed_at": "2026-11-01T08:12:30.917Z",
+          "attempted_at": "2026-11-01T08:12:30.917Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -1155,7 +1155,7 @@
     "meta_traffic": {
       "campaign": "120275454337270555",
       "adset": "120275454337280555",
-      "observed_at": "2026-11-01T08:00:43.452Z",
+      "observed_at": "2026-11-01T08:12:30.917Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -1504,7 +1504,7 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-11-01T08:00:43.452Z",
+      "attempted_at": "2026-11-01T08:12:30.917Z",
       "error": null,
       "complete_test_window": false
     },

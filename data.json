@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-11-02T17:00:00.000Z",
-  "collected_at": "2026-11-02T17:01:00.958Z",
+  "snapshot_id": "2026-11-02T17:03:51.379Z",
+  "collected_at": "2026-11-02T17:03:51.379Z",
   "sources": {
     "meta": {
       "observed_at": "2026-11-02T17:01:00.958Z",
@@ -302,7 +302,7 @@
     "website_events": {
       "status": "error",
       "observed_at": "2026-10-31T08:06:38.326Z",
-      "attempted_at": "2026-11-02T08:00:10.570Z",
+      "attempted_at": "2026-11-02T17:01:33.002Z",
       "error": "BROWSER_PROFILE_UNAVAILABLE",
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
@@ -533,14 +533,14 @@
       "method": "csv",
       "site": "chatline.app",
       "label": "chatline.app + start.chatline.app",
-      "status": "error",
-      "observed_at": "2026-10-30T08:06:35.170Z",
-      "attempted_at": "2026-11-02T08:00:10.570Z",
-      "error": "BROWSER_PROFILE_UNAVAILABLE",
+      "status": "connected",
+      "observed_at": "2026-11-02T17:03:05.735Z",
+      "attempted_at": "2026-11-02T17:03:05.735Z",
+      "error": null,
       "timezone": "America/Los_Angeles",
       "period": {
         "from": "2026-10-22",
-        "to": "2026-10-29"
+        "to": "2026-11-02"
       },
       "daily": [
         {
@@ -581,10 +581,30 @@
         {
           "date": "2026-10-29",
           "clicks": 0,
-          "impressions": 4
+          "impressions": 5
+        },
+        {
+          "date": "2026-10-30",
+          "clicks": 0,
+          "impressions": 6
+        },
+        {
+          "date": "2026-10-31",
+          "clicks": 0,
+          "impressions": 1
+        },
+        {
+          "date": "2026-11-01",
+          "clicks": 1,
+          "impressions": 6
+        },
+        {
+          "date": "2026-11-02",
+          "clicks": 0,
+          "impressions": 1
         }
       ],
-      "note": "Letzter erfolgreicher manueller UI-CSV-Export am 2026-10-30T08:06:35.170Z: Domain-Property chatline.app, Web (text-based), URL-Regex nur chatline.app und start.chatline.app. Verwertbare Messwerte 22.–29.10.2026 Pacific Time: 1 Suchklick und 47 Impressionen; jüngster Tag vorläufig 0/4. Aktueller Versuch am 02.11. nicht möglich, da das vorhandene Arbeitsprofil nicht verbunden ist. Der letzte tatsächlich gelesene UI-Versuch verlangte eine erneute Google-Anmeldung. Letzte erfolgreiche Werte, Datenperiode und Quellenzeit bewahrt; keine Suchbegriffe oder einzelnen URLs veröffentlicht."
+      "note": "Frischer manueller UI-CSV-Export am 2026-11-02T17:03:05.735Z im vorhandenen Arbeitsprofil. Domain-Property chatline.app, Web (text-based), exakter Seitenregex nur chatline.app und start.chatline.app. Tagesaggregate 22.10.–02.11.2026 in Pacific Time: 2 Suchklicks und 62 Impressionen; jüngste Tage vorläufig, der 02.11. ist unvollständig (0 Klicks/1 Impression) und kein abgeschlossener Nulltag. UI zuletzt vor 4,5 Stunden aktualisiert. Historische Werte können revidiert werden; Filter können Teilsummen liefern. Nur Tagesaggregate, keine Suchbegriffe oder einzelnen URLs."
     },
     "diy_funnel": {
       "source_code": "vercel_diy_events_production",

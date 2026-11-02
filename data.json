@@ -6,11 +6,11 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-11-02T17:30:00.000Z",
-  "collected_at": "2026-11-02T17:30:43.561Z",
+  "snapshot_id": "2026-11-02T18:00:00.000Z",
+  "collected_at": "2026-11-02T18:00:54.662Z",
   "sources": {
     "meta": {
-      "observed_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -295,7 +295,7 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "error": null,
       "complete_test_window": true
     },
@@ -370,8 +370,8 @@
     },
     "analytics": {
       "status": "connected",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "error": null,
       "sites": [
         {
@@ -379,8 +379,8 @@
           "label": "Projekt chatline-website · chatline.app + mindbody-home.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "observed_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -455,8 +455,8 @@
           "label": "Projekt limitless · start.chatline.app",
           "source_code": "vercel_project_production",
           "status": "connected",
-          "observed_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "observed_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "error": null,
           "timezone": "UTC",
           "period": {
@@ -613,8 +613,8 @@
       "timezone": "UTC",
       "collection_started_at": "2026-10-26T02:30:39Z",
       "status": "awaiting_events",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "period": {
         "from": "2026-10-26",
         "to": "2026-11-02"
@@ -625,8 +625,8 @@
     "link_audit": {
       "source_code": "meta_ad_destination_checks",
       "status": "connected",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "complete": true,
       "checked_count": 13,
       "request_count": 13,
@@ -636,8 +636,8 @@
           "ad_id": "120275421779180555",
           "code": "PIL-PA-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -701,8 +701,8 @@
           "ad_id": "120275422266100555",
           "code": "PIL-PA-02",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -733,8 +733,8 @@
           "ad_id": "120275421929330555",
           "code": "PIL-PA-03",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -765,8 +765,8 @@
           "ad_id": "120275422266130555",
           "code": "PIL-PA-04",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -830,8 +830,8 @@
           "ad_id": "120275421929340555",
           "code": "PIL-PR-01",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -862,8 +862,8 @@
           "ad_id": "120275422266170555",
           "code": "PIL-PR-02",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -894,8 +894,8 @@
           "ad_id": "120275422266160555",
           "code": "PIL-PR-03",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -926,8 +926,8 @@
           "ad_id": "120275422266150555",
           "code": "PIL-PR-04",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -958,8 +958,8 @@
           "ad_id": "120275422266110555",
           "code": "PIL-SA-01",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -990,8 +990,8 @@
           "ad_id": "120275422266120555",
           "code": "PIL-SA-02",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1055,8 +1055,8 @@
           "ad_id": "120275422266140555",
           "code": "PIL-SA-03",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1087,8 +1087,8 @@
           "ad_id": "120275421929310555",
           "code": "PIL-SA-04",
           "status": "valid",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1119,8 +1119,8 @@
           "ad_id": "120275421929320555",
           "code": "PIL-VID-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1185,7 +1185,7 @@
     "meta_traffic": {
       "campaign": "120275454337270555",
       "adset": "120275454337280555",
-      "observed_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -1534,14 +1534,14 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "error": null,
       "complete_test_window": false
     },
     "meta_crm": {
       "campaign": "120275503974760555",
       "adset": "120275503974770555",
-      "observed_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-28",
@@ -1583,14 +1583,14 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "error": null,
       "complete_test_window": false
     },
     "meta_lookalike": {
       "campaign": "120275504052470555",
       "adset": "120275504052490555",
-      "observed_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-28",
@@ -1644,7 +1644,7 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "error": null,
       "complete_test_window": false
     },
@@ -1655,8 +1655,8 @@
       "timezone": "UTC",
       "collection_started_at": "2026-10-26T02:30:39Z",
       "status": "awaiting_events",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "period": {
         "from": "2026-10-27",
         "to": "2026-11-02"
@@ -1671,8 +1671,8 @@
       "timezone": "UTC",
       "collection_started_at": "2026-10-26T02:30:39Z",
       "status": "awaiting_events",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "period": {
         "from": "2026-10-27",
         "to": "2026-11-02"
@@ -1687,8 +1687,8 @@
       "timezone": "UTC",
       "collection_started_at": "2026-10-26T02:30:39Z",
       "status": "awaiting_events",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "period": {
         "from": "2026-10-27",
         "to": "2026-11-02"
@@ -1699,8 +1699,8 @@
     "link_audit_traffic": {
       "source_code": "meta_ad_destination_checks",
       "status": "connected",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "complete": true,
       "checked_count": 5,
       "request_count": 5,
@@ -1710,8 +1710,8 @@
           "ad_id": "120275454337290555",
           "code": "PIL-PA-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1775,8 +1775,8 @@
           "ad_id": "120275471298970555",
           "code": "PIL-PA-04",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1840,8 +1840,8 @@
           "ad_id": "120275471298980555",
           "code": "PIL-LM-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1905,8 +1905,8 @@
           "ad_id": "120275471298990555",
           "code": "PIL-SA-02",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -1970,8 +1970,8 @@
           "ad_id": "120275471299000555",
           "code": "PIL-VID-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -2036,8 +2036,8 @@
     "link_audit_crm": {
       "source_code": "meta_ad_destination_checks",
       "status": "connected",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "complete": true,
       "checked_count": 3,
       "request_count": 3,
@@ -2047,8 +2047,8 @@
           "ad_id": "120275505908750555",
           "code": "VID-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -2112,8 +2112,8 @@
           "ad_id": "120275504866300555",
           "code": "VID-02",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -2177,8 +2177,8 @@
           "ad_id": "120275504866310555",
           "code": "VID-03",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -2243,8 +2243,8 @@
     "link_audit_lookalike": {
       "source_code": "meta_ad_destination_checks",
       "status": "connected",
-      "observed_at": "2026-11-02T17:30:43.561Z",
-      "attempted_at": "2026-11-02T17:30:43.561Z",
+      "observed_at": "2026-11-02T18:00:54.662Z",
+      "attempted_at": "2026-11-02T18:00:54.662Z",
       "complete": true,
       "checked_count": 3,
       "request_count": 3,
@@ -2254,8 +2254,8 @@
           "ad_id": "120275504052480555",
           "code": "VID-01",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -2319,8 +2319,8 @@
           "ad_id": "120275504962450555",
           "code": "VID-02",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,
@@ -2384,8 +2384,8 @@
           "ad_id": "120275504945410555",
           "code": "VID-03",
           "status": "core_verified_extra_review",
-          "checked_at": "2026-11-02T17:30:43.561Z",
-          "attempted_at": "2026-11-02T17:30:43.561Z",
+          "checked_at": "2026-11-02T18:00:54.662Z",
+          "attempted_at": "2026-11-02T18:00:54.662Z",
           "checks": {
             "scope_validated": true,
             "destination_present": true,

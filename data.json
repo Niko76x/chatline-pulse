@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-11-03T08:00:00.000Z",
-  "collected_at": "2026-11-03T08:00:51.006Z",
+  "snapshot_id": "2026-11-03T08:05:50.278Z",
+  "collected_at": "2026-11-03T08:05:50.278Z",
   "sources": {
     "meta": {
       "observed_at": "2026-11-03T08:00:51.006Z",
@@ -302,7 +302,7 @@
     "website_events": {
       "status": "error",
       "observed_at": "2026-10-31T08:06:38.326Z",
-      "attempted_at": "2026-11-02T17:01:33.002Z",
+      "attempted_at": "2026-11-03T08:05:30.686Z",
       "error": "BROWSER_PROFILE_UNAVAILABLE",
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
@@ -310,7 +310,7 @@
         "from": "2026-10-22",
         "to": "2026-10-31"
       },
-      "note": "Letzter erfolgreicher Dataset-UI-Read am 2026-10-31T08:06:38.326Z für 22.–31.10.2026, Europe/Berlin. Aktueller Versuch am 02.11. nicht möglich: das vorgesehene Chrome-Profil Niko ist nicht verbunden. Ereigniswerte, Zeitraum, Diagnose- und Deduplizierungsbelege bleiben historisch erhalten; keine neue heutige Ereignismessung oder Diagnose behauptet. Eingänge vor Verarbeitung, keine eindeutigen Kunden oder Kampagnenzuordnung.",
+      "note": "Letzter erfolgreicher Dataset-UI-Read am 2026-10-31T08:06:38.326Z für 22.–31.10.2026, Europe/Berlin. Aktueller Versuch am 03.11. nicht möglich: das vorgesehene Chrome-Profil Niko ist nicht verbunden. Ereigniswerte, Zeitraum, Diagnose- und Deduplizierungsbelege bleiben historisch erhalten; keine neue heutige Ereignismessung oder Diagnose behauptet. Eingänge vor Verarbeitung, keine eindeutigen Kunden oder Kampagnenzuordnung.",
       "diagnostics": "Separat am 2026-10-31T08:05:55.358Z gelesen: keine aktiven Fehler; die UI bezieht sich auf in den letzten drei Tagen erkannte Fehler.",
       "deduplication": "Lead-Detail am 2026-10-31T08:06:38.326Z: Still Parsing Your Data. Vollständige Deduplizierung weiterhin nicht bestätigt.",
       "events": [
@@ -543,10 +543,10 @@
       "method": "csv",
       "site": "chatline.app",
       "label": "chatline.app + start.chatline.app",
-      "status": "connected",
+      "status": "error",
       "observed_at": "2026-11-02T17:03:05.735Z",
-      "attempted_at": "2026-11-02T17:03:05.735Z",
-      "error": null,
+      "attempted_at": "2026-11-03T08:05:30.686Z",
+      "error": "BROWSER_PROFILE_UNAVAILABLE",
       "timezone": "America/Los_Angeles",
       "period": {
         "from": "2026-10-22",
@@ -614,7 +614,7 @@
           "impressions": 1
         }
       ],
-      "note": "Frischer manueller UI-CSV-Export am 2026-11-02T17:03:05.735Z im vorhandenen Arbeitsprofil. Domain-Property chatline.app, Web (text-based), exakter Seitenregex nur chatline.app und start.chatline.app. Tagesaggregate 22.10.–02.11.2026 in Pacific Time: 2 Suchklicks und 62 Impressionen; jüngste Tage vorläufig, der 02.11. ist unvollständig (0 Klicks/1 Impression) und kein abgeschlossener Nulltag. UI zuletzt vor 4,5 Stunden aktualisiert. Historische Werte können revidiert werden; Filter können Teilsummen liefern. Nur Tagesaggregate, keine Suchbegriffe oder einzelnen URLs."
+      "note": "Letzter erfolgreicher manueller UI-CSV-Export am 2026-11-02T17:03:05.735Z: Domain-Property chatline.app, Web (text-based), exakter URL-Regex nur chatline.app und start.chatline.app. Verwertbare Messwerte 22.10.–02.11.2026 Pacific Time: 2 Suchklicks und 62 Impressionen; jüngste Tage vorläufig, 02.11. beim damaligen Read unvollständig mit 0 Klicks/1 Impression. Aktueller Versuch am 03.11. nicht möglich: das gestern verbundene Arbeitsprofil ist derzeit nicht verbunden. Letzte erfolgreiche Werte, Datenperiode und Quellenzeit bewahrt; keine neue Anmeldungssperre behauptet, keine Suchbegriffe oder einzelnen URLs veröffentlicht."
     },
     "diy_funnel": {
       "source_code": "vercel_diy_events_production",

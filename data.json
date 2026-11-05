@@ -6,8 +6,8 @@
     "campaign": "120274644271350555",
     "adset": "120275421779190555"
   },
-  "snapshot_id": "2026-11-05T08:00:00.000Z",
-  "collected_at": "2026-11-05T08:00:50.858Z",
+  "snapshot_id": "2026-11-05T08:02:24.891Z",
+  "collected_at": "2026-11-05T08:02:24.891Z",
   "sources": {
     "meta": {
       "observed_at": "2026-11-05T08:00:50.858Z",
@@ -302,7 +302,7 @@
     "website_events": {
       "status": "error",
       "observed_at": "2026-10-31T08:06:38.326Z",
-      "attempted_at": "2026-11-05T04:09:02.697Z",
+      "attempted_at": "2026-11-05T08:00:54.036Z",
       "error": "BROWSER_PROFILE_UNAVAILABLE",
       "source_code": "events_manager_ui",
       "timezone": "Europe/Berlin",
@@ -565,7 +565,7 @@
       "label": "chatline.app + start.chatline.app",
       "status": "error",
       "observed_at": "2026-11-02T17:03:05.735Z",
-      "attempted_at": "2026-11-05T04:09:02.697Z",
+      "attempted_at": "2026-11-05T08:00:54.036Z",
       "error": "BROWSER_PROFILE_UNAVAILABLE",
       "timezone": "America/Los_Angeles",
       "period": {

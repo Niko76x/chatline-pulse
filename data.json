@@ -7,10 +7,10 @@
     "adset": "120275421779190555"
   },
   "snapshot_id": "2026-11-26T20:30:00.000Z",
-  "collected_at": "2026-11-26T20:30:42.275Z",
+  "collected_at": "2026-11-26T20:34:14.005Z",
   "sources": {
     "meta": {
-      "observed_at": "2026-11-26T20:30:42.275Z",
+      "observed_at": "2026-11-26T20:34:14.005Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -295,7 +295,7 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-11-26T20:30:42.275Z",
+      "attempted_at": "2026-11-26T20:34:14.005Z",
       "error": null,
       "complete_test_window": true
     },
@@ -371,7 +371,7 @@
     "analytics": {
       "status": "error",
       "observed_at": "2026-11-24T19:00:52.550Z",
-      "attempted_at": "2026-11-26T20:30:42.275Z",
+      "attempted_at": "2026-11-26T20:34:14.005Z",
       "error": "ANALYTICS_PARTIAL_FAILURE",
       "sites": [
         {
@@ -380,7 +380,7 @@
           "source_code": "vercel_project_production",
           "status": "error",
           "observed_at": "2026-11-24T19:00:52.550Z",
-          "attempted_at": "2026-11-26T20:30:42.275Z",
+          "attempted_at": "2026-11-26T20:34:14.005Z",
           "error": "ANALYTICS_PERMISSION_REQUIRED",
           "timezone": "UTC",
           "period": {
@@ -546,7 +546,7 @@
           "source_code": "vercel_project_production",
           "status": "error",
           "observed_at": "2026-11-24T19:00:52.550Z",
-          "attempted_at": "2026-11-26T20:30:42.275Z",
+          "attempted_at": "2026-11-26T20:34:14.005Z",
           "error": "ANALYTICS_PERMISSION_REQUIRED",
           "timezone": "UTC",
           "period": {
@@ -1380,7 +1380,7 @@
     "meta_traffic": {
       "campaign": "120275454337270555",
       "adset": "120275454337280555",
-      "observed_at": "2026-11-26T20:30:42.275Z",
+      "observed_at": "2026-11-26T20:34:14.005Z",
       "timezone": "Europe/Berlin",
       "period": {
         "from": "2026-10-22",
@@ -1729,7 +1729,7 @@
         }
       ],
       "status": "connected",
-      "attempted_at": "2026-11-26T20:30:42.275Z",
+      "attempted_at": "2026-11-26T20:34:14.005Z",
       "error": null,
       "complete_test_window": false
     },
